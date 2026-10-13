@@ -16,8 +16,6 @@
 
 访问端按 User-Agent、硬件线索与运行时 API 可用性划分为四档，功能机与低端机型自动卸载高开销项，并改用简化样式表。
 
-页面内的链接由 `assets/scripts/protocols.js` 统一处理，覆盖 http、mailto、tel、irc、xmpp、ftp、gopher、gemini、magnet、ipfs、feed 等常见与历史方案，方案清单见 [docs/protocols.md](docs/protocols.md)。
-
 选型的完整依据、开发阶段划分与性能预算记录在 [docs/plan.md](docs/plan.md)。
 
 ## 目录结构

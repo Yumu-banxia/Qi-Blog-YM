@@ -49,14 +49,6 @@ high 与 medium 之外，`data-motion="reduced"` 生效，动画与过渡关闭�
 
 脚本侧通过 `Capability.allow(name)` 查询单项能力，通过 `Capability.load(name, src)` 决定是否注入高开销脚本。未获允许时返回 `false`，资源不会进入请求队列。
 
-### 协议链接处理
-
-页面内的链接由 `assets/scripts/protocols.js` 统一处理，登记常见互联网方案并按浏览器可处理程度分为九类，据此决定跳转方式、安全属性与提示内容。分类结果写入 `data-scheme` 与 `data-scheme-status`，样式按属性分支。
-
-站外 web 链接补上 `target="_blank"` 与 `rel="noopener noreferrer"`；legacy、p2p、crypto、feed、altnet 几类方案显示方案标签、等宽度地址与复制入口；unsafe 一类移除 `href` 并置为不可聚焦。minimal 档位跳过标签与复制入口的生成，保留方案识别与安全处理。
-
-完整方案清单见 [docs/protocols.md](protocols.md)。
-
 ## 二、目录结构
 
 ```text
@@ -70,12 +62,10 @@ Qi-blog-ds/
 │  │  └─ lite.css          超低端设备兜底样式
 │  ├─ scripts/
 │  │  ├─ capability.js     设备能力分级
-│  │  ├─ protocols.js      协议链接处理
 │  │  └─ main.js           全局交互
 │  ├─ icons/               SVG 图标
 │  └─ media/               图片与字体
 ├─ docs/
-│  ├─ protocols.md
 │  ├─ project-brief.md
 │  └─ plan.md
 └─ README.md
