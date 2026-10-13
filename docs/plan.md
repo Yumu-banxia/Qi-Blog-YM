@@ -54,7 +54,11 @@ high 与 medium 之外，`data-motion="reduced"` 生效，动画与过渡关闭�
 ```text
 Qi-blog-ds/
 ├─ index.html              首页
-├─ pages/                  关于、文章列表、文章详情、作品等页面
+├─ pages/
+│  ├─ posts.html           文章列表
+│  ├─ post-sample.html     文章详情模板
+│  ├─ works.html           作品陈列
+│  └─ about.html           个人介绍
 ├─ assets/
 │  ├─ styles/
 │  │  ├─ tokens.css        设计令牌
@@ -66,6 +70,7 @@ Qi-blog-ds/
 │  ├─ icons/               SVG 图标
 │  └─ media/               图片与字体
 ├─ docs/
+│  ├─ content-plan.md      内容与栏目结构
 │  ├─ project-brief.md
 │  └─ plan.md
 └─ README.md

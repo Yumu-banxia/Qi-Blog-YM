@@ -23,13 +23,17 @@
 ```text
 Qi-blog-ds/
 ├─ index.html            首页
+├─ pages/
+│  ├─ posts.html         文章列表
+│  ├─ post-sample.html   文章详情模板
+│  ├─ works.html         作品陈列
+│  └─ about.html         个人介绍
 ├─ assets/
 │  ├─ styles/            设计令牌与基础样式
 │  ├─ scripts/           全局交互
 │  ├─ icons/             SVG 图标
 │  └─ media/             图片与字体
-├─ pages/                其余页面
-├─ docs/                 项目说明与设计记录
+├─ docs/                 项目说明、内容规划与设计记录
 ├─ .editorconfig
 ├─ .gitignore
 └─ README.md

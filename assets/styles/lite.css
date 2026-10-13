@@ -111,3 +111,45 @@ svg {
   font-size: 13px;
 }
 
+.card-list {
+  padding-left: 20px;
+  list-style: disc;
+}
+
+.card-list > li {
+  margin-bottom: 20px;
+}
+
+.meta,
+.summary {
+  color: #555555;
+}
+
+.tags,
+.actions,
+.pager {
+  padding: 0;
+  list-style: none;
+}
+
+.tags li,
+.actions li,
+.pager li {
+  display: inline;
+  margin-right: 12px;
+}
+
+.prose pre {
+  overflow-x: auto;
+  padding: 8px;
+  background-color: #f2f2f2;
+  border: 1px solid #dddddd;
+}
+
+.prose blockquote {
+  margin: 12px 0;
+  padding-left: 12px;
+  border-left: 3px solid #dddddd;
+  color: #555555;
+}
+
