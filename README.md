@@ -31,6 +31,7 @@ Qi-blog-ds/
 ├─ assets/
 │  ├─ styles/            设计令牌与基础样式
 │  ├─ scripts/           全局交互
+│  ├─ vendor/            本地化的 highlight.js 与 KaTeX
 │  ├─ icons/             SVG 图标
 │  └─ media/             图片与字体
 ├─ docs/                 项目说明、内容规划与设计记录

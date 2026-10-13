@@ -8,8 +8,10 @@
   <meta name="description" content="文章详情页模板：标题、日期、标签、正文与上下篇导航。">
   <link rel="stylesheet" href="../assets/styles/tokens.css">
   <link rel="stylesheet" href="../assets/styles/base.css">
+  <link rel="stylesheet" href="../assets/styles/article.css">
   <script src="../assets/scripts/capability.js"></script>
   <script src="../assets/scripts/main.js" defer></script>
+  <script src="../assets/scripts/reader.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主要内容</a>
@@ -52,7 +54,7 @@
   <main id="main">
     <article class="section">
       <div class="container">
-        <header>
+        <header class="article-head">
           <h1>文章标题占位</h1>
           <p class="meta"><time datetime="2026-10-13">2026-10-13</time><span>随笔</span></p>
           <ul class="tags">
@@ -66,17 +68,42 @@
 
           <h2>小节标题占位</h2>
           <p>正文段落占位。</p>
-          <p>行内代码写作 <code>const value = 1;</code> 这种形式。</p>
+          <p>行内代码写作 <code>const value = 1;</code> 这种形式，行内公式写作 $O(n\log n)$ 这种形式，独立成段的公式如下。</p>
+          <p>$$ \int_{-\infty}^{\infty} e^{-x^{2}}\,\mathrm{d}x = \sqrt{\pi} $$</p>
 
-          <pre><code>function greet(name) {
-  return 'hello, ' + name;
-}</code></pre>
+          <h2>代码块占位</h2>
+          <p>代码块标注语言，附带复制与折叠操作。</p>
+
+          <pre><code class="language-js">const cache = new Map();
+
+function memoize(fn) {
+  return function (...args) {
+    const key = JSON.stringify(args);
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+    const value = fn.apply(this, args);
+    cache.set(key, value);
+    return value;
+  };
+}
+
+const slow = (n) => {
+  let total = 0;
+  for (let i = 0; i &lt; n; i += 1) {
+    total += Math.sqrt(i);
+  }
+  return total;
+};
+
+const fast = memoize(slow);
+console.log(fast(100000));</code></pre>
 
           <h3>次级标题占位</h3>
           <p>正文段落占位。</p>
 
           <blockquote>
-            <p>引用占位，用于摘录外部资料或强调结论。</p>
+            <p>引用占位，用于摘录外部资料或强调要点。</p>
           </blockquote>
 
           <h2>小结</h2>

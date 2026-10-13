@@ -12,9 +12,12 @@
 | 样式 | 原生 CSS，自建设计令牌与组件类 | 无 |
 | 脚本 | 原生 JavaScript，classic script | 无 |
 | 图标 | Lucide | SVG 内联，按需复制 |
-| 代码高亮 | highlight.js | 文章页本地引入 |
+| 代码高亮 | highlight.js 11.12.0 | 文章页按需加载，本地 vendor |
+| 公式渲染 | KaTeX 0.19.0 | 文章页按需加载，本地 vendor |
 | 星河背景 | CSS 渐变与关键帧动画 | 无 |
 | 构建 | 无构建步骤 | 无 |
+
+第三方库以本地文件形式放入 `assets/vendor/`，随站点一起分发，file:// 环境同样可用。加载时机由 `assets/scripts/reader.js` 判断：页面存在代码块或公式时才请求对应脚本，设备档位为 low 与 minimal 时跳过。渲染库不进入首屏请求队列。
 
 ### 采用依据
 
@@ -63,10 +66,15 @@ Qi-blog-ds/
 │  ├─ styles/
 │  │  ├─ tokens.css        设计令牌
 │  │  ├─ base.css          重置、排版、布局与组件样式
+│  │  ├─ article.css       文章页增强样式
 │  │  └─ lite.css          超低端设备兜底样式
 │  ├─ scripts/
 │  │  ├─ capability.js     设备能力分级
+│  │  ├─ reader.js         文章页阅读增强
 │  │  └─ main.js           全局交互
+│  ├─ vendor/
+│  │  ├─ highlight/        highlight.js 构建与许可证
+│  │  └─ katex/            KaTeX 构建、样式与字体
 │  ├─ icons/               SVG 图标
 │  └─ media/               图片与字体
 ├─ docs/
@@ -125,7 +133,8 @@ Qi-blog-ds/
 | 维度 | 目标 |
 | --- | --- |
 | 首屏关键资源（HTML 与 CSS） | 未压缩 120 KB 以内 |
-| JavaScript 体积 | 未压缩 40 KB 以内 |
+| 页面自带脚本 | 未压缩 40 KB 以内，capability、main、reader 三者合计约 18 KB |
+| 按需第三方库 | 仅在文章页命中内容时加载，highlight.js 约 129 KB，KaTeX 约 273 KB 加字体 296 KB |
 | 单页 DOM 节点 | 1500 以内 |
 | 累计布局偏移 | 接近于零，媒体元素标注宽高 |
 | 目标浏览器 | Chrome 与 Edge 105 以上、Firefox 110 以上、Safari 15.4 以上 |
