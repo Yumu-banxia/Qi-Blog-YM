@@ -196,20 +196,6 @@ button {
 }
 
 /* 导航 */
-.site-nav {
-  position: absolute;
-  inset-inline: 0;
-  inset-block-start: 100%;
-  display: none;
-  padding: var(--space-3) var(--space-4) var(--space-5);
-  background-color: var(--color-bg);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.site-nav[data-open="true"] {
-  display: block;
-}
-
 .site-nav ul {
   display: flex;
   flex-direction: column;
@@ -230,12 +216,27 @@ button {
   text-decoration: underline;
 }
 
+/* 具备脚本能力时，移动端导航折入可展开面板 */
+:root.has-js .site-nav {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 100%;
+  display: none;
+  padding: var(--space-3) var(--space-4) var(--space-5);
+  background-color: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+:root.has-js .site-nav[data-open="true"] {
+  display: block;
+}
+
 @media (min-width: 768px) {
   .nav-toggle {
     display: none;
   }
 
-  .site-nav {
+  :root.has-js .site-nav {
     position: static;
     display: block;
     padding: 0;
@@ -269,5 +270,54 @@ button {
   border-top: 1px solid var(--color-border);
   color: var(--color-muted);
   font-size: var(--text-sm);
+}
+
+/* 能力分级降级：按 data-cap 与 data-motion 关闭高开销表现 */
+:root[data-cap="low"] .site-header,
+:root[data-cap="minimal"] .site-header {
+  background-color: var(--color-bg);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:root[data-cap="minimal"] .site-nav {
+  position: static;
+  display: block;
+  padding: 0;
+  background: none;
+  border: 0;
+}
+
+:root[data-cap="minimal"] .site-nav ul {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+:root[data-cap="minimal"] .nav-toggle,
+:root[data-cap="minimal"] .theme-toggle,
+:root:not(.has-js) .nav-toggle,
+:root:not(.has-js) .theme-toggle {
+  display: none;
+}
+
+:root[data-cap="minimal"],
+:root[data-motion="reduced"] {
+  scroll-behavior: auto;
+}
+
+:root[data-motion="reduced"] *,
+:root[data-motion="reduced"] *::before,
+:root[data-motion="reduced"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+:root[data-cap="minimal"] *,
+:root[data-cap="minimal"] *::before,
+:root[data-cap="minimal"] *::after {
+  animation: none !important;
+  transition: none !important;
 }
 

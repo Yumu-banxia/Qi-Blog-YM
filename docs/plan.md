@@ -32,6 +32,23 @@
 | Tailwind CSS | 要取得可接受的体积，必须引入构建步骤 |
 | Astro | 构建产物使用绝对地址，file:// 打开时资源加载失败 |
 
+### 能力分级与降级
+
+页面按访问端的实际条件划分四档，由 `assets/scripts/capability.js` 在首屏同步判定，结果写入 `data-cap`，供样式与脚本共同读取，并暴露为 `window.Capability`。
+
+判定输入包含三组信号：User-Agent 中的功能机与老式移动浏览器特征、硬件与网络线索（逻辑核数、设备内存、省流模式、2G 级连接），以及运行时 API 的可用性（自定义属性、`matchMedia`、`requestAnimationFrame`、`IntersectionObserver`、`backdrop-filter`）。
+
+| 档位 | 判定条件 | 允许项 |
+| --- | --- | --- |
+| high | 逻辑核数 8 以上且内存 4 GB 以上 | 全部动效与增强 |
+| medium | 未命中其他条件的现代设备 | 动效、模糊、按需脚本 |
+| low | 受限 UA、双核以内、内存 1 GB 以内、省流模式或 2G 级连接 | 静态内容与基础表现 |
+| minimal | 功能机 UA，或缺少自定义属性等基础 API | 静态内容 |
+
+high 与 medium 之外，`data-motion="reduced"` 生效，动画与过渡关闭，平滑滚动同步关闭。minimal 档位额外挂载 `assets/styles/lite.css`，该样式表不使用自定义属性、弹性布局与网格，保证功能机上仍能正确排版。
+
+脚本侧通过 `Capability.allow(name)` 查询单项能力，通过 `Capability.load(name, src)` 决定是否注入高开销脚本。未获允许时返回 `false`，资源不会进入请求队列。
+
 ## 二、目录结构
 
 ```text
@@ -41,8 +58,10 @@ Qi-blog-ds/
 ├─ assets/
 │  ├─ styles/
 │  │  ├─ tokens.css        设计令牌
-│  │  └─ base.css          重置、排版、布局与组件样式
+│  │  ├─ base.css          重置、排版、布局与组件样式
+│  │  └─ lite.css          超低端设备兜底样式
 │  ├─ scripts/
+│  │  ├─ capability.js     设备能力分级
 │  │  └─ main.js           全局交互
 │  ├─ icons/               SVG 图标
 │  └─ media/               图片与字体

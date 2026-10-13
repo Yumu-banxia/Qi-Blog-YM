@@ -1,0 +1,113 @@
+/* 超低端设备兜底样式
+   不使用自定义属性、弹性布局、网格与逻辑属性，供缺少现代 CSS 支持的浏览器读取。 */
+body {
+  margin: 0;
+  padding: 0 12px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #111111;
+  background-color: #ffffff;
+}
+
+h1 {
+  margin: 0 0 12px;
+  font-size: 22px;
+}
+
+h2 {
+  margin: 0 0 10px;
+  font-size: 19px;
+}
+
+h3 {
+  margin: 0 0 8px;
+  font-size: 17px;
+}
+
+p {
+  margin: 0 0 12px;
+}
+
+ul,
+ol {
+  padding-left: 20px;
+}
+
+a {
+  color: #1a4fd6;
+}
+
+img,
+svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.container {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.site-header {
+  padding: 8px 0;
+  border-bottom: 1px solid #cccccc;
+}
+
+.brand {
+  display: inline-block;
+  font-weight: bold;
+  color: #111111;
+  text-decoration: none;
+}
+
+.site-nav {
+  position: static;
+  display: block;
+  padding: 8px 0 0;
+  background: none;
+  border: 0;
+}
+
+.site-nav ul {
+  display: block;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-nav li {
+  display: inline;
+  margin-right: 12px;
+}
+
+.site-nav a {
+  display: inline;
+  color: #1a4fd6;
+  text-decoration: none;
+}
+
+.icon-button,
+.nav-toggle,
+.theme-toggle,
+.skip-link {
+  display: none;
+}
+
+.section {
+  padding: 16px 0;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.lede {
+  font-size: 16px;
+  color: #444444;
+}
+
+.site-footer {
+  padding: 12px 0 24px;
+  color: #555555;
+  font-size: 13px;
+}
+

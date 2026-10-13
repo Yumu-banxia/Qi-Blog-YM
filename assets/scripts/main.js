@@ -2,6 +2,7 @@
   'use strict';
 
   var root = document.documentElement;
+  var capability = window.Capability || null;
   var STORAGE_KEY = 'theme';
 
   function readStoredTheme() {
@@ -37,12 +38,25 @@
     }
   }
 
-  renderTheme(readStoredTheme() || systemTheme());
+  function persistTheme(theme) {
+    if (capability && typeof capability.setTheme === 'function') {
+      capability.setTheme(theme);
+      return;
+    }
+    writeStoredTheme(theme);
+  }
+
+  /* capability.js 已在首屏解析主题，脚本缺失时在此兜底 */
+  var resolvedTheme = root.getAttribute('data-theme');
+  if (resolvedTheme !== 'light' && resolvedTheme !== 'dark') {
+    resolvedTheme = readStoredTheme() || systemTheme();
+  }
+  renderTheme(resolvedTheme);
 
   if (themeToggle) {
     themeToggle.addEventListener('click', function () {
       var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-      writeStoredTheme(next);
+      persistTheme(next);
       renderTheme(next);
     });
   }
@@ -86,13 +100,13 @@
     });
 
     siteNav.addEventListener('click', function (event) {
-      if (event.target.closest('a')) {
+      if (event.target.closest && event.target.closest('a')) {
         setNavOpen(false);
       }
     });
 
     document.addEventListener('keydown', function (event) {
-      if (event.key === 'Escape' && isNavOpen()) {
+      if ((event.key === 'Escape' || event.keyCode === 27) && isNavOpen()) {
         setNavOpen(false);
         navToggle.focus();
       }
