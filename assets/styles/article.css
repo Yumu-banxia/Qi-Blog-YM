@@ -31,7 +31,7 @@
 }
 
 .prose {
-  font-size: calc(1rem * var(--reading-scale));
+  font-size: calc(var(--text-base) * var(--reading-scale));
 }
 
 .article-head {
@@ -127,7 +127,7 @@
 }
 
 .toc-list a[aria-current="true"] {
-  color: var(--color-accent);
+  color: var(--color-link);
 }
 
 /* 代码块 */
@@ -145,7 +145,7 @@
   background-color: transparent;
   border: 0;
   border-radius: 0;
-  font-size: calc(0.875rem * var(--reading-scale));
+  font-size: calc(var(--text-sm) * var(--reading-scale));
   line-height: 1.6;
 }
 
