@@ -76,7 +76,12 @@
 
   root.setAttribute('data-cap', tier);
   root.setAttribute('data-cap-reason', reason);
-  root.className = root.className ? root.className + ' has-js' : 'has-js';
+
+  var rootClasses = 'has-js';
+  if (env.intersectionObserver) {
+    rootClasses += ' has-observer';
+  }
+  root.className = root.className ? root.className + ' ' + rootClasses : rootClasses;
 
   if (!features.motion) {
     root.setAttribute('data-motion', 'reduced');

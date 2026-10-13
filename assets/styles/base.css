@@ -524,3 +524,16 @@ button {
   color: var(--color-muted);
 }
 
+/* 滚动出现：仅在具备观察器且允许动效时隐藏待入场元素 */
+:root.has-observer:not([data-motion="reduced"]) [data-reveal] {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+:root.has-observer:not([data-motion="reduced"]) [data-reveal].is-revealed {
+  opacity: 1;
+  transform: none;
+  transition: opacity var(--duration-slow) var(--ease-out),
+    transform var(--duration-slow) var(--ease-out);
+}
+

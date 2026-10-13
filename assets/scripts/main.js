@@ -128,5 +128,46 @@
   for (var index = 0; index < yearSlots.length; index += 1) {
     yearSlots[index].textContent = currentYear;
   }
+
+  /* 滚动出现：设备允许动效且浏览器具备观察器时启用 */
+  var motionAllowed = !capability || capability.allow('motion');
+  var revealTargets = document.querySelectorAll('[data-reveal]');
+
+  function revealElement(node) {
+    if (node.classList) {
+      node.classList.add('is-revealed');
+      return;
+    }
+    if (!node.className || node.className.indexOf('is-revealed') === -1) {
+      node.className = node.className ? node.className + ' is-revealed' : 'is-revealed';
+    }
+  }
+
+  if (motionAllowed && revealTargets.length && typeof window.IntersectionObserver === 'function') {
+    var revealObserver = new window.IntersectionObserver(function (entries) {
+      for (var i = 0; i < entries.length; i += 1) {
+        if (entries[i].isIntersecting) {
+          revealElement(entries[i].target);
+          revealObserver.unobserve(entries[i].target);
+        }
+      }
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+
+    for (var target = 0; target < revealTargets.length; target += 1) {
+      revealObserver.observe(revealTargets[target]);
+    }
+
+    /* 键盘聚焦时立即显示，避免焦点落在未入场的内容上 */
+    document.addEventListener('focusin', function (event) {
+      var node = event.target;
+      while (node && node.getAttribute) {
+        if (node.getAttribute('data-reveal') !== null) {
+          revealElement(node);
+          return;
+        }
+        node = node.parentNode;
+      }
+    });
+  }
 })();
 
