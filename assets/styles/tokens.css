@@ -1,0 +1,65 @@
+/* 设计令牌：字体、字号、间距、圆角、动效与配色 */
+:root {
+  --font-sans: system-ui, -apple-system, "Segoe UI", "Noto Sans SC",
+    "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas,
+    "Liberation Mono", monospace;
+
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  --text-2xl: clamp(1.6rem, 1.3rem + 1.4vw, 2.4rem);
+  --text-3xl: clamp(2rem, 1.5rem + 2.4vw, 3.4rem);
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+
+  --container: 72rem;
+  --header-height: 3.5rem;
+
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 400ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-bg: #ffffff;
+  --color-surface: #f5f6f9;
+  --color-text: #14161c;
+  --color-muted: #565c6e;
+  --color-border: #e3e6ee;
+  --color-accent: #2f6df6;
+  --color-accent-contrast: #ffffff;
+  --color-focus: #1d4ed8;
+  --shadow-sm: 0 1px 2px rgb(16 18 24 / 8%);
+  --shadow-md: 0 6px 24px rgb(16 18 24 / 10%);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-bg: #0f1116;
+  --color-surface: #171a21;
+  --color-text: #e9ecf3;
+  --color-muted: #a2a9bb;
+  --color-border: #262b36;
+  --color-accent: #6f9dff;
+  --color-accent-contrast: #0b0d12;
+  --color-focus: #93b6ff;
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 40%);
+  --shadow-md: 0 6px 24px rgb(0 0 0 / 45%);
+}
+

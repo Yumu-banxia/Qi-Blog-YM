@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Qi 的个人博客</title>
+  <meta name="description" content="个人博客：个人介绍、文章阅读与作品陈列。">
+  <script>
+    (function () {
+      try {
+        var theme = localStorage.getItem('theme');
+        if (theme !== 'light' && theme !== 'dark') {
+          theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+            ? 'dark'
+            : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (error) {
+        /* 首屏主题在脚本不可用时沿用标记中的默认值 */
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="assets/styles/tokens.css">
+  <link rel="stylesheet" href="assets/styles/base.css">
+  <script src="assets/scripts/main.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html">Qi 的个人博客</a>
+
+      <nav id="site-nav" class="site-nav" aria-label="主导航">
+        <ul>
+          <li><a href="#home">首页</a></li>
+          <li><a href="#posts">文章</a></li>
+          <li><a href="#works">作品</a></li>
+          <li><a href="#about">关于</a></li>
+        </ul>
+      </nav>
+
+      <button class="icon-button theme-toggle" type="button" aria-pressed="false" title="切换明暗主题">
+        <span class="visually-hidden">切换明暗主题</span>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+        </svg>
+      </button>
+
+      <button class="icon-button nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" title="展开导航">
+        <span class="visually-hidden">展开导航</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+          <path d="M3 7h18"></path>
+          <path d="M3 12h18"></path>
+          <path d="M3 17h18"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <section id="home" class="section hero">
+      <div class="container">
+        <h1>博观代码，客绘星河</h1>
+        <p class="lede">页面骨架已建立。内容模块与视觉方向在后续阶段补充。</p>
+      </div>
+    </section>
+
+    <section id="posts" class="section">
+      <div class="container">
+        <h2>文章</h2>
+        <p>文章列表与详情页占位。</p>
+      </div>
+    </section>
+
+    <section id="works" class="section">
+      <div class="container">
+        <h2>作品</h2>
+        <p>作品陈列占位。</p>
+      </div>
+    </section>
+
+    <section id="about" class="section">
+      <div class="container">
+        <h2>关于</h2>
+        <p>个人介绍占位。</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© <span data-year>2026</span> Qi 的个人博客</p>
+    </div>
+  </footer>
+</body>
+</html>
+
