@@ -45,6 +45,9 @@
   --color-accent: #2f6df6;
   --color-accent-contrast: #ffffff;
   --color-focus: #1d4ed8;
+  --color-link: #1b4fd8;
+  --color-link-hover: #1746bf;
+  --color-link-visited: #6a3ab2;
   --shadow-sm: 0 1px 2px rgb(16 18 24 / 8%);
   --shadow-md: 0 6px 24px rgb(16 18 24 / 10%);
 }
@@ -59,6 +62,9 @@
   --color-accent: #6f9dff;
   --color-accent-contrast: #0b0d12;
   --color-focus: #93b6ff;
+  --color-link: #86abff;
+  --color-link-hover: #93b6ff;
+  --color-link-visited: #c39bf0;
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 40%);
   --shadow-md: 0 6px 24px rgb(0 0 0 / 45%);
 }

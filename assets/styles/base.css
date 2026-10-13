@@ -78,7 +78,60 @@ video {
 }
 
 a {
-  color: var(--color-accent);
+  color: var(--color-link);
+  text-decoration-line: underline;
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.18em;
+  text-decoration-skip-ink: auto;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+a:link {
+  text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+}
+
+a:visited {
+  color: var(--color-link-visited);
+}
+
+a:hover,
+a:active {
+  color: var(--color-link-hover);
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 0.1em;
+}
+
+.prose a,
+.summary a {
+  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* 站外链接附外链标记，缺少遮罩支持时不显示 */
+@supports ((-webkit-mask-image: url("x.svg")) or (mask-image: url("x.svg"))) {
+  .prose a[href^="http"]::after,
+  .summary a[href^="http"]::after,
+  .actions a[href^="http"]::after {
+    content: "";
+    display: inline-block;
+    inline-size: 0.7em;
+    block-size: 0.7em;
+    margin-inline-start: 0.3em;
+    vertical-align: baseline;
+    background-color: currentColor;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 3h6v6'/%3E%3Cpath d='M10 14 21 3'/%3E%3Cpath d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 3h6v6'/%3E%3Cpath d='M10 14 21 3'/%3E%3Cpath d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'/%3E%3C/svg%3E");
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+  }
+
+  .actions a[href^="http"]::after {
+    margin-inline-start: 0;
+  }
 }
 
 button {
@@ -213,7 +266,13 @@ button {
 }
 
 .site-nav a:hover {
+  color: var(--color-link);
   text-decoration: underline;
+}
+
+.site-nav a[aria-current="page"] {
+  color: var(--color-link);
+  font-weight: 600;
 }
 
 /* 具备脚本能力时，移动端导航折入可展开面板 */
@@ -349,6 +408,7 @@ button {
 }
 
 .list-title a:hover {
+  color: var(--color-link);
   text-decoration: underline;
 }
 
@@ -393,6 +453,46 @@ button {
   margin: var(--space-5) 0 0;
   padding: 0;
   list-style: none;
+}
+
+.actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.actions a:visited {
+  color: var(--color-text);
+}
+
+.actions a:hover,
+.actions a:active {
+  background-color: var(--color-bg);
+  border-color: var(--color-link);
+  color: var(--color-link);
+}
+
+.actions a[data-variant="primary"] {
+  background-color: var(--color-link);
+  border-color: var(--color-link);
+  color: var(--color-accent-contrast);
+}
+
+.actions a[data-variant="primary"]:visited {
+  color: var(--color-accent-contrast);
+}
+
+.actions a[data-variant="primary"]:hover,
+.actions a[data-variant="primary"]:active {
+  background-color: var(--color-link-hover);
+  border-color: var(--color-link-hover);
+  color: var(--color-accent-contrast);
 }
 
 /* 正文 */
