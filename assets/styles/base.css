@@ -537,3 +537,11 @@ button {
     transform var(--duration-slow) var(--ease-out);
 }
 
+/* 打印与输出为 PDF 时不保留待入场状态 */
+@media print {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+

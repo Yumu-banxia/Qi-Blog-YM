@@ -124,6 +124,8 @@ Qi-blog-ds/
 
 1. 取消站内链接的已访问变色。当前 `a:visited` 会把点击过的站内链接转为 `--color-link-visited`；站名 `.brand` 也会一并变色，原因是 `a:visited` 的优先级高于 `.brand`，`color: inherit` 被覆盖。
 
+2. 待入场内容在整页截图中的可见性。`data-reveal` 元素依赖 IntersectionObserver 判定入场，不滚动页面的整页截图不会触发观察器，视口之外的内容维持隐藏状态。真实浏览过程不受影响，打印路径已由 `@media print` 兜住。
+
 验收标准：整站观感统一，各断点下无破版。
 
 ### 阶段七 打包与交付
@@ -162,5 +164,5 @@ Qi-blog-ds/
 
 无脚本核对的做法是复制站点并剥离页面自带脚本，再用探针读取计算样式。无头 Chrome 的 `--blink-settings=scriptEnabled=false` 会令截图静默失败，`--disable-javascript` 在当前版本下不生效，因此改用剥离脚本的副本。
 
-多引擎渲染抽查尚未完成，Firefox 与 Edge 的实测留待后续。
+多引擎渲染抽查结果：Firefox 下布局、公式、代码高亮、目录、代码块工具条与折叠均正常，差异集中在整页截图，见阶段六记录项 2。Edge 与 Chrome 同属 Chromium 引擎，当前环境下 Edge 无头模式无法顺利生成截图，未单独实测。
 
