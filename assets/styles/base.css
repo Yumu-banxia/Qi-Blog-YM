@@ -354,6 +354,7 @@ button {
   inset: 0;
   touch-action: pan-y;
   cursor: grab;
+  -webkit-user-drag: none;
 }
 
 .chart-canvas[data-dragging="true"] {
@@ -505,6 +506,8 @@ button {
 
 .chart-node a {
   cursor: grab;
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 .chart-node.is-dragging {

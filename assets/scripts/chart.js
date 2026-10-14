@@ -39,12 +39,12 @@
   var SPRING = 3.6;
   var FORCE = 22;
   var DAMPING = 0.88;
-  var OFFSET_LIMIT_PX = 60;
+  var OFFSET_LIMIT_PX = 34;
 
-  /* 指针力场：半径按像素计，靠近的节点被推开并带一点沿运动方向的推力 */
-  var POINTER_RADIUS = 200;
-  var POINTER_ACCEL = 4000;
-  var VELOCITY_WEIGHT = 0.5;
+  /* 指针力场：半径按像素计，近旁节点被轻微吸引，并带一点沿指针运动方向的拖尾 */
+  var POINTER_RADIUS = 180;
+  var POINTER_ACCEL = 420;
+  var VELOCITY_WEIGHT = 0.2;
   var VELOCITY_LIMIT = 700;
 
   var items = [];
@@ -145,19 +145,19 @@
 
     var nodePx = ((item.baseX + item.ox) / 100) * width;
     var nodePy = ((item.baseY + item.oy) / 100) * height;
-    var dx = nodePx - pointerPos.x;
-    var dy = nodePy - pointerPos.y;
+    var dx = pointerPos.x - nodePx;
+    var dy = pointerPos.y - nodePy;
     var distance = Math.sqrt(dx * dx + dy * dy);
     if (distance > POINTER_RADIUS) {
       return;
     }
 
     var falloff = 1 - distance / POINTER_RADIUS;
-    var push = falloff * falloff * POINTER_ACCEL * pointerStrength;
+    var pull = falloff * falloff * POINTER_ACCEL * pointerStrength;
 
     if (distance > 0.5) {
-      fx.v += ((dx / distance) * push * 100) / width;
-      fy.v += ((dy / distance) * push * 100) / height;
+      fx.v += ((dx / distance) * pull * 100) / width;
+      fy.v += ((dy / distance) * pull * 100) / height;
     }
 
     var vx = clamp(pointerVel.x, -VELOCITY_LIMIT, VELOCITY_LIMIT);
@@ -327,6 +327,12 @@
       applyOffset(item);
       draw();
     }
+
+    /* 拖动时浏览器不应把链接当作可拖拽元素，也不参与文本选择 */
+    link.setAttribute('draggable', 'false');
+    link.addEventListener('dragstart', function (event) {
+      event.preventDefault();
+    });
 
     link.addEventListener('pointerdown', onDown);
     link.addEventListener('pointermove', onMove);
