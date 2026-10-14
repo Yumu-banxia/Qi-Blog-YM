@@ -1,6 +1,6 @@
 # Qi-blog-ds
 
-个人博客的前端设计项目。页面围绕个人介绍、文章阅读与作品陈列组织内容，并在内容结构与视觉语言上形成统一的设计方向。
+个人博客的前端设计项目。页面围绕个人介绍、文章阅读与作品陈列组织内容，视觉语言取自星图意象，全部由原生 HTML、CSS 与 JavaScript 实现，没有构建步骤。
 
 ## 项目定位
 
@@ -8,7 +8,7 @@
 
 ## 设计方向
 
-主题意象取自星河，视觉表达从这一意象延伸，落到配色、字体、版式与动效四个层面，目标是形成具备辨识度的观感。具体方向与约束记录在 [docs/project-brief.md](docs/project-brief.md)。
+主题意象取自星图。首屏把四个栏目画成一组星座节点，站点结构本身成为第一屏的视觉主体，其余部分保持安静，让正文与列表承担阅读任务。配色分为月白与夜空两套，正文对比度均在 16 以上。具体方向与约束记录在 [docs/project-brief.md](docs/project-brief.md)，完整的设计说明见 [docs/design-note.md](docs/design-note.md)。
 
 ## 技术方向
 
@@ -25,16 +25,16 @@ Qi-blog-ds/
 ├─ index.html            首页
 ├─ pages/
 │  ├─ posts.html         文章列表
-│  ├─ post-sample.html   文章详情模板
+│  ├─ post-reader.html   文章详情：阅读增强与按需渲染
+│  ├─ post-capability.html 文章详情：访问端能力分级
+│  ├─ post-no-build.html 文章详情：无构建方案
 │  ├─ works.html         作品陈列
 │  └─ about.html         个人介绍
 ├─ assets/
-│  ├─ styles/            设计令牌与基础样式
-│  ├─ scripts/           全局交互
+│  ├─ styles/            设计令牌、基础样式、文章样式与兜底样式
+│  ├─ scripts/           能力分级、全局交互与阅读增强
 │  ├─ vendor/            本地化的 highlight.js 与 KaTeX
-│  ├─ icons/             SVG 图标
-│  └─ media/             图片与字体
-├─ docs/                 项目说明、内容规划与设计记录
+├─ docs/                 项目说明、内容规划、设计说明与开发记录
 ├─ .editorconfig
 ├─ .gitignore
 └─ README.md
@@ -53,4 +53,10 @@ Qi-blog-ds/
 5. 性能、兼容性与无障碍核对
 6. 视觉打磨
 7. 打包与交付
+
+前六阶段已完成，第七阶段的设计说明已写入 `docs/design-note.md`，压缩包待按赛事命名规则打包。
+
+## 性能实测
+
+以本地文件方式打开，首屏资源（HTML、CSS 与页面脚本，未压缩）首页为 37.6 KB，文章列表、作品、关于三页在 32.9 KB 到 33.9 KB 之间，文章详情页在 57.7 KB 到 59.8 KB 之间。gzip 后分别为 12.3 KB、11.4 KB 到 11.5 KB、19.5 KB 到 20.2 KB。单页 DOM 节点最多 353 个，横向溢出在 360、753、1425 三种宽度下均为 0。
 

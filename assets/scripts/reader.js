@@ -76,14 +76,34 @@
     fallback();
   }
 
+  /* 复制结果通过独立状态区播报，便于读屏软件获取反馈 */
+  var liveRegion = null;
+
+  function announce(message) {
+    if (!liveRegion) {
+      liveRegion = document.createElement('p');
+      liveRegion.className = 'visually-hidden';
+      liveRegion.setAttribute('role', 'status');
+      liveRegion.setAttribute('aria-live', 'polite');
+      document.body.appendChild(liveRegion);
+    }
+    liveRegion.textContent = message;
+  }
+
   /* 代码块：语言标签、复制、超长折叠 */
   function countLines(text) {
     return String(text || '').replace(/\n$/, '').split('\n').length;
   }
 
   function enhanceBlock(pre) {
-    if (pre.parentNode && pre.parentNode.className === 'code-block') {
+    var host = pre.parentNode;
+    if (host && typeof host.className === 'string' && host.className.split(/\s+/).indexOf('code-block') !== -1) {
       return;
+    }
+
+    /* 代码块可横向滚动，需要能通过键盘到达 */
+    if (!pre.getAttribute('tabindex')) {
+      pre.setAttribute('tabindex', '0');
     }
 
     var code = pre.getElementsByTagName('code')[0] || null;
@@ -135,6 +155,7 @@
     copy.addEventListener('click', function () {
       copyText(code ? code.textContent : pre.textContent, function () {
         copy.textContent = '已复制';
+        announce('代码已复制到剪贴板');
         window.setTimeout(function () {
           copy.textContent = '复制';
         }, 1600);
@@ -417,7 +438,12 @@
     button.setAttribute('aria-label', '回到顶部');
     button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 19V5"></path><path d="M5 12l7-7 7 7"></path></svg>';
     button.addEventListener('click', function () {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      var smooth = allow('motion');
+      try {
+        window.scrollTo({ top: 0, behavior: smooth ? 'smooth' : 'auto' });
+      } catch (error) {
+        window.scrollTo(0, 0);
+      }
     });
     document.body.appendChild(button);
 

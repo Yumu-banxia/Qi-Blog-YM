@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>文章页的阅读增强：按需渲染与代码块操作 · Qi 的个人博客</title>
+  <meta name="description" content="文章页的阅读增强：目录、进度、字号控制与代码块操作，以及公式与代码高亮的按需加载条件。">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="stylesheet" href="../assets/styles/tokens.css">
+  <link rel="stylesheet" href="../assets/styles/base.css">
+  <link rel="stylesheet" href="../assets/styles/article.css">
+  <script src="../assets/scripts/capability.js"></script>
+  <script src="../assets/scripts/main.js" defer></script>
+  <script src="../assets/scripts/reader.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="../index.html">Qi 的个人博客</a>
+
+      <nav id="site-nav" class="site-nav" aria-label="主导航">
+        <ul>
+          <li><a href="../index.html">首页</a></li>
+          <li><a href="posts.html" aria-current="page">文章</a></li>
+          <li><a href="works.html">作品</a></li>
+          <li><a href="about.html">关于</a></li>
+        </ul>
+      </nav>
+
+      <button class="icon-button theme-toggle" type="button" aria-pressed="false" title="切换明暗主题">
+        <span class="visually-hidden">切换明暗主题</span>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+        </svg>
+      </button>
+
+      <button class="icon-button nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" title="展开导航">
+        <span class="visually-hidden">展开导航</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+          <path d="M3 7h18"></path>
+          <path d="M3 12h18"></path>
+          <path d="M3 17h18"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <article class="section">
+      <div class="container">
+        <header class="article-head">
+          <h1>文章页的阅读增强：按需渲染与代码块操作</h1>
+          <p class="meta"><time datetime="2026-10-13">2026-10-13</time><span>阅读体验</span></p>
+          <ul class="tags">
+            <li>阅读体验</li>
+            <li>渲染性能</li>
+            <li>无障碍</li>
+          </ul>
+        </header>
+
+        <div class="prose">
+          <p>列表页与文章页共用同一套样式，差别集中在正文。额外的阅读能力放在 <code>article.css</code> 与 <code>reader.js</code> 两份文件里，只在文章详情页加载，其余页面的首屏请求不受影响。</p>
+
+          <h2>目录与阅读进度</h2>
+          <p>目录由脚本扫描正文的小节标题生成，标题不足三条时不予生成，避免为一段短文制造冗余结构。当前所处的小节由观察器在视口中判断，并用 <code>aria-current</code> 标注。</p>
+          <p>阅读进度条固定在页面顶部，高度 2 像素，位移交给 <code>transform: scaleX()</code>；滚动回调合并到 <code>requestAnimationFrame</code> 内，一次滚动最多写入一次样式。回到顶部的按钮在纵向滚动超过 400 像素后出现，动效档位受限时改为瞬时定位。</p>
+
+          <h2>代码块的操作</h2>
+          <p>每个代码块会补一条工具条，显示语言、折叠与复制。折叠阈值取 16 行，超过的部分默认收起，按钮的 <code>aria-expanded</code> 随状态同步。</p>
+          <p>复制优先使用异步剪贴板接口，接口不可用时回退到临时文本域与 <code>execCommand</code>，这条回退在以本地文件打开时同样有效。复制结果由独立的状态区播报，读屏软件可以获取反馈。</p>
+          <p>代码块横向可滚动，因此补上了 <code>tabindex</code>，键盘能够进入并查看长行。下面两段文字取自 <code>reader.js</code>。</p>
+
+          <pre><code class="language-js">function enhanceBlock(pre) {
+  /* 代码块可横向滚动，需要能通过键盘到达 */
+  if (!pre.getAttribute('tabindex')) {
+    pre.setAttribute('tabindex', '0');
+  }
+
+  var source = code ? code.textContent : pre.textContent;
+  var lines = countLines(source);
+
+  if (lines > FOLD_MIN_LINES) {
+    var toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'code-action';
+    toggle.textContent = '展开';
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.addEventListener('click', function () {
+      var folded = wrapper.getAttribute('data-folded') === 'true';
+      wrapper.setAttribute('data-folded', folded ? 'false' : 'true');
+      toggle.setAttribute('aria-expanded', folded ? 'true' : 'false');
+      toggle.textContent = folded ? '收起' : '展开';
+    });
+    wrapper.setAttribute('data-folded', 'true');
+    bar.appendChild(toggle);
+  }
+}
+
+function copyText(value, onDone) {
+  function fallback() {
+    var area = document.createElement('textarea');
+    area.value = value;
+    area.setAttribute('readonly', 'readonly');
+    area.style.position = 'fixed';
+    area.style.top = '-1000px';
+    document.body.appendChild(area);
+    area.select();
+    try {
+      document.execCommand('copy');
+      onDone();
+    } catch (error) {
+      /* 复制不可用时保留原文 */
+    }
+    document.body.removeChild(area);
+  }
+
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+    navigator.clipboard.writeText(value).then(onDone, fallback);
+    return;
+  }
+  fallback();
+}</code></pre>
+
+          <h2>公式与代码高亮的按需加载</h2>
+          <p>两份渲染库都不进入首屏请求队列。代码高亮只在页面存在代码块时请求，公式渲染只在正文确实命中公式分隔符时请求，两者都要求当前档位允许按需脚本。</p>
+          <p>判定公式的方式是读取正文的纯文本，跳过 <code>pre</code> 与 <code>code</code> 内部的文本后再匹配分隔符，因此代码里的美元符号不会造成误判。行内公式写作 $O(n\log n)$ 这种形式，独立成段的公式如下。</p>
+          <p>$$ \int_{-\infty}^{\infty} e^{-x^{2}}\,\mathrm{d}x = \sqrt{\pi} $$</p>
+          <p>KaTeX 的脚本约 273 KB、字体约 296 KB，highlight.js 约 129 KB，三者都只在命中内容时进入请求队列。命中的内容越少，被跳过的资源越多。</p>
+
+          <h2>字号控制</h2>
+          <p>字号分为小、中、大三档，改动的是正文基准字号，小节标题、代码与公式按同一比例缩放，避免只放大正文造成层级错位。选择结果写入 <code>localStorage</code>，存储不可用时只影响当前会话。</p>
+
+          <h2>小结</h2>
+          <p>阅读增强的取舍标准是：对阅读有直接帮助的能力保留，代价偏大的渲染库按内容出现情况加载，低端档位整体让位给正文。</p>
+        </div>
+
+        <nav class="article-pager" aria-label="文章导航">
+          <ul class="pager">
+            <li class="pager-prev"><a href="post-capability.html" rel="prev"><span class="pager-dir">更早的一篇</span><span class="pager-title">按访问端能力分级，把高开销表现留给用得上的人</span></a></li>
+          </ul>
+          <p class="pager-back"><a href="posts.html">返回文章列表</a></p>
+        </nav>
+      </div>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© <span data-year>2026</span> Qi 的个人博客</p>
+    </div>
+  </footer>
+</body>
+</html>

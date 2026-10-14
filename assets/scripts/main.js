@@ -30,12 +30,26 @@
   }
 
   var themeToggle = document.querySelector('.theme-toggle');
+  var themeColorMeta = document.querySelector('meta[name="theme-color"]');
+
+  /* 同步移动端浏览器界面的底色，避免地址栏与页面底色不一致 */
+  function syncThemeColor() {
+    if (!themeColorMeta || !window.getComputedStyle) {
+      return;
+    }
+    var value = window.getComputedStyle(root).getPropertyValue('--color-bg');
+    value = value ? value.replace(/^\s+|\s+$/g, '') : '';
+    if (value) {
+      themeColorMeta.setAttribute('content', value);
+    }
+  }
 
   function renderTheme(theme) {
     root.setAttribute('data-theme', theme);
     if (themeToggle) {
       themeToggle.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
     }
+    syncThemeColor();
   }
 
   function persistTheme(theme) {
@@ -134,6 +148,20 @@
   var revealTargets = document.querySelectorAll('[data-reveal]');
 
   function revealElement(node) {
+    /* 同一列表内的条目按顺序错开出现，避免整页条目同时位移 */
+    var parent = node.parentNode;
+    var delay = 0;
+    if (parent && parent.children && node.style) {
+      for (var order = 0; order < parent.children.length; order += 1) {
+        if (parent.children[order] === node) {
+          delay = Math.min(order * 70, 210);
+          break;
+        }
+      }
+      if (delay) {
+        node.style.transitionDelay = delay + 'ms';
+      }
+    }
     if (node.classList) {
       node.classList.add('is-revealed');
       return;
@@ -151,7 +179,7 @@
           revealObserver.unobserve(entries[i].target);
         }
       }
-    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+    }, { rootMargin: '0px 0px -2% 0px', threshold: 0.05 });
 
     for (var target = 0; target < revealTargets.length; target += 1) {
       revealObserver.observe(revealTargets[target]);

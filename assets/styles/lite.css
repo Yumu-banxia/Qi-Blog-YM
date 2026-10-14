@@ -153,3 +153,64 @@ svg {
   color: #555555;
 }
 
+/* 星图在缺少现代 CSS 支持时退化为普通链接清单 */
+.star-chart {
+  position: static;
+  width: auto;
+  height: auto;
+  aspect-ratio: auto;
+  margin: 12px 0;
+}
+
+.chart-lines,
+.chart-spark {
+  display: none;
+}
+
+.chart-nodes {
+  position: static;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chart-node {
+  position: static;
+  display: inline;
+  margin-right: 12px;
+}
+
+.pager {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pager li {
+  display: inline;
+  margin-right: 12px;
+}
+
+.chart-node a {
+  display: inline;
+  color: #1a4fd6;
+  text-decoration: none;
+}
+
+.chart-label {
+  font-size: 16px;
+}
+
+.chart-meta,
+.hero-motto,
+.pager-dir {
+  color: #555555;
+  font-size: 13px;
+}
+
+.article-pager {
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid #cccccc;
+}
+

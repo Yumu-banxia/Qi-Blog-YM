@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>按访问端能力分级，把高开销表现留给用得上的人 · Qi 的个人博客</title>
+  <meta name="description" content="访问端能力分级：判定信号、四档划分与各档允许的表现项，以及样式与脚本读取分级结果的方式。">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="stylesheet" href="../assets/styles/tokens.css">
+  <link rel="stylesheet" href="../assets/styles/base.css">
+  <link rel="stylesheet" href="../assets/styles/article.css">
+  <script src="../assets/scripts/capability.js"></script>
+  <script src="../assets/scripts/main.js" defer></script>
+  <script src="../assets/scripts/reader.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="../index.html">Qi 的个人博客</a>
+
+      <nav id="site-nav" class="site-nav" aria-label="主导航">
+        <ul>
+          <li><a href="../index.html">首页</a></li>
+          <li><a href="posts.html" aria-current="page">文章</a></li>
+          <li><a href="works.html">作品</a></li>
+          <li><a href="about.html">关于</a></li>
+        </ul>
+      </nav>
+
+      <button class="icon-button theme-toggle" type="button" aria-pressed="false" title="切换明暗主题">
+        <span class="visually-hidden">切换明暗主题</span>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+        </svg>
+      </button>
+
+      <button class="icon-button nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" title="展开导航">
+        <span class="visually-hidden">展开导航</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+          <path d="M3 7h18"></path>
+          <path d="M3 12h18"></path>
+          <path d="M3 17h18"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <article class="section">
+      <div class="container">
+        <header class="article-head">
+          <h1>按访问端能力分级，把高开销表现留给用得上的人</h1>
+          <p class="meta"><time datetime="2026-10-12">2026-10-12</time><span>兼容性</span></p>
+          <ul class="tags">
+            <li>兼容性</li>
+            <li>渐进增强</li>
+            <li>降级策略</li>
+          </ul>
+        </header>
+
+        <div class="prose">
+          <p>同一份页面要在两台差异极大的设备上都可读，一台是星号键还在用的功能机，一台是当下的桌面浏览器。做法是在首屏同步判断一次访问端的条件，把结果写入根元素的 <code>data-cap</code>，之后样式与脚本都读这一处标记。</p>
+
+          <h2>三处判定信号</h2>
+          <p>第一处是 User-Agent。功能机与老式移动浏览器的特征片段归为一组，命中即判为最低档；现代内核但硬件受限的机型归为另一组，命中即判为受限档。</p>
+          <p>第二处是硬件与网络线索：逻辑核数、设备内存、省流模式，以及连接类型处于 2G 级的情形。</p>
+          <p>第三处是运行时接口的可用性：<code>CSS.supports('--probe: 0')</code>、<code>matchMedia</code>、<code>requestAnimationFrame</code>、<code>IntersectionObserver</code>、<code>backdrop-filter</code>，以及画布上下文能否取得。基础接口缺失时，脚本与样式的增强部分都无法成立。</p>
+
+          <h2>四档与允许项</h2>
+          <div class="table-wrap" tabindex="0">
+            <table>
+              <caption>判定条件与各档允许的表现项</caption>
+              <thead>
+                <tr>
+                  <th scope="col">档位</th>
+                  <th scope="col">判定条件</th>
+                  <th scope="col">允许项</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">high</th>
+                  <td>逻辑核数 8 以上，内存 4 GB 以上，且未偏好减少动态效果</td>
+                  <td>全部动效与增强</td>
+                </tr>
+                <tr>
+                  <th scope="row">medium</th>
+                  <td>未命中其他条件的现代设备</td>
+                  <td>动效、模糊、按需脚本</td>
+                </tr>
+                <tr>
+                  <th scope="row">low</th>
+                  <td>受限 UA、双核以内、内存 1 GB 以内、省流模式或 2G 级连接</td>
+                  <td>静态内容与基础表现</td>
+                </tr>
+                <tr>
+                  <th scope="row">minimal</th>
+                  <td>功能机 UA，或缺少自定义属性等基础接口</td>
+                  <td>静态内容</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2>样式与脚本如何读取</h2>
+          <p>样式直接按属性选择器分支处理。受限档位下页头的模糊背景被关掉，最低档位下导航改为常驻排列，两个按钮隐藏，动画与过渡整体停用。</p>
+          <p>脚本通过 <code>Capability.allow(name)</code> 查询单项能力，通过 <code>Capability.load(name, src)</code> 决定是否注入高开销脚本。未获允许时返回 <code>false</code>，资源不进入请求队列，这一点比加载之后再判断更省。</p>
+
+          <pre><code class="language-js">var tier = 'medium';
+var reason = 'baseline';
+var limited = (cores &gt; 0 &amp;&amp; cores &lt;= 2) || (memory &gt; 0 &amp;&amp; memory &lt;= 1);
+
+if (legacyUA || !env.customProperties || !env.matchMedia || !env.animationFrame) {
+  tier = 'minimal';
+  reason = legacyUA ? 'legacy-ua' : 'limited-runtime';
+} else if (CONSTRAINED_PATTERN.test(ua) || limited || saveData || slowNetwork) {
+  tier = 'low';
+  reason = (saveData || slowNetwork) ? 'network' : 'hardware';
+} else if (cores &gt;= 8 &amp;&amp; memory &gt;= 4 &amp;&amp; !prefersReducedMotion) {
+  tier = 'high';
+  reason = 'ample';
+}
+
+var features = {
+  effects: tier === 'high' || tier === 'medium',
+  motion: (tier === 'high' || tier === 'medium') &amp;&amp; !prefersReducedMotion,
+  blur: env.blur &amp;&amp; (tier === 'high' || tier === 'medium'),
+  optionalScripts: tier === 'high' || tier === 'medium'
+};
+
+root.setAttribute('data-cap', tier);
+root.setAttribute('data-cap-reason', reason);</code></pre>
+
+          <h2>最低档位换一套样式</h2>
+          <p>仅有静态内容还不够。缺少自定义属性与弹性布局支持时，主样式表本身就无法正确排版，因此最低档位会追加一份兜底样式表。这份样式不使用自定义属性、弹性布局、网格与逻辑属性，正文以 16 像素、1.6 行高呈现，导航回到行内排列。</p>
+          <p>根元素上的 <code>data-cap-reason</code> 保留了判定来源，便于在真机上核对是哪一组信号触发了降级。</p>
+
+          <h2>小结</h2>
+          <p>分级的意义在于把表现层的开销与访问端的实际条件对齐。判断只做一次，写在根元素上，样式与脚本共用；判断结果与来源都留在文档里，便于复核。</p>
+        </div>
+
+        <nav class="article-pager" aria-label="文章导航">
+          <ul class="pager">
+            <li class="pager-prev"><a href="post-no-build.html" rel="prev"><span class="pager-dir">更早的一篇</span><span class="pager-title">这个博客没有构建步骤</span></a></li>
+            <li class="pager-next"><a href="post-reader.html" rel="next"><span class="pager-dir">更新的一篇</span><span class="pager-title">文章页的阅读增强：按需渲染与代码块操作</span></a></li>
+          </ul>
+          <p class="pager-back"><a href="posts.html">返回文章列表</a></p>
+        </nav>
+      </div>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© <span data-year>2026</span> Qi 的个人博客</p>
+    </div>
+  </footer>
+</body>
+</html>

@@ -32,6 +32,7 @@ body {
   font-family: var(--font-sans);
   font-size: var(--text-base);
   line-height: var(--leading-base);
+  caret-color: var(--color-accent);
   color: var(--color-text);
   background-color: var(--color-bg);
 }
@@ -312,7 +313,154 @@ button {
 .hero {
   position: relative;
   overflow: hidden;
-  padding-block: calc(var(--section-space) + var(--space-4));
+  padding-block: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem) var(--section-space);
+}
+
+.hero-inner {
+  display: grid;
+  gap: var(--space-7);
+  align-items: center;
+}
+
+@media (min-width: 60rem) {
+  .hero-inner {
+    grid-template-columns: minmax(0, 1fr) minmax(20rem, 25rem);
+    gap: var(--space-8);
+  }
+}
+
+.hero h1 {
+  font-size: clamp(1.85rem, 1.4rem + 1.9vw, 2.9rem);
+}
+
+.hero-motto {
+  margin: var(--space-5) 0 0;
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
+/* 站点星图：栏目作为星座节点，连线与星点由内联 SVG 与样式生成 */
+.star-chart {
+  position: relative;
+  inline-size: 100%;
+  max-inline-size: 25rem;
+  aspect-ratio: 10 / 6.4;
+  margin-inline: auto;
+}
+
+.chart-lines {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: visible;
+  color: var(--color-chart-line);
+}
+
+.chart-lines path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 0;
+  animation: chart-draw var(--duration-draw) var(--ease-out) both;
+}
+
+.chart-lines path:nth-child(2) {
+  animation-delay: 110ms;
+}
+
+.chart-lines path:nth-child(3) {
+  animation-delay: 220ms;
+}
+
+.chart-lines path:nth-child(4) {
+  animation-delay: 330ms;
+}
+
+@keyframes chart-draw {
+  from {
+    stroke-dashoffset: 100;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.chart-nodes {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chart-node {
+  position: absolute;
+  inset-block-start: var(--y);
+  inset-inline-start: var(--x);
+  inline-size: max-content;
+  transform: translate(-50%, -50%);
+}
+
+.chart-node a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: var(--space-1) var(--space-2);
+  color: inherit;
+  text-decoration: none;
+}
+
+.chart-spark {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  color: var(--color-accent);
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.chart-node a:hover .chart-spark,
+.chart-node a:focus-visible .chart-spark {
+  transform: scale(1.2);
+}
+
+.chart-label {
+  font-size: 0.9375rem;
+  line-height: 1.3;
+}
+
+.chart-node a:hover .chart-label,
+.chart-node a:focus-visible .chart-label {
+  color: var(--color-link);
+}
+
+.chart-meta {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  line-height: 1.3;
+}
+
+.chart-node-home {
+  --x: 12%;
+  --y: 18%;
+}
+
+.chart-node-posts {
+  --x: 74%;
+  --y: 14%;
+}
+
+.chart-node-works {
+  --x: 86%;
+  --y: 52%;
+}
+
+.chart-node-about {
+  --x: 36%;
+  --y: 84%;
 }
 
 /* 星河：两层星点，位移量与平铺尺寸取整以保持循环无缝 */
@@ -468,8 +616,16 @@ button {
   font-size: var(--text-sm);
 }
 
+/* 元信息之间以细分隔线区分，避免使用居中小圆点 */
 .meta > * + *::before {
-  content: " · ";
+  content: "";
+  display: inline-block;
+  inline-size: 1px;
+  block-size: 0.72em;
+  margin-inline: var(--space-2);
+  background-color: currentColor;
+  opacity: 0.45;
+  vertical-align: -0.06em;
 }
 
 .meta time {
@@ -499,8 +655,7 @@ button {
   line-height: 1.6;
 }
 
-.actions,
-.pager {
+.actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-4);
@@ -547,6 +702,53 @@ button {
   max-width: var(--measure);
 }
 
+.prose :is(h2, h3, h4) {
+  scroll-margin-top: calc(var(--header-height) + var(--space-4));
+}
+
+.prose p {
+  text-wrap: pretty;
+}
+
+/* 表格：正文中的对照内容，窄屏由外层容器承担横向滚动 */
+.table-wrap {
+  overflow-x: auto;
+  margin: 0 0 var(--space-5);
+}
+
+.prose table {
+  inline-size: 100%;
+  min-inline-size: 28rem;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.prose caption {
+  margin-bottom: var(--space-3);
+  color: var(--color-muted);
+  text-align: start;
+}
+
+.prose th,
+.prose td {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  text-align: start;
+  vertical-align: top;
+}
+
+.prose thead th {
+  border-bottom-color: var(--color-text);
+  color: var(--color-muted);
+  font-weight: 600;
+}
+
+.prose tbody tr:last-child th,
+.prose tbody tr:last-child td {
+  border-bottom: 0;
+}
+
 .prose pre {
   overflow-x: auto;
   margin: 0 0 var(--space-4);
@@ -567,8 +769,16 @@ button {
 .prose blockquote {
   margin: 0 0 var(--space-4);
   padding-inline-start: var(--space-4);
-  border-inline-start: 3px solid var(--color-border);
+  border-inline-start: 1px solid var(--color-border);
   color: var(--color-muted);
+}
+
+/* 横向滚动区域沿用页面配色，滚动条不落入浏览器默认外观 */
+.prose pre,
+.table-wrap,
+.article-toc {
+  scrollbar-color: var(--color-border) transparent;
+  scrollbar-width: thin;
 }
 
 /* 滚动出现：仅在具备观察器且允许动效时隐藏待入场元素 */

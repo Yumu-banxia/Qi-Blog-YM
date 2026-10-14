@@ -34,8 +34,46 @@
   font-size: calc(var(--text-base) * var(--reading-scale));
 }
 
+.prose h2 {
+  font-size: calc(var(--text-2xl) * var(--reading-scale));
+}
+
+.prose h3 {
+  font-size: calc(var(--text-xl) * var(--reading-scale));
+}
+
 .article-head {
   margin-bottom: var(--space-5);
+}
+
+.article-head h1 {
+  font-size: clamp(1.9rem, 1.4rem + 2vw, 3rem);
+}
+
+/* 宽屏下正文与目录分成两栏，目录随滚动停在视口上方 */
+@media (min-width: 64rem) {
+  article > .container {
+    display: grid;
+    grid-template-columns: minmax(12rem, 15rem) minmax(0, var(--measure));
+    column-gap: var(--space-6);
+    justify-content: center;
+    align-items: start;
+  }
+
+  .article-head,
+  .article-tools,
+  .prose,
+  .article-pager {
+    grid-column: 2;
+  }
+
+  .article-toc {
+    grid-column: 1;
+    grid-row: 1 / span 4;
+    position: sticky;
+    inset-block-start: calc(var(--header-height) + var(--space-4));
+    margin: 0;
+  }
 }
 
 /* 阅读进度 */
@@ -235,6 +273,94 @@
   overflow-x: auto;
   overflow-y: hidden;
   padding-block: var(--space-2);
+}
+
+/* 上下篇导航 */
+.article-pager {
+  margin-top: var(--space-7);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+.pager {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pager a {
+  display: block;
+  block-size: 100%;
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.pager a:hover,
+.pager a:active {
+  background-color: var(--color-bg);
+  border-color: var(--color-link);
+  color: var(--color-link);
+}
+
+.pager-dir {
+  display: block;
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
+.pager-title {
+  display: block;
+  font-size: var(--text-lg);
+}
+
+.pager-back {
+  margin: var(--space-4) 0 0;
+}
+
+@media (min-width: 48rem) {
+  .pager {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+  }
+
+  .pager-next a {
+    text-align: end;
+  }
+}
+
+/* 打印与导出为 PDF 时隐藏交互组件，并展开折叠的代码块 */
+@media print {
+  .reading-progress,
+  .article-tools,
+  .article-toc,
+  .back-to-top,
+  .code-toolbar {
+    display: none !important;
+  }
+
+  .code-block {
+    overflow: visible;
+  }
+
+  .code-block[data-folded="true"] pre {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .code-block[data-folded="true"]::after {
+    content: none;
+  }
+
+  .pager a {
+    background-color: transparent;
+    border-color: #999999;
+  }
 }
 
 /* 代码高亮配色 */

@@ -70,8 +70,7 @@
     motion: (tier === 'high' || tier === 'medium') && !prefersReducedMotion,
     blur: env.blur && (tier === 'high' || tier === 'medium'),
     smoothScroll: tier === 'high' || tier === 'medium',
-    optionalScripts: tier === 'high' || tier === 'medium',
-    codeHighlight: tier !== 'minimal'
+    optionalScripts: tier === 'high' || tier === 'medium'
   };
 
   root.setAttribute('data-cap', tier);

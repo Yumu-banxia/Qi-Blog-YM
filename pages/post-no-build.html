@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>这个博客没有构建步骤 · Qi 的个人博客</title>
+  <meta name="description" content="不使用构建工具与框架的原因：本地文件直开、首屏体积与维护成本三个角度。">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="stylesheet" href="../assets/styles/tokens.css">
+  <link rel="stylesheet" href="../assets/styles/base.css">
+  <link rel="stylesheet" href="../assets/styles/article.css">
+  <script src="../assets/scripts/capability.js"></script>
+  <script src="../assets/scripts/main.js" defer></script>
+  <script src="../assets/scripts/reader.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="../index.html">Qi 的个人博客</a>
+
+      <nav id="site-nav" class="site-nav" aria-label="主导航">
+        <ul>
+          <li><a href="../index.html">首页</a></li>
+          <li><a href="posts.html" aria-current="page">文章</a></li>
+          <li><a href="works.html">作品</a></li>
+          <li><a href="about.html">关于</a></li>
+        </ul>
+      </nav>
+
+      <button class="icon-button theme-toggle" type="button" aria-pressed="false" title="切换明暗主题">
+        <span class="visually-hidden">切换明暗主题</span>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+        </svg>
+      </button>
+
+      <button class="icon-button nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" title="展开导航">
+        <span class="visually-hidden">展开导航</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+          <path d="M3 7h18"></path>
+          <path d="M3 12h18"></path>
+          <path d="M3 17h18"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <article class="section">
+      <div class="container">
+        <header class="article-head">
+          <h1>这个博客没有构建步骤</h1>
+          <p class="meta"><time datetime="2026-10-11">2026-10-11</time><span>技术选型</span></p>
+          <ul class="tags">
+            <li>技术选型</li>
+            <li>性能预算</li>
+            <li>静态站点</li>
+          </ul>
+        </header>
+
+        <div class="prose">
+          <p>仓库里没有 <code>package.json</code>，也没有构建产物目录。提交上去的文件就是浏览器读取的文件，改完之后刷新页面即可看到结果。</p>
+
+          <h2>本地文件直接打开</h2>
+          <p>作品以压缩包形式提交，评审很可能双击 <code>index.html</code> 查看。这种打开方式下页面处于 <code>file://</code> 环境，ES module 受跨源策略限制，外部模块与本地数据文件的读取都会失败。因此脚本全部使用 classic script，资源引用一律用相对地址。</p>
+          <p>构建产物通常以站点根目录为前提，用绝对地址引用样式与脚本，本地文件打开时会全部取不到。这一条直接排除了若干静态站点生成器。</p>
+
+          <pre><code class="language-html">&lt;link rel="stylesheet" href="../assets/styles/tokens.css"&gt;
+&lt;link rel="stylesheet" href="../assets/styles/base.css"&gt;
+&lt;script src="../assets/scripts/capability.js"&gt;&lt;/script&gt;
+&lt;script src="../assets/scripts/main.js" defer&gt;&lt;/script&gt;</code></pre>
+
+          <h2>首屏体积</h2>
+          <p>预算定为：HTML 与 CSS 未压缩合计 120 KB 以内，页面自带脚本 40 KB 以内。实施后的实测值是，首页首屏 29.6 KB；文章列表、作品、关于三页在 26.4 KB 到 27.9 KB 之间；文章详情页 47.9 KB，多出来的是文章正文本身。</p>
+          <p>脚本方面，每页加载的 <code>capability.js</code> 为 5.4 KB、<code>main.js</code> 为 5.1 KB，文章页再加 <code>reader.js</code> 的 14 KB。这些数字按未压缩体积相加，第三方渲染库单列，只在文章页命中内容时进入请求队列。</p>
+
+          <h2>维护成本</h2>
+          <p>页头与页尾在每一页各存一份，改动一处需要逐页同步，代价与页面数量成正比。约定是页面超过八页时改用一次性生成脚本，脚本只在开发阶段运行，产物仍然是纯静态文件。</p>
+          <p>一并放弃的还有组件库与原子化样式。按需引入依赖构建阶段完成，无构建方案下要么整份引入，要么自己写。当前样式表 gzip 后约 5.3 KB，而体量最小的通用样式库为 3.6 KB 且组件极少，引入之后还得覆盖默认观感。</p>
+
+          <h2>代价与边界</h2>
+          <p>没有类型检查，也没有自动化测试；第三方库升级要手动替换本地文件；模板复用依靠复制。项目维持在一位作者、十余个页面的规模时，这些代价可以接受。页面数量或协作人数继续增长时，这套做法的收益会下降，届时应把生成脚本提前到构建阶段。</p>
+
+          <h2>小结</h2>
+          <p>省掉构建步骤换来的是打开即用与更小的体积，付出的是模板同步与依赖管理上的手工劳动。判断依据是项目规模与交付方式，两边的数字都摆在明处，取舍就清楚了。</p>
+        </div>
+
+        <nav class="article-pager" aria-label="文章导航">
+          <ul class="pager">
+            <li class="pager-next"><a href="post-capability.html" rel="next"><span class="pager-dir">更新的一篇</span><span class="pager-title">按访问端能力分级，把高开销表现留给用得上的人</span></a></li>
+          </ul>
+          <p class="pager-back"><a href="posts.html">返回文章列表</a></p>
+        </nav>
+      </div>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© <span data-year>2026</span> Qi 的个人博客</p>
+    </div>
+  </footer>
+</body>
+</html>
