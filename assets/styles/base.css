@@ -346,12 +346,6 @@ button {
   max-inline-size: 25rem;
   aspect-ratio: 10 / 6.4;
   margin-inline: auto;
-
-  /* 指针交互的输入值，由 chart.js 写入；缺省值保证静态状态与原样一致 */
-  --nx: 0;
-  --ny: 0;
-  --px: 0px;
-  --py: 0px;
 }
 
 /* 可变换层：缩放与平移作用在这一层，节点与连线同处一层 */
@@ -420,8 +414,8 @@ button {
   inset-block-start: var(--y);
   inset-inline-start: var(--x);
   inline-size: max-content;
-  transform: translate(-50%, -50%)
-    translate3d(calc(var(--nx) * var(--depth, 0px)), calc(var(--ny) * var(--depth, 0px)), 0);
+  /* 漂浮偏移由 chart.js 写入，缺省为 0，静态形态与基准位置一致 */
+  transform: translate(-50%, -50%) translate3d(var(--ox, 0px), var(--oy, 0px), 0);
 }
 
 .chart-node a {
@@ -465,25 +459,21 @@ button {
 .chart-node-home {
   --x: 12%;
   --y: 18%;
-  --depth: 4px;
 }
 
 .chart-node-posts {
   --x: 74%;
   --y: 14%;
-  --depth: 7px;
 }
 
 .chart-node-works {
   --x: 86%;
   --y: 52%;
-  --depth: 10px;
 }
 
 .chart-node-about {
   --x: 36%;
   --y: 84%;
-  --depth: 6px;
 }
 /* 聚焦反馈：指针悬停或键盘聚焦某个节点时，相关元素保持，其余退到背景 */
 .chart-node,
@@ -523,33 +513,6 @@ button {
 
 .chart-node.is-dragging a {
   cursor: grabbing;
-}
-
-/* 观测星：跟随指针落点，离开星图时淡出 */
-.chart-pointer {
-  position: absolute;
-  inset-block-start: 0;
-  inset-inline-start: 0;
-  display: block;
-  inline-size: 0.75rem;
-  block-size: 0.75rem;
-  margin: -0.375rem 0 0 -0.375rem;
-  color: var(--color-accent);
-  opacity: 0;
-  pointer-events: none;
-  transform: translate3d(var(--px), var(--py), 0) scale(var(--inverse, 1));
-  transition: opacity var(--duration-base) var(--ease-out);
-  will-change: transform;
-}
-
-.chart-pointer svg {
-  display: block;
-  inline-size: 100%;
-  block-size: 100%;
-}
-
-.star-chart[data-pointer="on"] .chart-pointer {
-  opacity: 0.85;
 }
 
 /* 星河：两层星点，位移量与平铺尺寸取整以保持循环无缝 */
