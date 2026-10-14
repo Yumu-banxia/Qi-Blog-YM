@@ -1,8 +1,10 @@
-/* 站点星图的漂浮交互
- * 四个节点各自独立漂浮：以基准位置为锚，受低频扰动与回中弹力作用，带阻尼地缓慢游走，
- * 相位各不相同，因此彼此的位移方向与节奏都不同。连线用三次贝塞尔连接，随节点平滑变化。
- * 指针只用于高亮（悬停或键盘聚焦）与操作（拖动节点、缩放、平移），不再牵引节点或留下跟随星点。
- * 只在允许动效的档位启用；页面隐藏或星图离开视口时暂停；系统偏好减少动态效果时终止。
+/* 站点星图的流动交互
+ * 一、自主漂浮：每个节点以基准位置为锚，受低频扰动、回中弹力与阻尼作用，相位与振幅各不相同，
+ *     位移因此互不关联，观感像各自漂浮的天体。
+ * 二、指针响应：指针在画布内移动时形成力场，近旁节点被推开，并带一点沿指针移动方向的推力，
+ *     指针移开后节点在弹力作用下缓慢回到基准位置。
+ * 三、连线用三次贝塞尔连接，随节点位置连续变化。
+ * 指针不做跟随装饰，不牵引连线形状；节点可拖动、画布可缩放平移。只在允许动效的档位启用。
  */
 (function () {
   'use strict';
@@ -33,11 +35,17 @@
   var MAX_SCALE = 1.8;
   var ZOOM_STEP = 0.14;
 
-  /* 漂浮参数：回中弹力、低频扰动、阻尼与偏移上限，单位均为画布百分比 */
-  var SPRING = 3.2;
-  var FORCE = 12.5;
-  var DAMPING = 0.9;
-  var OFFSET_LIMIT = 5;
+  /* 漂浮：回中弹力、扰动幅度、阻尼与偏移上限，单位为画布百分比 */
+  var SPRING = 3.6;
+  var FORCE = 22;
+  var DAMPING = 0.88;
+  var OFFSET_LIMIT_PX = 60;
+
+  /* 指针力场：半径按像素计，靠近的节点被推开并带一点沿运动方向的推力 */
+  var POINTER_RADIUS = 200;
+  var POINTER_ACCEL = 4000;
+  var VELOCITY_WEIGHT = 0.5;
+  var VELOCITY_LIMIT = 700;
 
   var items = [];
   var width = 1;
@@ -52,6 +60,12 @@
   var frame = 0;
   var frameId = 0;
   var lastTime = 0;
+
+  var pointerPos = { x: 0, y: 0 };
+  var pointerVel = { x: 0, y: 0 };
+  var pointerStrength = 0;
+  var pointerInside = false;
+  var pointerOnNode = false;
 
   function clamp(value, min, max) {
     return value < min ? min : (value > max ? max : value);
@@ -123,6 +137,35 @@
     applyOffset(item);
   }
 
+  /* 指针力场：在像素空间计算距离与方向，再换算回百分比加速度 */
+  function pointerForce(item, fx, fy) {
+    if (pointerStrength < 0.01) {
+      return;
+    }
+
+    var nodePx = ((item.baseX + item.ox) / 100) * width;
+    var nodePy = ((item.baseY + item.oy) / 100) * height;
+    var dx = nodePx - pointerPos.x;
+    var dy = nodePy - pointerPos.y;
+    var distance = Math.sqrt(dx * dx + dy * dy);
+    if (distance > POINTER_RADIUS) {
+      return;
+    }
+
+    var falloff = 1 - distance / POINTER_RADIUS;
+    var push = falloff * falloff * POINTER_ACCEL * pointerStrength;
+
+    if (distance > 0.5) {
+      fx.v += ((dx / distance) * push * 100) / width;
+      fy.v += ((dy / distance) * push * 100) / height;
+    }
+
+    var vx = clamp(pointerVel.x, -VELOCITY_LIMIT, VELOCITY_LIMIT);
+    var vy = clamp(pointerVel.y, -VELOCITY_LIMIT, VELOCITY_LIMIT);
+    fx.v += ((vx * VELOCITY_WEIGHT * falloff) * 100) / width;
+    fy.v += ((vy * VELOCITY_WEIGHT * falloff) * 100) / height;
+  }
+
   function tick(now) {
     frameId = 0;
     if (!enabled) {
@@ -136,26 +179,40 @@
     if (!paused) {
       var damp = Math.pow(DAMPING, dt * 60);
       var seconds = now / 1000;
+      var target = pointerInside && !pointerOnNode && !pan ? 1 : 0;
+      pointerStrength += (target - pointerStrength) * Math.min(1, dt * 8);
 
       for (var i = 0; i < items.length; i += 1) {
         var item = items[i];
-        if (drag && drag.index === i) {
-          continue;
+
+        if (!(drag && drag.index === i)) {
+          var amp = FORCE * item.amp;
+          var force = { v: Math.sin(seconds / 4.5 + item.phase) * Math.cos(seconds / 9 + item.phase2) * amp };
+          var forceY = { v: Math.cos(seconds / 5.5 + item.phase2) * Math.sin(seconds / 8.5 + item.phase) * amp };
+          force.v -= item.ox * SPRING;
+          forceY.v -= item.oy * SPRING;
+
+          pointerForce(item, force, forceY);
+
+          item.vx = (item.vx + force.v * dt) * damp;
+          item.vy = (item.vy + forceY.v * dt) * damp;
+          item.ox += item.vx * dt;
+          item.oy += item.vy * dt;
+
+          var limitX = (OFFSET_LIMIT_PX * 100) / width;
+          var limitY = (OFFSET_LIMIT_PX * 100) / height;
+          item.ox = clamp(item.ox, -limitX, limitX);
+          item.oy = clamp(item.oy, -limitY, limitY);
+          item.ox = clamp(item.ox, 3 - item.baseX, 97 - item.baseX);
+          item.oy = clamp(item.oy, 3 - item.baseY, 97 - item.baseY);
         }
 
-        /* 每个节点有各自的振幅系数，位移的方向与幅度因此互不相同 */
-        var amp = FORCE * item.amp;
-        var fx = Math.sin(seconds / 6 + item.phase) * Math.cos(seconds / 13 + item.phase2) * amp;
-        var fy = Math.cos(seconds / 7.5 + item.phase2) * Math.sin(seconds / 12 + item.phase) * amp;
-        fx -= item.ox * SPRING;
-        fy -= item.oy * SPRING;
-
-        item.vx = (item.vx + fx * dt) * damp;
-        item.vy = (item.vy + fy * dt) * damp;
-        item.ox = clamp(item.ox + item.vx * dt, -OFFSET_LIMIT, OFFSET_LIMIT);
-        item.oy = clamp(item.oy + item.vy * dt, -OFFSET_LIMIT, OFFSET_LIMIT);
         applyOffset(item);
       }
+
+      /* 指针速度按帧衰减，指针停止后推力随之消失 */
+      pointerVel.x *= 0.9;
+      pointerVel.y *= 0.9;
 
       /* 连线每两帧重算一次，位移平缓，观感一致而开销减半 */
       if (frame % 2 === 0) {
@@ -282,17 +339,22 @@
     });
 
     link.addEventListener('pointerenter', function () {
+      // 指针停在节点上时不施加推力，保证节点稳定可点
+      pointerOnNode = true;
       setFocus(index);
     });
     link.addEventListener('pointerleave', function () {
+      pointerOnNode = false;
       if (!drag) {
         setFocus(-1);
       }
     });
     link.addEventListener('focus', function () {
+      pointerOnNode = true;
       setFocus(index);
     });
     link.addEventListener('blur', function () {
+      pointerOnNode = false;
       setFocus(-1);
     });
   }
@@ -365,15 +427,49 @@
     }
   }
 
+  /* 指针位置换算到画布坐标系，并记录移动速度供力场使用 */
   function onCanvasMove(event) {
-    if (!enabled || paused || !pan || pan.pointerId !== event.pointerId) {
+    if (!enabled || paused) {
       return;
     }
-    view.x = pan.originX + (event.clientX - pan.startX);
-    view.y = pan.originY + (event.clientY - pan.startY);
-    clampView();
-    applyView();
-    canvas.setAttribute('data-dragging', 'true');
+
+    if (pan && pan.pointerId === event.pointerId) {
+      view.x = pan.originX + (event.clientX - pan.startX);
+      view.y = pan.originY + (event.clientY - pan.startY);
+      clampView();
+      applyView();
+      canvas.setAttribute('data-dragging', 'true');
+      return;
+    }
+
+    if (drag) {
+      return;
+    }
+
+    var box = chart.getBoundingClientRect();
+    if (!box.width || !box.height) {
+      return;
+    }
+
+    var centerX = box.width / 2;
+    var centerY = box.height / 2;
+    var localX = (event.clientX - box.left - centerX - view.x) / view.scale + centerX;
+    var localY = (event.clientY - box.top - centerY - view.y) / view.scale + centerY;
+
+    if (pointerInside) {
+      pointerVel.x += (localX - pointerPos.x) * 12;
+      pointerVel.y += (localY - pointerPos.y) * 12;
+    }
+
+    pointerPos.x = localX;
+    pointerPos.y = localY;
+    pointerInside = true;
+  }
+
+  function onCanvasLeave() {
+    pointerInside = false;
+    pointerVel.x = 0;
+    pointerVel.y = 0;
   }
 
   function onWheel(event) {
@@ -429,7 +525,7 @@
         vy: 0,
         phase: (i * 1.7) % 6.28,
         phase2: (i * 2.9 + 1.1) % 6.28,
-        amp: 0.75 + (i % 4) * 0.15
+        amp: 0.8 + (i % 4) * 0.13
       });
       if (link) {
         bindNode(link, i);
@@ -442,6 +538,7 @@
 
   canvas.addEventListener('pointerdown', onCanvasDown);
   canvas.addEventListener('pointermove', onCanvasMove, { passive: true });
+  canvas.addEventListener('pointerleave', onCanvasLeave);
   canvas.addEventListener('wheel', onWheel, { passive: false });
   window.addEventListener('pointerup', finishPan, true);
   window.addEventListener('pointercancel', finishPan, true);
