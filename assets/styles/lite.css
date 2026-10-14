@@ -163,7 +163,8 @@ svg {
 }
 
 .chart-lines,
-.chart-spark {
+.chart-spark,
+.chart-pointer {
   display: none;
 }
 
