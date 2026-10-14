@@ -1,0 +1,10 @@
+# 默认按文本处理，仓库内统一使用 LF，避免跨平台检出时的行尾抖动
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff2 binary

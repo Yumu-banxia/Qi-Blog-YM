@@ -66,10 +66,7 @@
 
   /* 各档位允许加载的高开销项 */
   var features = {
-    effects: tier === 'high' || tier === 'medium',
     motion: (tier === 'high' || tier === 'medium') && !prefersReducedMotion,
-    blur: env.blur && (tier === 'high' || tier === 'medium'),
-    smoothScroll: tier === 'high' || tier === 'medium',
     optionalScripts: tier === 'high' || tier === 'medium'
   };
 

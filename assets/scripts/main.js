@@ -162,13 +162,7 @@
         node.style.transitionDelay = delay + 'ms';
       }
     }
-    if (node.classList) {
-      node.classList.add('is-revealed');
-      return;
-    }
-    if (!node.className || node.className.indexOf('is-revealed') === -1) {
-      node.className = node.className ? node.className + ' is-revealed' : 'is-revealed';
-    }
+    node.classList.add('is-revealed');
   }
 
   if (motionAllowed && revealTargets.length && typeof window.IntersectionObserver === 'function') {

@@ -332,6 +332,11 @@
   .pager-next a {
     text-align: end;
   }
+
+  /* 只有一侧存在时，条目留在所属列，避免失去方向感 */
+  .pager > li:only-child.pager-next {
+    grid-column: 2;
+  }
 }
 
 /* 打印与导出为 PDF 时隐藏交互组件，并展开折叠的代码块 */

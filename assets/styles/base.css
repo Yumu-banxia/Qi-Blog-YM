@@ -775,8 +775,7 @@ button {
 
 /* 横向滚动区域沿用页面配色，滚动条不落入浏览器默认外观 */
 .prose pre,
-.table-wrap,
-.article-toc {
+.table-wrap {
   scrollbar-color: var(--color-border) transparent;
   scrollbar-width: thin;
 }
@@ -794,11 +793,56 @@ button {
     transform var(--duration-slow) var(--ease-out);
 }
 
-/* 打印与输出为 PDF 时不保留待入场状态 */
+/* 打印与输出为 PDF：展开待入场内容，去掉屏幕专用的控件与装饰 */
 @media print {
   [data-reveal] {
     opacity: 1 !important;
     transform: none !important;
+  }
+
+  .site-nav,
+  .nav-toggle,
+  .theme-toggle,
+  .skip-link,
+  .star-chart {
+    display: none !important;
+  }
+
+  .site-header {
+    position: static;
+    background-color: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-bottom-color: #999999;
+  }
+
+  a,
+  .list-title a {
+    color: #000000;
+    text-decoration: underline;
+  }
+
+  .actions a,
+  .pager a {
+    display: inline;
+    padding: 0;
+    background-color: transparent;
+    border: 0;
+    color: #000000;
+  }
+
+  .tags li {
+    border-color: #999999;
+    color: #333333;
+  }
+
+  .site-footer {
+    border-top-color: #999999;
+    color: #333333;
+  }
+
+  .section {
+    padding-block: 1.5rem;
   }
 }
 
