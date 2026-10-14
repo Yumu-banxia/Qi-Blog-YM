@@ -24,12 +24,12 @@
     "isPartOf": { "@type": "Blog", "name": "Qi 的个人博客" }
   }
   </script>
-  <link rel="stylesheet" href="../assets/styles/tokens.css">
-  <link rel="stylesheet" href="../assets/styles/base.css">
-  <link rel="stylesheet" href="../assets/styles/article.css">
-  <script src="../assets/scripts/capability.js"></script>
-  <script src="../assets/scripts/main.js" defer></script>
-  <script src="../assets/scripts/reader.js" defer></script>
+  <link rel="stylesheet" href="../assets/styles/tokens.css?v=8">
+  <link rel="stylesheet" href="../assets/styles/base.css?v=8">
+  <link rel="stylesheet" href="../assets/styles/article.css?v=8">
+  <script src="../assets/scripts/capability.js?v=8"></script>
+  <script src="../assets/scripts/main.js?v=8" defer></script>
+  <script src="../assets/scripts/reader.js?v=8" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主要内容</a>
@@ -89,10 +89,10 @@
           <p>作品以压缩包形式提交，评审很可能双击 <code>index.html</code> 查看。这种打开方式下页面处于 <code>file://</code> 环境，ES module 受跨源策略限制，外部模块与本地数据文件的读取都会失败。因此脚本全部使用 classic script，资源引用一律用相对地址。</p>
           <p>构建产物通常以站点根目录为前提，用绝对地址引用样式与脚本，本地文件打开时会全部取不到。这一条直接排除了若干静态站点生成器。</p>
 
-          <pre><code class="language-html">&lt;link rel="stylesheet" href="../assets/styles/tokens.css"&gt;
-&lt;link rel="stylesheet" href="../assets/styles/base.css"&gt;
-&lt;script src="../assets/scripts/capability.js"&gt;&lt;/script&gt;
-&lt;script src="../assets/scripts/main.js" defer&gt;&lt;/script&gt;</code></pre>
+          <pre><code class="language-html">&lt;link rel="stylesheet" href="../assets/styles/tokens.css?v=8"&gt;
+&lt;link rel="stylesheet" href="../assets/styles/base.css?v=8"&gt;
+&lt;script src="../assets/scripts/capability.js?v=8"&gt;&lt;/script&gt;
+&lt;script src="../assets/scripts/main.js?v=8" defer&gt;&lt;/script&gt;</code></pre>
 
           <h2>首屏体积</h2>
           <p>预算定为：HTML 与 CSS 未压缩合计 120 KB 以内，页面自带脚本 40 KB 以内。实施后的实测值是，首页首屏 29.6 KB；文章列表、作品、关于三页在 26.4 KB 到 27.9 KB 之间；文章详情页 47.9 KB，多出来的是文章正文本身。</p>

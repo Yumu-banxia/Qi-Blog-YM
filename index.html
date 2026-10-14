@@ -13,11 +13,11 @@
   <meta property="og:title" content="Qi 的个人博客">
   <meta property="og:description" content="个人博客：个人介绍、文章阅读与作品陈列。">
   <meta property="og:locale" content="zh_CN">
-  <link rel="stylesheet" href="assets/styles/tokens.css">
-  <link rel="stylesheet" href="assets/styles/base.css">
-  <script src="assets/scripts/capability.js"></script>
-  <script src="assets/scripts/main.js" defer></script>
-  <script src="assets/scripts/chart.js?v=7" defer></script>
+  <link rel="stylesheet" href="assets/styles/tokens.css?v=8">
+  <link rel="stylesheet" href="assets/styles/base.css?v=8">
+  <script src="assets/scripts/capability.js?v=8"></script>
+  <script src="assets/scripts/main.js?v=8" defer></script>
+  <script src="assets/scripts/chart.js?v=8" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主要内容</a>
@@ -70,7 +70,7 @@
           <p class="hero-motto">博观代码，客绘星河</p>
         </div>
 
-        <nav class="star-chart" aria-label="站点星图">
+        <nav class="star-chart" aria-label="站点星图" aria-describedby="chart-help">
           <div class="chart-canvas">
             <svg class="chart-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
               <path pathLength="100" d="M12 18 L74 14"></path>
@@ -118,6 +118,7 @@
             </ul>
           </div>
         </nav>
+        <p id="chart-help" class="visually-hidden">星图的四个节点可用方向键移动位置，按住 Shift 加快；滚轮可放大，双击可复位。</p>
       </div>
     </section>
 

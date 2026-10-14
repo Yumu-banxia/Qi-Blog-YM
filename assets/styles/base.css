@@ -415,7 +415,7 @@ button {
   inset-block-start: var(--y);
   inset-inline-start: var(--x);
   inline-size: max-content;
-  /* 漂浮偏移由 chart.js 写入，缺省为 0，静态形态与基准位置一致 */
+  /* 静态时偏移由变量给出（缺省 0）；脚本运行时改为直接写内联 transform */
   transform: translate(-50%, -50%) translate3d(var(--ox, 0px), var(--oy, 0px), 0);
 }
 
@@ -508,6 +508,41 @@ button {
   cursor: grab;
   -webkit-user-drag: none;
   user-select: none;
+}
+/* 高对比模式：线条与星形改用系统色，淡化改用系统灰，不再依赖透明度 */
+@media (forced-colors: active) {
+  .hero::before,
+  .hero::after {
+    display: none;
+  }
+
+  .chart-lines {
+    color: CanvasText;
+  }
+
+  .chart-lines path.is-focus {
+    stroke: Highlight;
+    stroke-width: 2;
+  }
+
+  .chart-spark {
+    color: CanvasText;
+  }
+
+  .chart-node.is-focus .chart-spark,
+  .chart-node.is-focus .chart-label {
+    color: Highlight;
+  }
+
+  .chart-node.is-dim,
+  .chart-lines path.is-dim {
+    opacity: 1;
+  }
+
+  .chart-node.is-dim .chart-label,
+  .chart-node.is-dim .chart-meta {
+    color: GrayText;
+  }
 }
 
 .chart-node.is-dragging {

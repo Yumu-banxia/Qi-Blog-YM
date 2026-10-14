@@ -60,6 +60,8 @@
   var frame = 0;
   var frameId = 0;
   var lastTime = 0;
+  var lastApply = 0;
+  var frameInterval = 1000 / 40;
 
   var pointerPos = { x: 0, y: 0 };
   var pointerVel = { x: 0, y: 0 };
@@ -92,13 +94,6 @@
     return item.baseY + item.oy;
   }
 
-  function unit(dx, dy) {
-    var length = Math.sqrt(dx * dx + dy * dy);
-    if (length < 0.0001) {
-      return { x: 0, y: 0, length: 0 };
-    }
-    return { x: dx / length, y: dy / length, length: length };
-  }
 
   /* 每个节点的切线取前后两个邻点的连线方向，也就是曲线穿过该节点时的走向。
      相邻两条边在同一节点处的进出方向因此完全一致，四段边连成一条平滑的闭合曲线，
@@ -123,11 +118,9 @@
       if (length < 0.0001) {
         self.tx = 0;
         self.ty = 0;
-        self.strength = 0;
       } else {
         self.tx = tx / length;
         self.ty = ty / length;
-        self.strength = 1;
       }
     }
   }
@@ -156,10 +149,12 @@
       var length = Math.sqrt(dx * dx + dy * dy) || 1;
       var offset = length * 0.3;
 
-      var c1x = ax + a.tx * offset * a.strength;
-      var c1y = ay + a.ty * offset * a.strength;
-      var c2x = bx - b.tx * offset * b.strength;
-      var c2y = by - b.ty * offset * b.strength;
+      var offA = a.tx !== 0 || a.ty !== 0 ? offset : 0;
+      var offB = b.tx !== 0 || b.ty !== 0 ? offset : 0;
+      var c1x = ax + a.tx * offA;
+      var c1y = ay + a.ty * offA;
+      var c2x = bx - b.tx * offB;
+      var c2y = by - b.ty * offB;
 
       path.setAttribute('d',
         'M' + ax.toFixed(2) + ' ' + ay.toFixed(2) +
@@ -169,9 +164,11 @@
     }
   }
 
+  /* 每帧只写一次 transform，省去自定义属性解析带来的额外样式重算 */
   function applyOffset(item) {
-    item.el.style.setProperty('--ox', ((item.ox / 100) * width).toFixed(2) + 'px');
-    item.el.style.setProperty('--oy', ((item.oy / 100) * height).toFixed(2) + 'px');
+    var x = ((item.ox / 100) * width).toFixed(2);
+    var y = ((item.oy / 100) * height).toFixed(2);
+    item.el.style.transform = 'translate(-50%, -50%) translate3d(' + x + 'px, ' + y + 'px, 0)';
   }
 
   function resetOffset(item) {
@@ -217,7 +214,14 @@
       return;
     }
 
-    var dt = lastTime ? Math.min((now - lastTime) / 1000, 0.05) : 0.016;
+    /* 节点运动缓慢，按 40 帧上限更新，减少样式重算 */
+    if (lastApply && now - lastApply < frameInterval) {
+      schedule();
+      return;
+    }
+
+    var dt = lastApply ? Math.min((now - lastApply) / 1000, 0.05) : 0.016;
+    lastApply = now;
     lastTime = now;
     frame += 1;
 
@@ -320,6 +324,21 @@
     drag = null;
   }
 
+  /* 基准位置：拖动与键盘微调共用，写入后清零漂浮偏移并重绘连线 */
+  function setBasePosition(index, x, y) {
+    var item = items[index];
+    item.baseX = clamp(x, POSITION_MIN, POSITION_MAX);
+    item.baseY = clamp(y, POSITION_MIN, POSITION_MAX);
+    item.el.style.setProperty('--x', item.baseX.toFixed(2) + '%');
+    item.el.style.setProperty('--y', item.baseY.toFixed(2) + '%');
+    item.ox = 0;
+    item.oy = 0;
+    item.vx = 0;
+    item.vy = 0;
+    applyOffset(item);
+    draw();
+  }
+
   function bindNode(link, index) {
     function onDown(event) {
       if (!enabled || paused) {
@@ -357,26 +376,38 @@
       }
 
       drag.moved = true;
-      var item = items[drag.index];
-      item.el.classList.add('is-dragging');
+      items[drag.index].el.classList.add('is-dragging');
       canvas.setAttribute('data-dragging', 'true');
-
-      item.baseX = clamp(drag.originX + (dx * 100) / width, POSITION_MIN, POSITION_MAX);
-      item.baseY = clamp(drag.originY + (dy * 100) / height, POSITION_MIN, POSITION_MAX);
-      item.el.style.setProperty('--x', item.baseX.toFixed(2) + '%');
-      item.el.style.setProperty('--y', item.baseY.toFixed(2) + '%');
-      item.ox = 0;
-      item.oy = 0;
-      item.vx = 0;
-      item.vy = 0;
-      applyOffset(item);
-      draw();
+      setBasePosition(drag.index, drag.originX + (dx * 100) / width, drag.originY + (dy * 100) / height);
     }
 
     /* 拖动时浏览器不应把链接当作可拖拽元素，也不参与文本选择 */
     link.setAttribute('draggable', 'false');
     link.addEventListener('dragstart', function (event) {
       event.preventDefault();
+    });
+
+    /* 键盘微调：方向键移动节点，按住 Shift 加快 */
+    link.addEventListener('keydown', function (event) {
+      var step = event.shiftKey ? 4 : 1.5;
+      var dx = 0;
+      var dy = 0;
+      var key = event.key;
+
+      if (key === 'ArrowLeft' || event.keyCode === 37) {
+        dx = -step;
+      } else if (key === 'ArrowRight' || event.keyCode === 39) {
+        dx = step;
+      } else if (key === 'ArrowUp' || event.keyCode === 38) {
+        dy = -step;
+      } else if (key === 'ArrowDown' || event.keyCode === 40) {
+        dy = step;
+      } else {
+        return;
+      }
+
+      event.preventDefault();
+      setBasePosition(index, items[index].baseX + dx, items[index].baseY + dy);
     });
 
     link.addEventListener('pointerdown', onDown);
@@ -466,6 +497,10 @@
     if (event.target && event.target.closest && event.target.closest('.chart-node')) {
       return;
     }
+    /* 触摸在初始比例下不平移，避免与页面纵向滚动互相干扰 */
+    if (event.pointerType === 'touch' && view.scale <= 1.001) {
+      return;
+    }
     pan = {
       pointerId: event.pointerId,
       startX: event.clientX,
@@ -540,6 +575,7 @@
     }
     paused = next;
     if (!paused) {
+      lastApply = 0;
       lastTime = 0;
       schedule();
     }
@@ -576,7 +612,6 @@
         vy: 0,
         tx: 0,
         ty: 0,
-        strength: 0,
         phase: (i * 1.7) % 6.28,
         phase2: (i * 2.9 + 1.1) % 6.28,
         amp: 0.8 + (i % 4) * 0.13
