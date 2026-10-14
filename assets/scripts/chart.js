@@ -92,8 +92,50 @@
     return item.baseY + item.oy;
   }
 
-  /* 连线用三次贝塞尔，控制点沿同侧法线偏移，得到平滑且同向的弧线 */
+  function unit(dx, dy) {
+    var length = Math.sqrt(dx * dx + dy * dy);
+    if (length < 0.0001) {
+      return { x: 0, y: 0, length: 0 };
+    }
+    return { x: dx / length, y: dy / length, length: length };
+  }
+
+  /* 每个节点的切线取前后两个邻点的连线方向，也就是曲线穿过该节点时的走向。
+     相邻两条边在同一节点处的进出方向因此完全一致，四段边连成一条平滑的闭合曲线，
+     节点移动时切线连续变化，形状不会翻转，也不会出现折角。前后邻点重合时退化为直线。 */
+  function buildTangents() {
+    var count = items.length;
+    for (var i = 0; i < count; i += 1) {
+      var self = items[i];
+      var prev = items[(i + count - 1) % count];
+      var next = items[(i + 1) % count];
+
+      var tx = nodeX(next) - nodeX(prev);
+      var ty = nodeY(next) - nodeY(prev);
+      var length = Math.sqrt(tx * tx + ty * ty);
+
+      if (length < 0.0001) {
+        tx = nodeX(next) - nodeX(self);
+        ty = nodeY(next) - nodeY(self);
+        length = Math.sqrt(tx * tx + ty * ty);
+      }
+
+      if (length < 0.0001) {
+        self.tx = 0;
+        self.ty = 0;
+        self.strength = 0;
+      } else {
+        self.tx = tx / length;
+        self.ty = ty / length;
+        self.strength = 1;
+      }
+    }
+  }
+
+  /* 连线用三次贝塞尔，控制点沿两端节点的切线方向偏移，曲率随节点位置连续变化 */
   function draw() {
+    buildTangents();
+
     for (var i = 0; i < EDGES.length; i += 1) {
       var path = lines[i];
       if (!path) {
@@ -112,14 +154,17 @@
       var dx = bx - ax;
       var dy = by - ay;
       var length = Math.sqrt(dx * dx + dy * dy) || 1;
-      var bend = length * 0.16;
-      var nx = -dy / length;
-      var ny = dx / length;
+      var offset = length * 0.3;
+
+      var c1x = ax + a.tx * offset * a.strength;
+      var c1y = ay + a.ty * offset * a.strength;
+      var c2x = bx - b.tx * offset * b.strength;
+      var c2y = by - b.ty * offset * b.strength;
 
       path.setAttribute('d',
         'M' + ax.toFixed(2) + ' ' + ay.toFixed(2) +
-        ' C' + (ax + dx * 0.28 + nx * bend).toFixed(2) + ' ' + (ay + dy * 0.28 + ny * bend).toFixed(2) +
-        ' ' + (ax + dx * 0.72 + nx * bend).toFixed(2) + ' ' + (ay + dy * 0.72 + ny * bend).toFixed(2) +
+        ' C' + c1x.toFixed(2) + ' ' + c1y.toFixed(2) +
+        ' ' + c2x.toFixed(2) + ' ' + c2y.toFixed(2) +
         ' ' + bx.toFixed(2) + ' ' + by.toFixed(2));
     }
   }
@@ -529,6 +574,9 @@
         oy: 0,
         vx: 0,
         vy: 0,
+        tx: 0,
+        ty: 0,
+        strength: 0,
         phase: (i * 1.7) % 6.28,
         phase2: (i * 2.9 + 1.1) % 6.28,
         amp: 0.8 + (i % 4) * 0.13
