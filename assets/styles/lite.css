@@ -162,6 +162,11 @@ svg {
   margin: 12px 0;
 }
 
+.chart-canvas {
+  position: static;
+  transform: none;
+}
+
 .chart-lines,
 .chart-spark,
 .chart-pointer {

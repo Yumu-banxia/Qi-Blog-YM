@@ -71,55 +71,57 @@
         </div>
 
         <nav class="star-chart" aria-label="站点星图">
-          <svg class="chart-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-            <path pathLength="100" d="M12 18 L74 14"></path>
-            <path pathLength="100" d="M74 14 L86 52"></path>
-            <path pathLength="100" d="M86 52 L36 84"></path>
-            <path pathLength="100" d="M36 84 L12 18"></path>
-          </svg>
-          <ul class="chart-nodes">
-            <li class="chart-node chart-node-home">
-              <a href="index.html" aria-current="page">
-                <svg class="chart-spark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
-                  <path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12Z"></path>
-                </svg>
-                <span class="chart-label">首页</span>
-                <span class="chart-meta">站点说明</span>
-              </a>
-            </li>
-            <li class="chart-node chart-node-posts">
-              <a href="pages/posts.html">
-                <svg class="chart-spark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
-                  <path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12Z"></path>
-                </svg>
-                <span class="chart-label">文章</span>
-                <span class="chart-meta">3 篇</span>
-              </a>
-            </li>
-            <li class="chart-node chart-node-works">
-              <a href="pages/works.html">
-                <svg class="chart-spark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
-                  <path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12Z"></path>
-                </svg>
-                <span class="chart-label">作品</span>
-                <span class="chart-meta">3 项</span>
-              </a>
-            </li>
-            <li class="chart-node chart-node-about">
-              <a href="pages/about.html">
-                <svg class="chart-spark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
-                  <path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12Z"></path>
-                </svg>
-                <span class="chart-label">关于</span>
-                <span class="chart-meta">个人介绍</span>
-              </a>
-            </li>
-          </ul>
-          <span class="chart-pointer" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
-              <path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12Z"></path>
+          <div class="chart-canvas">
+            <svg class="chart-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+              <path pathLength="100" d="M12 18 L74 14"></path>
+              <path pathLength="100" d="M74 14 L86 52"></path>
+              <path pathLength="100" d="M86 52 L36 84"></path>
+              <path pathLength="100" d="M36 84 L12 18"></path>
             </svg>
-          </span>
+            <ul class="chart-nodes">
+              <li class="chart-node chart-node-home">
+                <a href="index.html" aria-current="page">
+                  <svg class="chart-spark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+                    <path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12Z"></path>
+                  </svg>
+                  <span class="chart-label">首页</span>
+                  <span class="chart-meta">站点说明</span>
+                </a>
+              </li>
+              <li class="chart-node chart-node-posts">
+                <a href="pages/posts.html">
+                  <svg class="chart-spark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+                    <path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12Z"></path>
+                  </svg>
+                  <span class="chart-label">文章</span>
+                  <span class="chart-meta">3 篇</span>
+                </a>
+              </li>
+              <li class="chart-node chart-node-works">
+                <a href="pages/works.html">
+                  <svg class="chart-spark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+                    <path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12Z"></path>
+                  </svg>
+                  <span class="chart-label">作品</span>
+                  <span class="chart-meta">3 项</span>
+                </a>
+              </li>
+              <li class="chart-node chart-node-about">
+                <a href="pages/about.html">
+                  <svg class="chart-spark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+                    <path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12Z"></path>
+                  </svg>
+                  <span class="chart-label">关于</span>
+                  <span class="chart-meta">个人介绍</span>
+                </a>
+              </li>
+            </ul>
+            <span class="chart-pointer" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+                <path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12Z"></path>
+              </svg>
+            </span>
+          </div>
         </nav>
       </div>
     </section>

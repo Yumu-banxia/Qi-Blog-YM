@@ -1,13 +1,16 @@
-/* 站点星图的指针交互
- * 指针进入星图后充当引力源：连线朝指针方向弯曲，节点按各自深度位移，
- * 距离最近的节点转为活跃星，指针落点显示一枚跟随的观测星。
- * 只在允许动效的档位启用；指针静止且数值回位后停止逐帧更新。
+/* 站点星图的图谱式交互
+ * 画布可放大与平移：滚轮以指针为中心缩放，放大后拖动空白处平移，双击或 Esc 回到初始视图。
+ * 节点可以拖动，位置写回 --x 与 --y，连线端点随之更新；
+ * 指针悬停或键盘聚焦某个节点时，该节点与相连连线保持，其余退到背景；
+ * 指针在画布内移动时，节点按各自深度做小幅视差。
+ * 只在允许动效的档位启用；页面隐藏或星图离开视口时暂停；系统偏好减少动态效果时终止。
  */
 (function () {
   'use strict';
 
   var chart = document.querySelector('.star-chart');
-  if (!chart) {
+  var canvas = chart ? chart.querySelector('.chart-canvas') : null;
+  if (!chart || !canvas) {
     return;
   }
 
@@ -16,167 +19,125 @@
     return;
   }
 
-  var svg = chart.querySelector('.chart-lines');
+  var svg = canvas.querySelector('.chart-lines');
   var lines = svg ? svg.querySelectorAll('path') : [];
-  if (!lines.length) {
+  var nodeList = canvas.querySelectorAll('.chart-node');
+  var pointer = canvas.querySelector('.chart-pointer');
+  if (!lines.length || !nodeList.length) {
     return;
   }
 
-  var EASE = 0.18;
-  var SETTLE = 0.004;
-  var ACTIVE_RADIUS = 56;
-  var PULL_RANGE = 70;
-  var PULL_STRENGTH = 0.55;
   var EDGES = [[0, 1], [1, 2], [2, 3], [3, 0]];
+  var EASE = 0.16;
+  var SETTLE = 0.002;
+  var DRAG_THRESHOLD = 4;
+  var POSITION_MIN = 6;
+  var POSITION_MAX = 94;
+  var MIN_SCALE = 1;
+  var MAX_SCALE = 1.8;
+  var ZOOM_STEP = 0.14;
 
-  var NODES = [
-    { x: 12, y: 18, depth: 0, el: chart.querySelector('.chart-node-home') },
-    { x: 74, y: 14, depth: 0, el: chart.querySelector('.chart-node-posts') },
-    { x: 86, y: 52, depth: 0, el: chart.querySelector('.chart-node-works') },
-    { x: 36, y: 84, depth: 0, el: chart.querySelector('.chart-node-about') }
-  ];
-
-  var left = 0;
-  var top = 0;
+  var items = [];
   var width = 1;
   var height = 1;
-  var inside = false;
-  var running = false;
-  var visible = true;
   var enabled = true;
-  var active = -1;
+  var paused = false;
+  var running = false;
+  var focusIndex = -1;
+  var drag = null;
+  var pan = null;
+  var suppressClick = false;
+  var parallaxTarget = { x: 0, y: 0 };
+  var parallax = { x: 0, y: 0 };
+  var view = { scale: 1, x: 0, y: 0 };
 
-  var target = { nx: 0, ny: 0, x: 0, y: 0 };
-  var current = { nx: 0, ny: 0, x: 0, y: 0 };
-
-  /* 深度取自样式表中的 --depth，保证节点位移与连线端点用同一份数值 */
-  function readDepth(node) {
-    if (!node.el || !window.getComputedStyle) {
-      return 0;
+  function readNumber(el, name, fallback) {
+    if (!el || !window.getComputedStyle) {
+      return fallback;
     }
-    var value = parseFloat(window.getComputedStyle(node.el).getPropertyValue('--depth'));
-    return isNaN(value) ? 0 : value;
+    var value = parseFloat(window.getComputedStyle(el).getPropertyValue(name));
+    return isNaN(value) ? fallback : value;
+  }
+
+  function clamp(value, min, max) {
+    return value < min ? min : (value > max ? max : value);
   }
 
   function measure() {
-    var box = chart.getBoundingClientRect();
-    left = box.left;
-    top = box.top;
-    width = box.width || 1;
-    height = box.height || 1;
-    for (var i = 0; i < NODES.length; i += 1) {
-      NODES[i].depth = readDepth(NODES[i]);
-    }
+    width = canvas.offsetWidth || 1;
+    height = canvas.offsetHeight || 1;
   }
 
-  function nodeX(index) {
-    return NODES[index].x + (current.nx * NODES[index].depth * 100) / width;
+  function shiftX(item) {
+    return (parallax.x * item.depth * 100) / width;
   }
 
-  function nodeY(index) {
-    return NODES[index].y + (current.ny * NODES[index].depth * 100) / height;
+  function shiftY(item) {
+    return (parallax.y * item.depth * 100) / height;
   }
 
-  function drawLines() {
-    var sx = (current.x * 100) / width;
-    var sy = (current.y * 100) / height;
-
+  function draw() {
     for (var i = 0; i < EDGES.length; i += 1) {
       var path = lines[i];
       if (!path) {
         continue;
       }
-
-      var ax = nodeX(EDGES[i][0]);
-      var ay = nodeY(EDGES[i][0]);
-      var bx = nodeX(EDGES[i][1]);
-      var by = nodeY(EDGES[i][1]);
-      var mx = (ax + bx) / 2;
-      var my = (ay + by) / 2;
-      var dx = sx - mx;
-      var dy = sy - my;
-      var distance = Math.sqrt(dx * dx + dy * dy);
-      var pull = 0;
-
-      if (inside && distance < PULL_RANGE) {
-        pull = (1 - distance / PULL_RANGE) * PULL_STRENGTH;
-      }
-
-      if (pull < 0.001) {
-        path.setAttribute('d', 'M' + ax.toFixed(2) + ' ' + ay.toFixed(2) +
-          ' L' + bx.toFixed(2) + ' ' + by.toFixed(2));
-      } else {
-        path.setAttribute('d', 'M' + ax.toFixed(2) + ' ' + ay.toFixed(2) +
-          ' Q' + (mx + dx * pull).toFixed(2) + ' ' + (my + dy * pull).toFixed(2) +
-          ' ' + bx.toFixed(2) + ' ' + by.toFixed(2));
-      }
-    }
-  }
-
-  function markActive(index) {
-    if (active === index) {
-      return;
-    }
-    active = index;
-
-    for (var i = 0; i < NODES.length; i += 1) {
-      if (!NODES[i].el) {
+      var a = items[EDGES[i][0]];
+      var b = items[EDGES[i][1]];
+      if (!a || !b) {
         continue;
       }
-      if (i === index) {
-        NODES[i].el.classList.add('is-active');
-      } else {
-        NODES[i].el.classList.remove('is-active');
-      }
-    }
-
-    for (var j = 0; j < EDGES.length; j += 1) {
-      var path = lines[j];
-      if (!path) {
-        continue;
-      }
-      var linked = index >= 0 && (EDGES[j][0] === index || EDGES[j][1] === index);
-      if (linked) {
-        path.classList.add('is-active');
-      } else {
-        path.classList.remove('is-active');
-      }
+      path.setAttribute('d',
+        'M' + (a.x + shiftX(a)).toFixed(2) + ' ' + (a.y + shiftY(a)).toFixed(2) +
+        ' L' + (b.x + shiftX(b)).toFixed(2) + ' ' + (b.y + shiftY(b)).toFixed(2));
     }
   }
 
-  function pickNode() {
-    if (!inside) {
-      markActive(-1);
+  /* 视图变换：缩放围绕指针，平移限制在放大后的范围内 */
+  function applyView() {
+    canvas.style.transform = 'translate3d(' + view.x.toFixed(2) + 'px, ' + view.y.toFixed(2) +
+      'px, 0) scale(' + view.scale.toFixed(4) + ')';
+    chart.style.setProperty('--inverse', (1 / view.scale).toFixed(4));
+  }
+
+  function clampView() {
+    var maxX = (width * view.scale - width) / 2;
+    var maxY = (height * view.scale - height) / 2;
+    view.x = clamp(view.x, -maxX, maxX);
+    view.y = clamp(view.y, -maxY, maxY);
+  }
+
+  function zoomTo(next, clientX, clientY) {
+    var scale = clamp(next, MIN_SCALE, MAX_SCALE);
+    if (Math.abs(scale - view.scale) < 0.001) {
       return;
     }
-
-    var best = -1;
-    var bestDistance = ACTIVE_RADIUS;
-
-    for (var i = 0; i < NODES.length; i += 1) {
-      var dx = current.x - (NODES[i].x / 100) * width;
-      var dy = current.y - (NODES[i].y / 100) * height;
-      var distance = Math.sqrt(dx * dx + dy * dy);
-      if (distance < bestDistance) {
-        bestDistance = distance;
-        best = i;
-      }
-    }
-
-    markActive(best);
+    var box = chart.getBoundingClientRect();
+    var px = clientX - box.left - box.width / 2;
+    var py = clientY - box.top - box.height / 2;
+    var ratio = scale / view.scale;
+    view.x = px - (px - view.x) * ratio;
+    view.y = py - (py - view.y) * ratio;
+    view.scale = scale;
+    clampView();
+    applyView();
   }
 
-  function apply() {
-    chart.style.setProperty('--nx', current.nx.toFixed(4));
-    chart.style.setProperty('--ny', current.ny.toFixed(4));
-    chart.style.setProperty('--px', (current.x - width / 2).toFixed(2) + 'px');
-    chart.style.setProperty('--py', (current.y - height / 2).toFixed(2) + 'px');
-    drawLines();
-    pickNode();
+  function resetView() {
+    view.scale = 1;
+    view.x = 0;
+    view.y = 0;
+    applyView();
+  }
+
+  function applyParallax() {
+    chart.style.setProperty('--nx', parallax.x.toFixed(4));
+    chart.style.setProperty('--ny', parallax.y.toFixed(4));
+    draw();
   }
 
   function schedule() {
-    if (running || !enabled || !visible) {
+    if (running || !enabled || paused) {
       return;
     }
     running = true;
@@ -185,113 +146,333 @@
 
   function step() {
     running = false;
-    if (!enabled) {
+    if (!enabled || paused) {
       return;
     }
 
-    var keys = ['nx', 'ny', 'x', 'y'];
     var settled = true;
-
+    var keys = ['x', 'y'];
     for (var i = 0; i < keys.length; i += 1) {
       var key = keys[i];
-      var goal = target[key];
-      var next = current[key] + (goal - current[key]) * EASE;
-      var limit = (key === 'x' || key === 'y') ? 0.5 : SETTLE;
-      if (Math.abs(goal - next) < limit) {
+      var goal = parallaxTarget[key];
+      var next = parallax[key] + (goal - parallax[key]) * EASE;
+      if (Math.abs(goal - next) < SETTLE) {
         next = goal;
       } else {
         settled = false;
       }
-      current[key] = next;
+      parallax[key] = next;
     }
 
-    apply();
+    applyParallax();
 
     if (!settled) {
       schedule();
     }
   }
 
-  function onMove(event) {
-    if (!enabled) {
+  /* 聚焦：相关元素保持，其余退到背景 */
+  function setFocus(index) {
+    if (focusIndex === index) {
       return;
     }
-    if (event.pointerType === 'touch' && event.buttons === 0) {
+    focusIndex = index;
+
+    for (var i = 0; i < items.length; i += 1) {
+      var related = i === index;
+      items[i].el.classList.toggle('is-focus', related);
+      items[i].el.classList.toggle('is-dim', index >= 0 && !related);
+    }
+
+    for (var j = 0; j < EDGES.length; j += 1) {
+      var path = lines[j];
+      if (!path) {
+        continue;
+      }
+      var linked = index >= 0 && (EDGES[j][0] === index || EDGES[j][1] === index);
+      path.classList.toggle('is-focus', linked);
+      path.classList.toggle('is-dim', index >= 0 && !linked);
+    }
+  }
+
+  /* 结束拖动：指针抬起、指针取消都回到静止状态 */
+  function finishDrag(event) {
+    if (!drag) {
+      return;
+    }
+    if (event && typeof event.pointerId === 'number' && event.pointerId !== drag.pointerId) {
+      return;
+    }
+    var item = items[drag.index];
+    if (item && item.el) {
+      item.el.classList.remove('is-dragging');
+    }
+    canvas.removeAttribute('data-dragging');
+    if (drag.moved) {
+      suppressClick = true;
+      window.setTimeout(function () {
+        suppressClick = false;
+      }, 0);
+    }
+    drag = null;
+  }
+
+  /* 节点拖动：位移超过阈值即视为拖动，并抑制随后的点击跳转 */
+  function bindNode(link, index) {
+    function onDown(event) {
+      if (!enabled || paused) {
+        return;
+      }
+      if (event.pointerType === 'mouse' && event.button !== 0) {
+        return;
+      }
+      // 节点上的拖动由本模块处理，阻止事件到达画布上的平移处理
+      event.stopPropagation();
+      drag = {
+        index: index,
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        originX: items[index].x,
+        originY: items[index].y,
+        moved: false
+      };
+      if (typeof link.setPointerCapture === 'function') {
+        link.setPointerCapture(event.pointerId);
+      }
+    }
+
+    function onMove(event) {
+      if (!drag || drag.pointerId !== event.pointerId) {
+        return;
+      }
+
+      var dx = (event.clientX - drag.startX) / view.scale;
+      var dy = (event.clientY - drag.startY) / view.scale;
+
+      if (!drag.moved && Math.abs(dx) < DRAG_THRESHOLD && Math.abs(dy) < DRAG_THRESHOLD) {
+        return;
+      }
+
+      drag.moved = true;
+      items[drag.index].el.classList.add('is-dragging');
+      canvas.setAttribute('data-dragging', 'true');
+
+      var item = items[drag.index];
+      item.x = clamp(drag.originX + (dx * 100) / width, POSITION_MIN, POSITION_MAX);
+      item.y = clamp(drag.originY + (dy * 100) / height, POSITION_MIN, POSITION_MAX);
+      item.el.style.setProperty('--x', item.x.toFixed(2) + '%');
+      item.el.style.setProperty('--y', item.y.toFixed(2) + '%');
+      draw();
+    }
+
+    link.addEventListener('pointerdown', onDown);
+    link.addEventListener('pointermove', onMove);
+    link.addEventListener('pointerup', finishDrag);
+    link.addEventListener('pointercancel', finishDrag);
+    link.addEventListener('click', function (event) {
+      if (suppressClick) {
+        event.preventDefault();
+      }
+    });
+
+    link.addEventListener('pointerenter', function () {
+      setFocus(index);
+    });
+    link.addEventListener('pointerleave', function () {
+      if (!drag) {
+        setFocus(-1);
+      }
+    });
+    link.addEventListener('focus', function () {
+      setFocus(index);
+    });
+    link.addEventListener('blur', function () {
+      setFocus(-1);
+    });
+  }
+
+  /* 空白处拖动：放大后用于平移视图 */
+  function finishPan(event) {
+    if (!pan) {
+      return;
+    }
+    if (event && typeof event.pointerId === 'number' && event.pointerId !== pan.pointerId) {
+      return;
+    }
+    canvas.removeAttribute('data-dragging');
+    pan = null;
+  }
+
+  function onCanvasDown(event) {
+    if (!enabled || paused || drag) {
+      return;
+    }
+    if (event.pointerType === 'mouse' && event.button !== 0) {
+      return;
+    }
+    if (event.target && event.target.closest && event.target.closest('.chart-node')) {
+      return;
+    }
+    pan = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: view.x,
+      originY: view.y
+    };
+    if (typeof canvas.setPointerCapture === 'function') {
+      canvas.setPointerCapture(event.pointerId);
+    }
+  }
+
+  function onCanvasDragMove(event) {
+    if (!enabled || paused) {
       return;
     }
 
-    measure();
+    if (pan && pan.pointerId === event.pointerId) {
+      view.x = pan.originX + (event.clientX - pan.startX);
+      view.y = pan.originY + (event.clientY - pan.startY);
+      clampView();
+      applyView();
+      canvas.setAttribute('data-dragging', 'true');
+      return;
+    }
 
-    var x = event.clientX - left;
-    var y = event.clientY - top;
+    if (drag) {
+      return;
+    }
 
-    target.x = x;
-    target.y = y;
-    target.nx = Math.max(-1, Math.min(1, (x / width) * 2 - 1));
-    target.ny = Math.max(-1, Math.min(1, (y / height) * 2 - 1));
-    inside = true;
+    var box = chart.getBoundingClientRect();
+    if (!box.width || !box.height) {
+      return;
+    }
+    parallaxTarget.x = clamp(((event.clientX - box.left) / box.width) * 2 - 1, -1, 1);
+    parallaxTarget.y = clamp(((event.clientY - box.top) / box.height) * 2 - 1, -1, 1);
 
-    chart.setAttribute('data-pointer', 'on');
+    if (pointer) {
+      chart.style.setProperty('--px', (event.clientX - box.left - box.width / 2).toFixed(2) + 'px');
+      chart.style.setProperty('--py', (event.clientY - box.top - box.height / 2).toFixed(2) + 'px');
+      chart.setAttribute('data-pointer', 'on');
+    }
+
     schedule();
   }
 
-  function onLeave() {
-    if (!enabled) {
+  function onCanvasLeave() {
+    if (!enabled || paused) {
       return;
     }
-    inside = false;
-    target.nx = 0;
-    target.ny = 0;
+    parallaxTarget.x = 0;
+    parallaxTarget.y = 0;
     chart.removeAttribute('data-pointer');
     schedule();
   }
 
-  /* 减少动态效果在运行中开启时，撤销全部交互并回到静态星图 */
+  function onWheel(event) {
+    if (!enabled || paused) {
+      return;
+    }
+    if (event.cancelable) {
+      event.preventDefault();
+    }
+    var step = event.deltaY < 0 ? 1 + ZOOM_STEP : 1 - ZOOM_STEP;
+    zoomTo(view.scale * step, event.clientX, event.clientY);
+  }
+
+  /* 页面隐藏或星图离开视口时暂停，恢复后继续 */
+  function setPaused(next) {
+    if (paused === next) {
+      return;
+    }
+    paused = next;
+    if (!paused) {
+      schedule();
+    }
+  }
+
+  /* 减少动态效果开启时终止交互，回到静态形态 */
   function stop() {
     enabled = false;
-    inside = false;
-    active = -1;
+    setFocus(-1);
     chart.removeAttribute('data-pointer');
     chart.style.removeProperty('--nx');
     chart.style.removeProperty('--ny');
     chart.style.removeProperty('--px');
     chart.style.removeProperty('--py');
-
-    for (var i = 0; i < NODES.length; i += 1) {
-      if (NODES[i].el) {
-        NODES[i].el.classList.remove('is-active');
-      }
-    }
-    for (var j = 0; j < lines.length; j += 1) {
-      lines[j].classList.remove('is-active');
-      lines[j].removeAttribute('d');
+    canvas.style.removeProperty('transform');
+    chart.style.removeProperty('--inverse');
+    for (var i = 0; i < lines.length; i += 1) {
+      lines[i].removeAttribute('d');
     }
   }
 
-  chart.addEventListener('pointermove', onMove, { passive: true });
-  chart.addEventListener('pointerleave', onLeave);
-  chart.addEventListener('pointercancel', onLeave);
+  function build() {
+    for (var i = 0; i < nodeList.length; i += 1) {
+      var el = nodeList[i];
+      var link = el.querySelector('a');
+      items.push({
+        el: el,
+        x: readNumber(el, '--x', 50),
+        y: readNumber(el, '--y', 50),
+        depth: readNumber(el, '--depth', 0)
+      });
+      if (link) {
+        bindNode(link, i);
+      }
+    }
+    measure();
+    applyView();
+    draw();
+  }
+
+  canvas.addEventListener('pointerdown', onCanvasDown);
+  canvas.addEventListener('pointermove', onCanvasDragMove, { passive: true });
+  canvas.addEventListener('pointerleave', onCanvasLeave);
+  canvas.addEventListener('wheel', onWheel, { passive: false });
+  window.addEventListener('pointerup', finishPan, true);
+  window.addEventListener('pointercancel', finishPan, true);
+  window.addEventListener('pointerup', finishDrag, true);
+  window.addEventListener('pointercancel', finishDrag, true);
+
+  chart.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' || event.keyCode === 27) {
+      resetView();
+    }
+  });
+
+  canvas.addEventListener('dblclick', function (event) {
+    event.preventDefault();
+    resetView();
+  });
+
+  if (typeof window.ResizeObserver === 'function') {
+    var observer = new window.ResizeObserver(function () {
+      measure();
+      clampView();
+      applyView();
+      draw();
+    });
+    observer.observe(canvas);
+  } else {
+    window.addEventListener('resize', function () {
+      measure();
+      clampView();
+      applyView();
+      draw();
+    }, { passive: true });
+  }
 
   if (typeof window.IntersectionObserver === 'function') {
-    var observer = new window.IntersectionObserver(function (entries) {
-      visible = entries[0].isIntersecting;
-      if (visible) {
-        schedule();
-      }
-    }, { threshold: 0.2 });
-    observer.observe(chart);
+    var visibleObserver = new window.IntersectionObserver(function (entries) {
+      setPaused(!entries[0].isIntersecting);
+    }, { threshold: 0.05 });
+    visibleObserver.observe(chart);
   }
 
   document.addEventListener('visibilitychange', function () {
-    if (document.hidden) {
-      enabled = false;
-      return;
-    }
-    if (chart.style.getPropertyValue('--nx') === '' && !inside) {
-      return;
-    }
-    enabled = true;
-    schedule();
+    setPaused(document.hidden);
   });
 
   if (window.matchMedia) {
@@ -308,5 +489,5 @@
     }
   }
 
-  measure();
+  build();
 })();

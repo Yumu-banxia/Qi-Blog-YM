@@ -354,6 +354,18 @@ button {
   --py: 0px;
 }
 
+/* 可变换层：缩放与平移作用在这一层，节点与连线同处一层 */
+.chart-canvas {
+  position: absolute;
+  inset: 0;
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+.chart-canvas[data-dragging="true"] {
+  cursor: grabbing;
+}
+
 .chart-lines {
   position: absolute;
   inset: 0;
@@ -473,22 +485,44 @@ button {
   --y: 84%;
   --depth: 6px;
 }
-/* 指针交互的反馈：近距节点转为活跃星，相连的连线随之加亮 */
-.chart-node.is-active .chart-spark {
+/* 聚焦反馈：指针悬停或键盘聚焦某个节点时，相关元素保持，其余退到背景 */
+.chart-node,
+.chart-lines path {
+  transition: opacity var(--duration-base) var(--ease-out);
+}
+
+.chart-node.is-dim,
+.chart-lines path.is-dim {
+  opacity: 0.3;
+}
+
+.chart-node.is-focus .chart-spark {
   transform: scale(1.35);
 }
 
-.chart-node.is-active .chart-label {
+.chart-node.is-focus .chart-label {
   color: var(--color-link);
 }
 
-.chart-node.is-active .chart-meta {
+.chart-node.is-focus .chart-meta {
   color: var(--color-text);
 }
 
-.chart-lines path.is-active {
+.chart-lines path.is-focus {
   stroke: var(--color-accent);
   stroke-width: 1.5;
+}
+
+.chart-node a {
+  cursor: grab;
+}
+
+.chart-node.is-dragging {
+  z-index: 2;
+}
+
+.chart-node.is-dragging a {
+  cursor: grabbing;
 }
 
 /* 观测星：跟随指针落点，离开星图时淡出 */
@@ -503,7 +537,7 @@ button {
   color: var(--color-accent);
   opacity: 0;
   pointer-events: none;
-  transform: translate3d(var(--px), var(--py), 0);
+  transform: translate3d(var(--px), var(--py), 0) scale(var(--inverse, 1));
   transition: opacity var(--duration-base) var(--ease-out);
   will-change: transform;
 }
