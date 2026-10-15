@@ -34,7 +34,13 @@
         </ul>
       </nav>
 
-      <button class="icon-button theme-toggle" type="button" aria-pressed="false" title="切换明暗主题">
+      <button class="icon-button search-toggle" type="button" aria-expanded="false" aria-controls="search-panel" title="搜索文章">
+        <span class="visually-hidden">搜索文章</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="m20 20-3.5-3.5"></path>
+        </svg>
+      </button>      <button class="icon-button theme-toggle" type="button" aria-pressed="false" title="切换明暗主题">
         <span class="visually-hidden">切换明暗主题</span>
         <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
           <circle cx="12" cy="12" r="4"></circle>
@@ -89,6 +95,28 @@
       <p>© <span data-year>2026</span> Qi 的个人博客</p>
     </div>
   </footer>
+  <div class="search-panel" id="search-panel" hidden>
+    <div class="search-box" role="dialog" aria-modal="true" aria-labelledby="search-heading">
+      <h2 class="visually-hidden" id="search-heading">站内搜索</h2>
+      <div class="search-bar">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="m20 20-3.5-3.5"></path>
+        </svg>
+        <input type="search" class="search-input" placeholder="搜索文章" aria-label="输入关键词搜索文章" autocomplete="off">
+        <button type="button" class="search-dismiss" aria-label="关闭搜索">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+            <path d="M6 6l12 12"></path>
+            <path d="M18 6 6 18"></path>
+          </svg>
+        </button>
+      </div>
+      <p class="search-status" role="status" aria-live="polite"></p>
+      <ul class="search-results"></ul>
+    </div>
+  </div>
+
+  <script src="../assets/scripts/search.js?v=8" defer></script>
 </body>
 </html>
 

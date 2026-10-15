@@ -32,8 +32,9 @@ Qi-blog-ds/
 │  └─ about.html         个人介绍
 ├─ assets/
 │  ├─ favicon.svg        站点图标
+│  ├─ data/              站内搜索索引
 │  ├─ styles/            设计令牌、基础样式、文章样式与兜底样式
-│  ├─ scripts/           能力分级、全局交互、星图交互与阅读增强
+│  ├─ scripts/           能力分级、全局交互、星图交互、站内搜索与阅读增强
 │  ├─ vendor/            本地化的 highlight.js 与 KaTeX
 ├─ docs/                 项目说明、内容规划、设计说明与开发记录
 ├─ .editorconfig
