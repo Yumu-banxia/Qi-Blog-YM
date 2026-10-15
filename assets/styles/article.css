@@ -267,6 +267,28 @@
   padding-block: var(--space-2);
 }
 
+/* 文末延伸阅读 */
+.related {
+  margin-top: var(--space-7);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+.related-title {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-lg);
+}
+
+.related-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.related-list li + li {
+  margin-top: var(--space-2);
+}
+
 /* 上下篇导航 */
 .article-pager {
   margin-top: var(--space-7);

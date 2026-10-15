@@ -425,6 +425,21 @@
     host.parentNode.insertBefore(tools, host.nextSibling);
   }
 
+  /* 阅读时长：按正文字数估算，中文按每分钟 400 字计，不足一分钟按一分钟显示 */
+  function initReadingTime(head) {
+    var area = document.querySelector('.prose');
+    var meta = head ? head.querySelector('.meta') : null;
+    if (!area || !meta) {
+      return;
+    }
+
+    var count = (area.textContent || '').replace(/\s+/g, '').length;
+    var minutes = Math.max(1, Math.round(count / 400));
+    var slot = document.createElement('span');
+    slot.textContent = '约 ' + minutes + ' 分钟';
+    meta.appendChild(slot);
+  }
+
   /* 阅读进度与回到顶部 */
   function initScrollUi() {
     var bar = document.createElement('div');
@@ -485,6 +500,7 @@
 
     if (head) {
       initReadingSize(head);
+      initReadingTime(head);
     }
     buildToc(areas);
     loadMath(areas);
