@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>归档 · Qi 的个人博客</title>
+  <meta name="description" content="归档：全部文章按时间与标签两种方式排列。">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <meta property="og:site_name" content="Qi 的个人博客">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="归档">
+  <meta property="og:description" content="归档：全部文章按时间与标签两种方式排列。">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="stylesheet" href="../assets/styles/tokens.css?v=8">
+  <link rel="stylesheet" href="../assets/styles/base.css?v=8">
+  <script src="../assets/scripts/capability.js?v=8"></script>
+  <script src="../assets/scripts/main.js?v=8" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="../index.html">Qi 的个人博客</a>
+
+      <nav id="site-nav" class="site-nav" aria-label="主导航">
+        <ul>
+          <li><a href="../index.html">首页</a></li>
+          <li><a href="posts.html">文章</a></li>
+          <li><a href="works.html">作品</a></li>
+          <li><a href="archive.html" aria-current="page">归档</a></li>
+          <li><a href="about.html">关于</a></li>
+        </ul>
+      </nav>
+
+      <button class="icon-button search-toggle" type="button" aria-expanded="false" aria-controls="search-panel" title="搜索文章">
+        <span class="visually-hidden">搜索文章</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="m20 20-3.5-3.5"></path>
+        </svg>
+      </button>
+
+      <button class="icon-button theme-toggle" type="button" aria-pressed="false" title="切换明暗主题">
+        <span class="visually-hidden">切换明暗主题</span>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+        </svg>
+      </button>
+
+      <button class="icon-button nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" title="展开导航">
+        <span class="visually-hidden">展开导航</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+          <path d="M3 7h18"></path>
+          <path d="M3 12h18"></path>
+          <path d="M3 17h18"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="section">
+      <div class="container">
+        <h1>归档</h1>
+        <p class="lede">全部文章按时间与标签两种方式排列，共 3 篇。</p>
+
+        <h2>按时间</h2>
+        <ul class="archive-years">
+          <li class="archive-year">
+            <h3>2026</h3>
+            <ul class="archive-items">
+            <li><time datetime="2026-10-13">10-13</time><a href="post-reader.html">文章页的阅读增强：按需渲染与代码块操作</a></li>
+            <li><time datetime="2026-10-12">10-12</time><a href="post-capability.html">按访问端能力分级，把高开销表现留给用得上的人</a></li>
+            <li><time datetime="2026-10-11">10-11</time><a href="post-no-build.html">这个博客没有构建步骤</a></li>
+            </ul>
+          </li>
+        </ul>
+
+        <h2>按标签</h2>
+        <ul class="tag-cloud">
+            <li><a href="#tag-技术选型">技术选型<span class="tag-count">1</span></a></li>
+            <li><a href="#tag-兼容性">兼容性<span class="tag-count">1</span></a></li>
+            <li><a href="#tag-渐进增强">渐进增强<span class="tag-count">1</span></a></li>
+            <li><a href="#tag-降级策略">降级策略<span class="tag-count">1</span></a></li>
+            <li><a href="#tag-静态站点">静态站点<span class="tag-count">1</span></a></li>
+            <li><a href="#tag-无障碍">无障碍<span class="tag-count">1</span></a></li>
+            <li><a href="#tag-性能预算">性能预算<span class="tag-count">1</span></a></li>
+            <li><a href="#tag-渲染性能">渲染性能<span class="tag-count">1</span></a></li>
+            <li><a href="#tag-阅读体验">阅读体验<span class="tag-count">1</span></a></li>
+        </ul>
+
+        <div class="tag-groups">
+          <section class="tag-group" id="tag-技术选型" aria-labelledby="tag-技术选型-title">
+            <h3 id="tag-技术选型-title">技术选型</h3>
+            <ul class="archive-items">
+              <li><time datetime="2026-10-11">2026-10-11</time><a href="post-no-build.html">这个博客没有构建步骤</a></li>
+            </ul>
+          </section>
+          <section class="tag-group" id="tag-兼容性" aria-labelledby="tag-兼容性-title">
+            <h3 id="tag-兼容性-title">兼容性</h3>
+            <ul class="archive-items">
+              <li><time datetime="2026-10-12">2026-10-12</time><a href="post-capability.html">按访问端能力分级，把高开销表现留给用得上的人</a></li>
+            </ul>
+          </section>
+          <section class="tag-group" id="tag-渐进增强" aria-labelledby="tag-渐进增强-title">
+            <h3 id="tag-渐进增强-title">渐进增强</h3>
+            <ul class="archive-items">
+              <li><time datetime="2026-10-12">2026-10-12</time><a href="post-capability.html">按访问端能力分级，把高开销表现留给用得上的人</a></li>
+            </ul>
+          </section>
+          <section class="tag-group" id="tag-降级策略" aria-labelledby="tag-降级策略-title">
+            <h3 id="tag-降级策略-title">降级策略</h3>
+            <ul class="archive-items">
+              <li><time datetime="2026-10-12">2026-10-12</time><a href="post-capability.html">按访问端能力分级，把高开销表现留给用得上的人</a></li>
+            </ul>
+          </section>
+          <section class="tag-group" id="tag-静态站点" aria-labelledby="tag-静态站点-title">
+            <h3 id="tag-静态站点-title">静态站点</h3>
+            <ul class="archive-items">
+              <li><time datetime="2026-10-11">2026-10-11</time><a href="post-no-build.html">这个博客没有构建步骤</a></li>
+            </ul>
+          </section>
+          <section class="tag-group" id="tag-无障碍" aria-labelledby="tag-无障碍-title">
+            <h3 id="tag-无障碍-title">无障碍</h3>
+            <ul class="archive-items">
+              <li><time datetime="2026-10-13">2026-10-13</time><a href="post-reader.html">文章页的阅读增强：按需渲染与代码块操作</a></li>
+            </ul>
+          </section>
+          <section class="tag-group" id="tag-性能预算" aria-labelledby="tag-性能预算-title">
+            <h3 id="tag-性能预算-title">性能预算</h3>
+            <ul class="archive-items">
+              <li><time datetime="2026-10-11">2026-10-11</time><a href="post-no-build.html">这个博客没有构建步骤</a></li>
+            </ul>
+          </section>
+          <section class="tag-group" id="tag-渲染性能" aria-labelledby="tag-渲染性能-title">
+            <h3 id="tag-渲染性能-title">渲染性能</h3>
+            <ul class="archive-items">
+              <li><time datetime="2026-10-13">2026-10-13</time><a href="post-reader.html">文章页的阅读增强：按需渲染与代码块操作</a></li>
+            </ul>
+          </section>
+          <section class="tag-group" id="tag-阅读体验" aria-labelledby="tag-阅读体验-title">
+            <h3 id="tag-阅读体验-title">阅读体验</h3>
+            <ul class="archive-items">
+              <li><time datetime="2026-10-13">2026-10-13</time><a href="post-reader.html">文章页的阅读增强：按需渲染与代码块操作</a></li>
+            </ul>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© <span data-year>2026</span> Qi 的个人博客</p>
+    </div>
+  </footer>
+
+  <div class="search-panel" id="search-panel" hidden>
+    <div class="search-box" role="dialog" aria-modal="true" aria-labelledby="search-heading">
+      <h2 class="visually-hidden" id="search-heading">站内搜索</h2>
+      <div class="search-bar">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="m20 20-3.5-3.5"></path>
+        </svg>
+        <input type="search" class="search-input" placeholder="搜索文章" aria-label="输入关键词搜索文章" autocomplete="off">
+        <button type="button" class="search-dismiss" aria-label="关闭搜索">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+            <path d="M6 6l12 12"></path>
+            <path d="M18 6 6 18"></path>
+          </svg>
+        </button>
+      </div>
+      <p class="search-status" role="status" aria-live="polite"></p>
+      <ul class="search-results"></ul>
+    </div>
+  </div>
+
+  <script src="../assets/scripts/search.js?v=8" defer></script>
+</body>
+</html>

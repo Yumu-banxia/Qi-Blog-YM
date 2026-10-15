@@ -28,6 +28,7 @@ Qi-blog-ds/
 │  ├─ post-reader.html   文章详情：阅读增强与按需渲染
 │  ├─ post-capability.html 文章详情：访问端能力分级
 │  ├─ post-no-build.html 文章详情：无构建方案
+│  ├─ archive.html       归档：按时间与标签两种视图
 │  ├─ works.html         作品陈列
 │  └─ about.html         个人介绍
 ├─ assets/
