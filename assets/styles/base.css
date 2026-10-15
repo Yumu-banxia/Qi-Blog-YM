@@ -477,12 +477,23 @@ button {
   --y: 84%;
 }
 /* 聚焦反馈：指针悬停或键盘聚焦某个节点时，相关元素保持，其余退到背景 */
-.chart-node,
+.chart-spark,
+.chart-label,
+.chart-meta,
 .chart-lines path {
-  transition: opacity var(--duration-base) var(--ease-out);
+  transition: opacity var(--duration-base) var(--ease-out), color var(--duration-base) var(--ease-out);
 }
 
-.chart-node.is-dim,
+/* 淡化时只让星形与连线退到背景，标签改用次要文字色，文字始终可读 */
+.chart-node.is-dim .chart-spark {
+  opacity: 0.35;
+}
+
+.chart-node.is-dim .chart-label,
+.chart-node.is-dim .chart-meta {
+  color: var(--color-muted);
+}
+
 .chart-lines path.is-dim {
   opacity: 0.3;
 }

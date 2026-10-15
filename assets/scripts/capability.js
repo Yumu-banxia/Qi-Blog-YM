@@ -104,7 +104,15 @@
     var scripts = document.getElementsByTagName('script');
     var source = (current && current.src) ? current.src : (scripts.length ? scripts[scripts.length - 1].src : '');
     var match = /^(.*)assets\/scripts\/capability\.js/.exec(source);
-    return match ? match[1] : '';
+    if (match) {
+      return match[1];
+    }
+    /* 无法从脚本地址推导时退回文档地址，pages/ 下的页面需要上溯一层 */
+    var base = document.baseURI || '';
+    if (!base) {
+      return '';
+    }
+    return base.indexOf('/pages/') !== -1 ? base.replace(/pages\/[^/]*$/, '') : base.replace(/[^/]*$/, '');
   }
 
   /* 超低端设备改挂兜底样式表，规避弹性布局与自定义属性缺失导致的排版错乱 */

@@ -63,6 +63,22 @@
   var lastApply = 0;
   var frameInterval = 1000 / 40;
 
+  var controller = typeof window.AbortController === 'function' ? new window.AbortController() : null;
+
+  /* 统一注册监听器，停止时一次解绑 */
+  function listen(target, type, handler, options) {
+    var settings = options;
+    if (controller) {
+      if (typeof settings === 'boolean') {
+        settings = { capture: settings, signal: controller.signal };
+      } else {
+        settings = settings || {};
+        settings.signal = controller.signal;
+      }
+    }
+    target.addEventListener(type, handler, settings);
+  }
+
   var pointerPos = { x: 0, y: 0 };
   var pointerVel = { x: 0, y: 0 };
   var pointerStrength = 0;
@@ -339,6 +355,18 @@
     draw();
   }
 
+  /* 复位：按 Home 键让当前节点回到初始位置，空白处双击或 Esc 复位全部节点 */
+  function resetNodePosition(index) {
+    var item = items[index];
+    setBasePosition(index, item.homeX, item.homeY);
+  }
+
+  function resetAllNodes() {
+    for (var i = 0; i < items.length; i += 1) {
+      resetNodePosition(i);
+    }
+  }
+
   function bindNode(link, index) {
     function onDown(event) {
       if (!enabled || paused) {
@@ -383,12 +411,13 @@
 
     /* 拖动时浏览器不应把链接当作可拖拽元素，也不参与文本选择 */
     link.setAttribute('draggable', 'false');
-    link.addEventListener('dragstart', function (event) {
+    listen(link, 'dragstart', function (event) {
       event.preventDefault();
     });
 
+
     /* 键盘微调：方向键移动节点，按住 Shift 加快 */
-    link.addEventListener('keydown', function (event) {
+    listen(link, 'keydown', function (event) {
       var step = event.shiftKey ? 4 : 1.5;
       var dx = 0;
       var dy = 0;
@@ -402,6 +431,10 @@
         dy = -step;
       } else if (key === 'ArrowDown' || event.keyCode === 40) {
         dy = step;
+      } else if (key === 'Home' || event.keyCode === 36) {
+        event.preventDefault();
+        resetNodePosition(index);
+        return;
       } else {
         return;
       }
@@ -410,32 +443,32 @@
       setBasePosition(index, items[index].baseX + dx, items[index].baseY + dy);
     });
 
-    link.addEventListener('pointerdown', onDown);
-    link.addEventListener('pointermove', onMove);
-    link.addEventListener('pointerup', finishDrag);
-    link.addEventListener('pointercancel', finishDrag);
-    link.addEventListener('click', function (event) {
+    listen(link, 'pointerdown', onDown);
+    listen(link, 'pointermove', onMove);
+    listen(link, 'pointerup', finishDrag);
+    listen(link, 'pointercancel', finishDrag);
+    listen(link, 'click', function (event) {
       if (suppressClick) {
         event.preventDefault();
       }
     });
 
-    link.addEventListener('pointerenter', function () {
+    listen(link, 'pointerenter', function () {
       // 指针停在节点上时不施加推力，保证节点稳定可点
       pointerOnNode = true;
       setFocus(index);
     });
-    link.addEventListener('pointerleave', function () {
+    listen(link, 'pointerleave', function () {
       pointerOnNode = false;
       if (!drag) {
         setFocus(-1);
       }
     });
-    link.addEventListener('focus', function () {
+    listen(link, 'focus', function () {
       pointerOnNode = true;
       setFocus(index);
     });
-    link.addEventListener('blur', function () {
+    listen(link, 'blur', function () {
       pointerOnNode = false;
       setFocus(-1);
     });
@@ -585,6 +618,9 @@
   function stop() {
     enabled = false;
     setFocus(-1);
+    if (controller) {
+      controller.abort();
+    }
     if (frameId) {
       window.cancelAnimationFrame(frameId);
       frameId = 0;
@@ -606,6 +642,8 @@
         el: el,
         baseX: readNumber(el, '--x', 50),
         baseY: readNumber(el, '--y', 50),
+        homeX: readNumber(el, '--x', 50),
+        homeY: readNumber(el, '--y', 50),
         ox: 0,
         oy: 0,
         vx: 0,
@@ -625,23 +663,25 @@
     draw();
   }
 
-  canvas.addEventListener('pointerdown', onCanvasDown);
-  canvas.addEventListener('pointermove', onCanvasMove, { passive: true });
-  canvas.addEventListener('pointerleave', onCanvasLeave);
-  canvas.addEventListener('wheel', onWheel, { passive: false });
-  window.addEventListener('pointerup', finishPan, true);
-  window.addEventListener('pointercancel', finishPan, true);
-  window.addEventListener('pointerup', finishDrag, true);
-  window.addEventListener('pointercancel', finishDrag, true);
+  listen(canvas, 'pointerdown', onCanvasDown);
+  listen(canvas, 'pointermove', onCanvasMove, { passive: true });
+  listen(canvas, 'pointerleave', onCanvasLeave);
+  listen(canvas, 'wheel', onWheel, { passive: false });
+  listen(window, 'pointerup', finishPan, true);
+  listen(window, 'pointercancel', finishPan, true);
+  listen(window, 'pointerup', finishDrag, true);
+  listen(window, 'pointercancel', finishDrag, true);
 
-  chart.addEventListener('keydown', function (event) {
+  listen(chart, 'keydown', function (event) {
     if (event.key === 'Escape' || event.keyCode === 27) {
+      resetAllNodes();
       resetView();
     }
   });
 
-  canvas.addEventListener('dblclick', function (event) {
+  listen(canvas, 'dblclick', function (event) {
     event.preventDefault();
+    resetAllNodes();
     resetView();
   });
 
@@ -658,7 +698,7 @@
     });
     observer.observe(canvas);
   } else {
-    window.addEventListener('resize', function () {
+    listen(window, 'resize', function () {
       measure();
       clampView();
       applyView();
@@ -673,7 +713,7 @@
     visibleObserver.observe(chart);
   }
 
-  document.addEventListener('visibilitychange', function () {
+  listen(document, 'visibilitychange', function () {
     setPaused(document.hidden);
   });
 
@@ -685,7 +725,7 @@
       }
     };
     if (typeof motionQuery.addEventListener === 'function') {
-      motionQuery.addEventListener('change', onMotionChange);
+      listen(motionQuery, 'change', onMotionChange);
     } else if (typeof motionQuery.addListener === 'function') {
       motionQuery.addListener(onMotionChange);
     }
