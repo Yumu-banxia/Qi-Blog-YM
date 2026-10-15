@@ -26,14 +26,12 @@
 
   --radius-sm: 4px;
   --radius-md: 8px;
-  --radius-lg: 12px;
   --radius-pill: 999px;
 
   --container: 72rem;
   --measure: 36rem;
   --section-space: clamp(3rem, 2rem + 4vw, 5.5rem);
   --header-height: 3.5rem;
-  --chart-height: 21rem;
 
   --duration-fast: 120ms;
   --duration-base: 200ms;
@@ -59,7 +57,6 @@
   --color-chart-line: #b9c4da;
   --color-selection: rgb(217 162 51 / 30%);
   --star-opacity: 0.7;
-  --shadow-sm: 0 1px 2px rgb(16 18 24 / 8%);
   --shadow-md: 0 6px 24px rgb(16 18 24 / 10%);
 }
 
@@ -79,7 +76,6 @@
   --color-chart-line: #38425f;
   --color-selection: rgb(240 198 117 / 28%);
   --star-opacity: 0.7;
-  --shadow-sm: 0 1px 2px rgb(0 0 0 / 40%);
   --shadow-md: 0 6px 24px rgb(0 0 0 / 45%);
 }
 
