@@ -132,16 +132,17 @@
     bar.appendChild(label);
 
     if (lines > FOLD_MIN_LINES) {
+      var restLines = lines - FOLD_MIN_LINES;
       var toggle = document.createElement('button');
       toggle.type = 'button';
       toggle.className = 'code-action';
-      toggle.textContent = '展开';
+      toggle.textContent = '展开剩余 ' + restLines + ' 行';
       toggle.setAttribute('aria-expanded', 'false');
       toggle.addEventListener('click', function () {
         var folded = wrapper.getAttribute('data-folded') === 'true';
         wrapper.setAttribute('data-folded', folded ? 'false' : 'true');
         toggle.setAttribute('aria-expanded', folded ? 'true' : 'false');
-        toggle.textContent = folded ? '收起' : '展开';
+        toggle.textContent = folded ? '收起' : '展开剩余 ' + restLines + ' 行';
       });
       wrapper.setAttribute('data-folded', 'true');
       bar.appendChild(toggle);

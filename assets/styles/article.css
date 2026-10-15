@@ -216,19 +216,11 @@
   color: var(--color-text);
 }
 
+/* 折叠只裁剪纵向，横向仍可滚动，长行不会因此看不全 */
 .code-block[data-folded="true"] pre {
-  max-height: calc(var(--code-fold-lines) * 1.6em + 2 * var(--space-4));
-  overflow: hidden;
-}
-
-.code-block[data-folded="true"]::after {
-  content: "";
-  position: absolute;
-  inset-inline: 0;
-  inset-block-end: 0;
-  block-size: 3rem;
-  background-image: linear-gradient(to bottom, transparent, var(--color-surface));
-  pointer-events: none;
+  max-block-size: calc(var(--code-fold-lines) * 1.6em + 2 * var(--space-4));
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 /* 回到顶部 */
@@ -358,9 +350,6 @@
     overflow: visible;
   }
 
-  .code-block[data-folded="true"]::after {
-    content: none;
-  }
 
   .pager a {
     background-color: transparent;
