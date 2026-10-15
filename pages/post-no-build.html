@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <title>这个博客没有构建步骤 · Qi 的个人博客</title>
-  <meta name="description" content="不使用构建工具与框架的原因：本地文件直开、首屏体积与维护成本三个角度。">
+  <meta name="description" content="为什么不给这个博客加构建步骤：本地打开、体积，以及同步的麻烦。">
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="../manifest.webmanifest">
   <link rel="apple-touch-icon" href="../assets/icons/icon-192.png">
@@ -13,7 +13,7 @@
   <meta property="og:site_name" content="Qi 的个人博客">
   <meta property="og:type" content="article">
   <meta property="og:title" content="这个博客没有构建步骤">
-  <meta property="og:description" content="不使用构建工具与框架的原因：本地文件直开、首屏体积与维护成本三个角度。">
+  <meta property="og:description" content="为什么不给这个博客加构建步骤：本地打开、体积，以及同步的麻烦。">
   <meta property="og:locale" content="zh_CN">
   <meta property="og:image" content="../assets/media/og-cover.jpg">
   <script type="application/ld+json">
@@ -93,43 +93,40 @@
         </header>
 
         <div class="prose">
-          <p>仓库里没有 <code>package.json</code>，也没有构建产物目录。提交上去的文件就是浏览器读取的文件，改完之后刷新页面即可看到结果。</p>
+          <p>比赛要求把作品打包成压缩包发到邮箱，评审大概率会解压之后双击 <code>index.html</code>。我照这个动作试了一遍，然后决定整站不放构建步骤。</p>
 
-          <h2>本地文件直接打开</h2>
-          <p>作品以压缩包形式提交，评审很可能双击 <code>index.html</code> 查看。这种打开方式下页面处于 <code>file://</code> 环境，ES module 受跨源策略限制，外部模块与本地数据文件的读取都会失败。因此脚本全部使用 classic script，资源引用一律用相对地址。</p>
-          <p>构建产物通常以站点根目录为前提，用绝对地址引用样式与脚本，本地文件打开时会全部取不到。这一条直接排除了若干静态站点生成器。</p>
+          <h2>双击打开时，模块会失效</h2>
+          <p>最早写的是 ES module，本地打开时脚本直接不跑。控制台里是一条跨源错误：<code>file://</code> 下外部模块读不了，用 <code>fetch</code> 读本地数据文件同样不行。改成 classic script、资源引用一律写相对地址，问题才消失。</p>
+          <p>构建工具的产物通常假设站点跑在根目录，样式和脚本用 <code>/assets/...</code> 这类绝对地址。压缩包解压到哪里并不确定，这种写法在本地一律取不到。这一条把不少静态站点生成器挡在门外。</p>
 
           <pre><code class="language-html">&lt;link rel="stylesheet" href="../assets/styles/tokens.css?v=8"&gt;
 &lt;link rel="stylesheet" href="../assets/styles/base.css?v=8"&gt;
 &lt;script src="../assets/scripts/capability.js?v=8"&gt;&lt;/script&gt;
 &lt;script src="../assets/scripts/main.js?v=8" defer&gt;&lt;/script&gt;</code></pre>
 
-          <h2>首屏体积</h2>
-          <p>预算定为：HTML 与 CSS 未压缩合计 120 KB 以内，页面自带脚本 40 KB 以内。实施后的实测值是，首页首屏 29.6 KB；文章列表、作品、关于三页在 26.4 KB 到 27.9 KB 之间；文章详情页 47.9 KB，多出来的是文章正文本身。</p>
-          <p>脚本方面，每页加载的 <code>capability.js</code> 为 5.4 KB、<code>main.js</code> 为 5.1 KB，文章页再加 <code>reader.js</code> 的 14 KB。这些数字按未压缩体积相加，第三方渲染库单列，只在文章页命中内容时进入请求队列。</p>
+          <h2>体积是第二个理由</h2>
+          <p>给自己划的线是：HTML 加 CSS 不超过 120 KB，页面自带脚本不超过 40 KB，都按未压缩算。现在首页首屏 63.6 KB（gzip 20.5 KB），列表、归档、作品、关于四页在 45 KB 到 51 KB 之间，文章详情页 74.2 KB，多出来的部分就是正文。</p>
+          <p>脚本这边，每页都要加载的 <code>capability.js</code> 与 <code>main.js</code> 合计 11 KB 上下。首页多一个星图脚本，文章页多一个阅读增强脚本；搜索的脚本和索引要等点开搜索面板才请求。highlight.js 与 KaTeX 只在页面真有代码块或公式时才进队列。</p>
 
-          <h2>维护成本</h2>
-          <p>页头与页尾在每一页各存一份，改动一处需要逐页同步，代价与页面数量成正比。约定是页面超过八页时改用一次性生成脚本，脚本只在开发阶段运行，产物仍然是纯静态文件。</p>
-          <p>一并放弃的还有组件库与原子化样式。按需引入依赖构建阶段完成，无构建方案下要么整份引入，要么自己写。当前样式表 gzip 后约 5.3 KB，而体量最小的通用样式库为 3.6 KB 且组件极少，引入之后还得覆盖默认观感。</p>
+          <h2>麻烦的地方在同步</h2>
+          <p>页头页脚是逐页复制的，改一次导航要在八个文件里各动一遍。前阵子加「归档」那一项就是用脚本批量替换的，带 <code>aria-current</code> 的那一页还得单独处理。页面再多下去这套做法会顶不住，所以定了条规矩：超过八页就改用一次性生成脚本，脚本只在开发时跑，产物还是静态文件。</p>
+          <p>组件库和原子化样式也一并放弃了。按需引入要靠构建阶段完成，不构建就只能整份搬进来，再花时间覆盖它自带的观感。现在整套样式 gzip 后五 KB 出头，最轻的通用样式库也有三 KB 多，组件还少。</p>
 
-          <h2>代价与边界</h2>
-          <p>没有类型检查，也没有自动化测试；第三方库升级要手动替换本地文件；模板复用依靠复制。项目维持在一位作者、十余个页面的规模时，这些代价可以接受。页面数量或协作人数继续增长时，这套做法的收益会下降，届时应把生成脚本提前到构建阶段。</p>
-
-          <h2>小结</h2>
-          <p>省掉构建步骤换来的是打开即用与更小的体积，付出的是模板同步与依赖管理上的手工劳动。判断依据是项目规模与交付方式，两边的数字都摆在明处，取舍就清楚了。</p>
+          <h2>剩下的代价</h2>
+          <p>没有类型检查，没有自动化测试，第三方库升级要手动替换 <code>vendor</code> 里的文件。一个人写十来个页面时这些都还好受；人一多，手工同步会最先出问题。</p>
         </div>
 
         <nav class="related" aria-labelledby="related-title">
           <h2 class="related-title" id="related-title">继续阅读</h2>
           <ul class="related-list">
             <li><a href="post-reader.html">文章页的阅读增强：按需渲染与代码块操作</a></li>
-            <li><a href="post-capability.html">按访问端能力分级，把高开销表现留给用得上的人</a></li>
+            <li><a href="post-capability.html">老设备也要能读：按访问端条件分级</a></li>
           </ul>
         </nav>
 
         <nav class="article-pager" aria-label="文章导航">
           <ul class="pager">
-            <li class="pager-next"><a href="post-capability.html" rel="next"><span class="pager-dir">更新的一篇</span><span class="pager-title">按访问端能力分级，把高开销表现留给用得上的人</span></a></li>
+            <li class="pager-next"><a href="post-capability.html" rel="next"><span class="pager-dir">更新的一篇</span><span class="pager-title">老设备也要能读：按访问端条件分级</span></a></li>
           </ul>
           <p class="pager-back"><a href="posts.html">返回文章列表</a></p>
         </nav>

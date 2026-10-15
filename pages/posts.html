@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <title>文章 · Qi 的个人博客</title>
-  <meta name="description" content="文章列表：按时间倒序排列的学习记录与技术思考。">
+  <meta name="description" content="文章列表，按时间倒序。">
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="../manifest.webmanifest">
   <link rel="apple-touch-icon" href="../assets/icons/icon-192.png">
@@ -13,7 +13,7 @@
   <meta property="og:site_name" content="Qi 的个人博客">
   <meta property="og:type" content="website">
   <meta property="og:title" content="文章">
-  <meta property="og:description" content="文章列表：按时间倒序排列的学习记录与技术思考。">
+  <meta property="og:description" content="文章列表，按时间倒序。">
   <meta property="og:locale" content="zh_CN">
   <meta property="og:image" content="../assets/media/og-cover.jpg">
   <link rel="stylesheet" href="../assets/styles/tokens.css?v=8">
@@ -70,7 +70,7 @@
     <section class="section">
       <div class="container">
         <h1>文章</h1>
-        <p class="lede">学习记录与技术思考，按时间倒序排列。内容围绕本站的选型、性能核对与阅读体验展开。</p>
+        <p class="lede">写的多半是这个站点本身：怎么选的，怎么核对的，哪里卡住了。按时间倒序。</p>
         <p><a href="archive.html">按标签与年份浏览归档</a></p>
 
         <ul class="card-list">
@@ -78,7 +78,7 @@
             <article>
               <h2 class="list-title"><a href="post-reader.html">文章页的阅读增强：按需渲染与代码块操作</a></h2>
               <p class="meta"><time datetime="2026-10-13">2026-10-13</time><span>阅读体验</span></p>
-              <p class="summary">目录、阅读进度、字号控制与代码块操作如何装配，公式与代码高亮的渲染库又是在什么条件下才进入请求队列。</p>
+              <p class="summary">目录、进度、字号、代码块折叠复制是怎么装上去的，公式与高亮又在什么条件下才去加载。</p>
               <ul class="tags">
                 <li>阅读体验</li>
                 <li>渲染性能</li>
@@ -87,9 +87,9 @@
           </li>
           <li data-reveal>
             <article>
-              <h2 class="list-title"><a href="post-capability.html">按访问端能力分级，把高开销表现留给用得上的人</a></h2>
+              <h2 class="list-title"><a href="post-capability.html">老设备也要能读：按访问端条件分级</a></h2>
               <p class="meta"><time datetime="2026-10-12">2026-10-12</time><span>兼容性</span></p>
-              <p class="summary">从 User-Agent、硬件线索与运行时接口三处取信号，划分四档并决定每一项表现的允许范围。</p>
+              <p class="summary">拿一台功能机试了试，布局散架。于是加了一套按访问端条件分支的机制，分四档给表现。</p>
               <ul class="tags">
                 <li>兼容性</li>
                 <li>渐进增强</li>
@@ -100,7 +100,7 @@
             <article>
               <h2 class="list-title"><a href="post-no-build.html">这个博客没有构建步骤</a></h2>
               <p class="meta"><time datetime="2026-10-11">2026-10-11</time><span>技术选型</span></p>
-              <p class="summary">从本地文件直接打开、首屏体积与维护成本三个角度，说明不引入打包工具与框架的原因。</p>
+              <p class="summary">不引入打包工具与框架的原因：双击打开要能用、体积要小，以及同步带来的麻烦。</p>
               <ul class="tags">
                 <li>技术选型</li>
                 <li>性能预算</li>

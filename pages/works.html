@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <title>作品 · Qi 的个人博客</title>
-  <meta name="description" content="作品陈列：项目与实验的名称、简介、技术栈与仓库地址。">
+  <meta name="description" content="三件出自本站搭建过程的东西，附技术栈与源码地址。">
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="../manifest.webmanifest">
   <link rel="apple-touch-icon" href="../assets/icons/icon-192.png">
@@ -13,7 +13,7 @@
   <meta property="og:site_name" content="Qi 的个人博客">
   <meta property="og:type" content="website">
   <meta property="og:title" content="作品">
-  <meta property="og:description" content="作品陈列：项目与实验的名称、简介、技术栈与仓库地址。">
+  <meta property="og:description" content="三件出自本站搭建过程的东西，附技术栈与源码地址。">
   <meta property="og:locale" content="zh_CN">
   <meta property="og:image" content="../assets/media/og-cover.jpg">
   <link rel="stylesheet" href="../assets/styles/tokens.css?v=8">
@@ -70,13 +70,13 @@
     <section class="section">
       <div class="container">
         <h1>作品</h1>
-        <p class="lede">做过的项目与实验，附技术栈与源码地址。以下三项都取自本站的构建过程。</p>
+        <p class="lede">三项都出自本站的搭建过程，附技术栈与源码地址，点图可放大。</p>
 
         <ul class="card-list">
           <li data-reveal>
             <article>
               <h2 class="list-title">Qi-blog-ds 个人博客</h2>
-              <p class="summary">本站源码。原生 HTML、CSS 与 JavaScript 组织的静态多页站点，没有构建步骤，以本地文件或静态托管两种方式都能完整打开。</p>
+              <p class="summary">本站源码。八个页面，原生 HTML、CSS、JavaScript，没有构建步骤；本地双击打开与静态托管两种方式都能完整运行。</p>
               <figure class="work-shot">
                 <button type="button" class="shot-open" aria-label="放大查看本站首页截图">
                   <img src="../assets/media/works/home-desktop.webp" alt="本站首页：左侧为站点说明与两个入口按钮，右侧为四栏目星图，节点之间以曲线相连" width="1200" height="750" loading="lazy" decoding="async">
@@ -96,7 +96,7 @@
           <li data-reveal>
             <article>
               <h2 class="list-title">访问端能力分级模块</h2>
-              <p class="summary">依据 User-Agent 特征、硬件线索与运行时接口划分四档，向样式与脚本提供统一的能力查询结果，低端访问端据此停用高开销表现。</p>
+              <p class="summary">首屏判断访问端条件并写入根元素，样式与脚本读同一个结果。低端设备据此停掉模糊、动效与渲染库。</p>
               <figure class="work-shot work-shot--narrow">
                 <button type="button" class="shot-open" aria-label="放大查看窄屏首屏截图">
                   <img src="../assets/media/works/home-mobile.webp" alt="窄屏下的首页：星图改为纵向堆叠，导航收入折叠面板" width="780" height="1688" loading="lazy" decoding="async">
@@ -116,7 +116,7 @@
           <li data-reveal>
             <article>
               <h2 class="list-title">阅读增强管线</h2>
-              <p class="summary">文章页的目录、阅读进度、字号切换与代码块复制折叠；公式与代码高亮由内容出现情况决定是否加载。</p>
+              <p class="summary">文章页的目录、进度、字号与代码块操作。公式和高亮只在内容真的用得上时才去请求。</p>
               <figure class="work-shot">
                 <button type="button" class="shot-open" aria-label="放大查看文章页截图">
                   <img src="../assets/media/works/article-desktop.webp" alt="文章页正文：左侧为目录与进度，正文含代码块与公式，代码块带复制与折叠操作" width="1200" height="750" loading="lazy" decoding="async">
