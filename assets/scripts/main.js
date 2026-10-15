@@ -83,6 +83,13 @@
     }
   }
 
+  /* 多个标签页同时打开时保持主题一致 */
+  window.addEventListener('storage', function (event) {
+    if (event.key === STORAGE_KEY && (event.newValue === 'light' || event.newValue === 'dark')) {
+      renderTheme(event.newValue);
+    }
+  });
+
   if (darkQuery && typeof darkQuery.addEventListener === 'function') {
     darkQuery.addEventListener('change', handleSystemThemeChange);
   } else if (darkQuery && typeof darkQuery.addListener === 'function') {

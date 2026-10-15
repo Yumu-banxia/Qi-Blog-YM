@@ -57,11 +57,12 @@
   var pan = null;
   var suppressClick = false;
   var view = { scale: 1, x: 0, y: 0 };
-  var frame = 0;
   var frameId = 0;
   var lastTime = 0;
   var lastApply = 0;
   var frameInterval = 1000 / 40;
+  var drawThreshold = 0.25;
+  var lastDrawn = null;
 
   var controller = typeof window.AbortController === 'function' ? new window.AbortController() : null;
 
@@ -178,6 +179,29 @@
         ' ' + c2x.toFixed(2) + ' ' + c2y.toFixed(2) +
         ' ' + bx.toFixed(2) + ' ' + by.toFixed(2));
     }
+
+    rememberDrawn();
+  }
+
+  /* 节点位移累计超过阈值才重绘连线，位移平缓时省去大量路径写入 */
+  function needDraw() {
+    if (!lastDrawn || lastDrawn.length !== items.length) {
+      return true;
+    }
+    for (var i = 0; i < items.length; i += 1) {
+      if (Math.abs(nodeX(items[i]) - lastDrawn[i][0]) > drawThreshold ||
+          Math.abs(nodeY(items[i]) - lastDrawn[i][1]) > drawThreshold) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function rememberDrawn() {
+    lastDrawn = [];
+    for (var i = 0; i < items.length; i += 1) {
+      lastDrawn.push([nodeX(items[i]), nodeY(items[i])]);
+    }
   }
 
   /* 每帧只写一次 transform，省去自定义属性解析带来的额外样式重算 */
@@ -239,7 +263,6 @@
     var dt = lastApply ? Math.min((now - lastApply) / 1000, 0.05) : 0.016;
     lastApply = now;
     lastTime = now;
-    frame += 1;
 
     if (!paused) {
       var damp = Math.pow(DAMPING, dt * 60);
@@ -279,8 +302,7 @@
       pointerVel.x *= 0.9;
       pointerVel.y *= 0.9;
 
-      /* 连线每两帧重算一次，位移平缓，观感一致而开销减半 */
-      if (frame % 2 === 0) {
+      if (needDraw()) {
         draw();
       }
     }

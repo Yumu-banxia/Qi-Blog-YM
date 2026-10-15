@@ -555,6 +555,26 @@ button {
     color: GrayText;
   }
 }
+/* 用户要求更高对比度时，线条与各类边框改用正文色 */
+@media (prefers-contrast: more) {
+  .chart-lines {
+    color: var(--color-text);
+  }
+
+  .chart-lines path.is-dim {
+    opacity: 0.55;
+  }
+
+  .site-header,
+  .card-list > li,
+  .tags li,
+  .pager a,
+  .icon-button,
+  .code-action,
+  .code-toolbar {
+    border-color: var(--color-text);
+  }
+}
 
 .chart-node.is-dragging {
   z-index: 2;
