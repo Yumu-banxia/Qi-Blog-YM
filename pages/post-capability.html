@@ -93,13 +93,13 @@
         </header>
 
         <div class="prose">
-          <p>手边有一台 Nokia 2700c，想看看这个站在上面打开是什么样。结果比预想差：布局散掉，正文挤成一团。那次之后，站点加了一套按访问端条件分支的机制。</p>
+          <p>手边有一台 Nokia 2700c，试着打开这个站。结果比预想差：布局散掉，正文挤成一团。那次之后，站点加了一套按访问端条件分支的机制。</p>
 
           <h2>首屏判断一次</h2>
           <p>判断放在 <code>&lt;head&gt;</code> 里同步执行的一小段脚本中，结果写到根元素的 <code>data-cap</code> 上，样式和后续脚本都读这一个属性，不再各自判断。依据来自三处。</p>
-          <p>先是 User-Agent。功能机与老式移动浏览器（<code>MIDP</code>、<code>Symbian</code>、<code>Opera Mini</code>、<code>Trident</code> 这些片段）命中就判最低档；现代内核但硬件吃紧的机型（老 Android、UC、MIUI 之类）归为受限档。</p>
+          <p>先是 User-Agent。功能机与老式移动浏览器（<code>MIDP</code>、<code>Symbian</code>、<code>Opera Mini</code>、<code>Trident</code> 这些片段）命中就判最低档；现代内核但硬件受限的机型（老 Android、UC、MIUI 之类）归为受限档。</p>
           <p>再看硬件与网络：逻辑核数、设备内存、省流模式，以及连接是不是 2G 级。</p>
-          <p>最后看运行时接口能不能用：<code>CSS.supports('--probe: 0')</code>、<code>matchMedia</code>、<code>requestAnimationFrame</code>、<code>IntersectionObserver</code>、<code>backdrop-filter</code>，还有画布上下文。这几个里缺任何一个，脚本与样式的增强部分就没有落脚点。</p>
+          <p>最后一处是运行时接口是否可用：<code>CSS.supports('--probe: 0')</code>、<code>matchMedia</code>、<code>requestAnimationFrame</code>、<code>IntersectionObserver</code>、<code>backdrop-filter</code>，还有画布上下文。其中任一项缺失，脚本与样式的增强部分都无从成立。</p>
 
           <h2>四档与各自能用的东西</h2>
           <div class="table-wrap" tabindex="0">
@@ -139,7 +139,7 @@
 
           <h2>样式与脚本怎么读这个结果</h2>
           <p>样式按属性选择器分支。受限档位关掉页头模糊；最低档位把导航改回常驻排列，隐藏搜索与主题按钮，动画和过渡整个停掉。</p>
-          <p>脚本用 <code>Capability.allow(name)</code> 与 <code>Capability.load(name, src)</code>。没有权限时 <code>load</code> 直接返回 <code>false</code>，请求根本不发出去，比先下载再判断省得多。</p>
+          <p>脚本用 <code>Capability.allow(name)</code> 与 <code>Capability.load(name, src)</code>。未获权限时 <code>load</code> 返回 <code>false</code>，请求不会发出，比先下载再判断更省。</p>
 
           <pre><code class="language-js">var tier = 'medium';
 var reason = 'baseline';
@@ -167,11 +167,11 @@ root.setAttribute('data-cap', tier);
 root.setAttribute('data-cap-reason', reason);</code></pre>
 
           <h2>最低档位换一份样式表</h2>
-          <p>光有静态内容还不够。缺少自定义属性与弹性布局支持的浏览器，连主样式表都排不对，所以最低档位会追加一份兜底表：不用自定义属性，不用 flex 与 grid，正文 16 像素、行高 1.6，导航回到行内排列。</p>
-          <p>根元素上的 <code>data-cap-reason</code> 记着是哪组信号触发的降级（<code>legacy-ua</code>、<code>network</code>、<code>hardware</code>），在真机上排查省事。</p>
+          <p>仅有静态内容还不够。缺少自定义属性与弹性布局支持的浏览器，连主样式表都排不对，所以最低档位会追加一份兜底表：不用自定义属性，不用 flex 与 grid，正文 16 像素、行高 1.6，导航回到行内排列。</p>
+          <p>根元素上的 <code>data-cap-reason</code> 记着是哪组信号触发的降级（<code>legacy-ua</code>、<code>network</code>、<code>hardware</code>），在真机上排查时很省事。</p>
 
           <h2>没解决的部分</h2>
-          <p>内存与核数的阈值是估出来的，只在几台常见设备上对过，没有大规模验证；功能机的实测也只有那一台。真要做扎实，得攒一批旧机型逐台看，这件事我没做。</p>
+          <p>内存与核数的阈值是估出来的，只在几台常见设备上核对过，没有做大规模验证；功能机实测也只有那一台。要做扎实，需要收集一批旧机型逐台验证，这一步尚未进行。</p>
         </div>
 
         <nav class="related" aria-labelledby="related-title">

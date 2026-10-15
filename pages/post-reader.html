@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <title>文章页的阅读增强：按需渲染与代码块操作 · Qi 的个人博客</title>
-  <meta name="description" content="文章页的目录、进度、字号与代码块操作是怎么做的，公式和高亮什么时候才去加载。">
+  <meta name="description" content="文章页的目录、进度、字号与代码块操作是怎么做的，公式与高亮在什么条件下才加载。">
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="../manifest.webmanifest">
   <link rel="apple-touch-icon" href="../assets/icons/icon-192.png">
@@ -13,7 +13,7 @@
   <meta property="og:site_name" content="Qi 的个人博客">
   <meta property="og:type" content="article">
   <meta property="og:title" content="文章页的阅读增强：按需渲染与代码块操作">
-  <meta property="og:description" content="文章页的目录、进度、字号与代码块操作是怎么做的，公式和高亮什么时候才去加载。">
+  <meta property="og:description" content="文章页的目录、进度、字号与代码块操作是怎么做的，公式与高亮在什么条件下才加载。">
   <meta property="og:locale" content="zh_CN">
   <meta property="og:image" content="../assets/media/og-cover.jpg">
   <script type="application/ld+json">
@@ -93,16 +93,16 @@
         </header>
 
         <div class="prose">
-          <p>写完第一篇文章才发现，正文里的东西比正文本身麻烦：一段三十来行的代码在窄屏上被拉得很长，几条公式要等渲染库加载完才出现。阅读增强这一块就是为这些情况写的，代码放在 <code>article.css</code> 与 <code>reader.js</code>，只在文章详情页加载。</p>
+          <p>写完第一篇文章才发现，正文里的东西比正文本身麻烦：一段三十来行的代码在窄屏上被拉得很长，几条公式要等渲染库加载完才出现。阅读增强这一部分就是为这些情况写的，代码放在 <code>article.css</code> 与 <code>reader.js</code>，只在文章详情页加载。</p>
 
           <h2>目录与进度条</h2>
-          <p>目录是脚本扫正文的二级、三级标题拼出来的，标题不到三条就不生成——短文配目录反而累赘。当前所在的小节由观察器判断，命中后标 <code>aria-current</code>。</p>
+          <p>目录是脚本扫正文的二级、三级标题拼出来的，标题不到三条就不生成——短文配目录显得累赘。当前所在的小节由观察器判断，命中后标 <code>aria-current</code>。</p>
           <p>顶部那条进度线高两像素，位移交给 <code>transform: scaleX()</code>，滚动回调塞进 <code>requestAnimationFrame</code>，一次滚动最多写一次样式。回到顶部的按钮在纵向滚过 400 像素后出现；设备被判定不适合动效时，它改成瞬时跳转。</p>
 
           <h2>代码块</h2>
           <p>每个代码块补一条工具条：语言、折叠、复制。超过 16 行默认收起，按钮上写清楚还剩多少行，展开状态同步到 <code>aria-expanded</code>。</p>
-          <p>复制走异步剪贴板接口，失败时退回临时文本域加 <code>execCommand</code>，本地文件打开时这条回退用得上。复制结果交给一个独立状态区播报，读屏软件能听到。</p>
-          <p>代码块横向能滚，所以补了 <code>tabindex</code>，键盘可以进去看长行。折叠时只裁纵向，横向照样能滚——早先的写法把 <code>overflow</code> 整个设成 <code>hidden</code>，长行只能看到左边一截，这个错很久之后才修。</p>
+          <p>复制走异步剪贴板接口，失败时退回临时文本域加 <code>execCommand</code>，本地文件打开时这条回退路径用得上。复制结果交给一个独立状态区播报，读屏软件能听到。</p>
+          <p>代码块横向可滚动，因此补上 <code>tabindex</code>，键盘可以进入查看长行。折叠时只裁纵向，横向仍可滚动。早先的写法把 <code>overflow</code> 整个设成 <code>hidden</code>，长行只能看到左边一截，这个问题后来才修。</p>
 
           <pre><code class="language-js">function enhanceBlock(pre) {
   /* 代码块可横向滚动，需要能通过键盘到达 */
@@ -161,10 +161,10 @@ function copyText(value, onDone) {
           <p>KaTeX 脚本约 273 KB、字体约 296 KB，highlight.js 约 129 KB。页面上一行代码都没有的时候，这些数字就是零。</p>
 
           <h2>字号</h2>
-          <p>小、中、大三档改的是正文基准字号，小节标题、代码、公式按同一比例跟着缩放。早先只放大正文，标题反而显小，层级看着别扭。选择存在 <code>localStorage</code>，存不了就只影响这次会话。</p>
+          <p>小、中、大三档改的是正文基准字号，小节标题、代码、公式按同一比例跟着缩放。早先只放大正文，标题反而显得小，层级不正常。选择存在 <code>localStorage</code>，存不了就只影响这次会话。</p>
 
           <h2>还没做的</h2>
-          <p>代码块没有行号，也做不了差异对比；折叠阈值写死 16 行，长行短行的观感差别不小。这些等文章多起来再补。</p>
+          <p>代码块没有行号，也做不了差异对比；折叠阈值写死 16 行，长行与短行的观感差别不小。这些等到文章多起来再补。</p>
         </div>
 
         <nav class="related" aria-labelledby="related-title">
