@@ -63,6 +63,8 @@
   var frameInterval = 1000 / 40;
   var drawThreshold = 0.25;
   var lastDrawn = null;
+  var EASE_RESET = 0.14;
+  var viewTarget = null;
 
   var controller = typeof window.AbortController === 'function' ? new window.AbortController() : null;
 
@@ -273,7 +275,22 @@
       for (var i = 0; i < items.length; i += 1) {
         var item = items[i];
 
-        if (!(drag && drag.index === i)) {
+        if (item.resetting) {
+          item.ox += (item.targetOx - item.ox) * EASE_RESET;
+          item.oy += (item.targetOy - item.oy) * EASE_RESET;
+
+          if (Math.abs(item.targetOx - item.ox) < 0.05 && Math.abs(item.targetOy - item.oy) < 0.05) {
+            item.baseX = clamp(item.homeX, POSITION_MIN, POSITION_MAX);
+            item.baseY = clamp(item.homeY, POSITION_MIN, POSITION_MAX);
+            item.el.style.setProperty('--x', item.baseX.toFixed(2) + '%');
+            item.el.style.setProperty('--y', item.baseY.toFixed(2) + '%');
+            item.ox = 0;
+            item.oy = 0;
+            item.vx = 0;
+            item.vy = 0;
+            item.resetting = false;
+          }
+        } else if (!(drag && drag.index === i)) {
           var amp = FORCE * item.amp;
           var force = { v: Math.sin(seconds / 4.5 + item.phase) * Math.cos(seconds / 9 + item.phase2) * amp };
           var forceY = { v: Math.cos(seconds / 5.5 + item.phase2) * Math.sin(seconds / 8.5 + item.phase) * amp };
@@ -296,6 +313,22 @@
         }
 
         applyOffset(item);
+      }
+
+      if (viewTarget) {
+        view.scale += (viewTarget.scale - view.scale) * 0.18;
+        view.x += (viewTarget.x - view.x) * 0.18;
+        view.y += (viewTarget.y - view.y) * 0.18;
+
+        if (Math.abs(viewTarget.scale - view.scale) < 0.002 && Math.abs(viewTarget.x - view.x) < 0.5 && Math.abs(viewTarget.y - view.y) < 0.5) {
+          view.scale = viewTarget.scale;
+          view.x = viewTarget.x;
+          view.y = viewTarget.y;
+          viewTarget = null;
+        }
+
+        clampView();
+        applyView();
       }
 
       /* 指针速度按帧衰减，指针停止后推力随之消失 */
@@ -365,6 +398,7 @@
   /* 基准位置：拖动与键盘微调共用，写入后清零漂浮偏移并重绘连线 */
   function setBasePosition(index, x, y) {
     var item = items[index];
+    item.resetting = false;
     item.baseX = clamp(x, POSITION_MIN, POSITION_MAX);
     item.baseY = clamp(y, POSITION_MIN, POSITION_MAX);
     item.el.style.setProperty('--x', item.baseX.toFixed(2) + '%');
@@ -377,10 +411,24 @@
     draw();
   }
 
-  /* 复位：按 Home 键让当前节点回到初始位置，空白处双击或 Esc 复位全部节点 */
+  /* 复位单个节点：带缓动回到初始位置，动画结束后把位移提交到布局位置；
+     已经处于初始位置时直接落位，避免无谓的逐帧开销 */
   function resetNodePosition(index) {
     var item = items[index];
-    setBasePosition(index, item.homeX, item.homeY);
+    var offsetX = item.homeX - item.baseX;
+    var offsetY = item.homeY - item.baseY;
+
+    if (Math.abs(offsetX) < 0.2 && Math.abs(offsetY) < 0.2 && Math.abs(item.ox) < 0.2 && Math.abs(item.oy) < 0.2) {
+      setBasePosition(index, item.homeX, item.homeY);
+      return;
+    }
+
+    item.resetting = true;
+    item.targetOx = offsetX;
+    item.targetOy = offsetY;
+    item.vx = 0;
+    item.vy = 0;
+    schedule();
   }
 
   function resetAllNodes() {
@@ -399,6 +447,7 @@
       }
       // 节点上的拖动由本模块处理，阻止事件到达画布上的平移处理
       event.stopPropagation();
+      items[index].resetting = false;
       drag = {
         index: index,
         pointerId: event.pointerId,
@@ -524,11 +573,17 @@
     applyView();
   }
 
+  /* 复位视图：带缓动回到初始比例与位置；已经处于初始状态时直接落位 */
   function resetView() {
-    view.scale = 1;
-    view.x = 0;
-    view.y = 0;
-    applyView();
+    if (Math.abs(view.scale - 1) < 0.001 && Math.abs(view.x) < 0.5 && Math.abs(view.y) < 0.5) {
+      view.scale = 1;
+      view.x = 0;
+      view.y = 0;
+      applyView();
+      return;
+    }
+    viewTarget = { scale: 1, x: 0, y: 0 };
+    schedule();
   }
 
   function finishPan(event) {
@@ -556,6 +611,7 @@
     if (event.pointerType === 'touch' && view.scale <= 1.001) {
       return;
     }
+    viewTarget = null;
     pan = {
       pointerId: event.pointerId,
       startX: event.clientX,
@@ -620,6 +676,7 @@
     if (event.cancelable) {
       event.preventDefault();
     }
+    viewTarget = null;
     var step = event.deltaY < 0 ? 1 + ZOOM_STEP : 1 - ZOOM_STEP;
     zoomTo(view.scale * step, event.clientX, event.clientY);
   }
@@ -672,6 +729,9 @@
         vy: 0,
         tx: 0,
         ty: 0,
+        resetting: false,
+        targetOx: 0,
+        targetOy: 0,
         phase: (i * 1.7) % 6.28,
         phase2: (i * 2.9 + 1.1) % 6.28,
         amp: 0.8 + (i % 4) * 0.13
