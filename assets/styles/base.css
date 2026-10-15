@@ -916,6 +916,78 @@ button {
     transform var(--duration-slow) var(--ease-out);
 }
 
+/* 作品截图与放大查看 */
+.work-shot {
+  margin: var(--space-4) 0 0;
+}
+
+.shot-open {
+  display: block;
+  inline-size: 100%;
+  padding: 0;
+  overflow: hidden;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: zoom-in;
+}
+
+.shot-open:hover {
+  border-color: var(--color-link);
+}
+
+.shot-open img {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+}
+
+/* 窄长截图按列显示并裁切预览，点击后再看完整图 */
+.work-shot--narrow .shot-open {
+  max-inline-size: 18rem;
+}
+
+.work-shot--narrow .shot-open img {
+  block-size: 24rem;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+  background-color: rgb(8 10 16 / 84%);
+}
+
+.lightbox[hidden] {
+  display: none;
+}
+
+.lightbox-inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-inline-size: 100%;
+}
+
+.lightbox-image {
+  max-inline-size: 100%;
+  max-block-size: 86vh;
+  border-radius: var(--radius-md);
+}
+
+.lightbox-close {
+  position: absolute;
+  inset-block-start: calc(-1 * var(--space-6));
+  inset-inline-end: 0;
+  background-color: var(--color-bg);
+}
 /* 归档页：按年份与按标签两组视图 */
 .archive-years {
   margin: 0 0 var(--space-7);
