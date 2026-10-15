@@ -33,7 +33,7 @@
       return;
     }
     box.hidden = true;
-    image.removeAttribute('src');
+    image.src = box.getAttribute('data-placeholder') || image.src;
     if (lastFocus && typeof lastFocus.focus === 'function') {
       lastFocus.focus();
     }
