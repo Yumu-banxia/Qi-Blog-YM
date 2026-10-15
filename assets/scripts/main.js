@@ -150,6 +150,65 @@
     yearSlots[index].textContent = currentYear;
   }
 
+  /* 搜索入口：点击按钮或按快捷键时才取搜索脚本，首屏不为搜索付出体积 */
+  var searchToggle = document.querySelector('.search-toggle');
+
+  function searchBase() {
+    var current = document.currentScript;
+    var scripts = document.getElementsByTagName('script');
+    var source = (current && current.src) ? current.src : (scripts.length ? scripts[scripts.length - 1].src : '');
+    var match = /^(.*)assets\/scripts\/main\.js/.exec(source);
+    if (match) {
+      return match[1];
+    }
+    var base = document.baseURI || '';
+    return base.indexOf('/pages/') !== -1 ? base.replace(/pages\/[^/]*$/, '') : base.replace(/[^/]*$/, '');
+  }
+
+  function openSearch() {
+    if (window.SiteSearch) {
+      window.SiteSearch.toggle();
+      return;
+    }
+    var toggle = document.querySelector('.search-toggle');
+    var script = document.createElement('script');
+    script.src = searchBase() + 'assets/scripts/search.js?v=8';
+    script.async = true;
+    script.onload = function () {
+      if (window.SiteSearch) {
+        window.SiteSearch.open();
+        if (toggle) {
+          toggle.setAttribute('aria-expanded', 'true');
+        }
+      }
+    };
+    document.head.appendChild(script);
+  }
+
+  if (searchToggle) {
+    searchToggle.addEventListener('click', openSearch);
+  }
+
+  document.addEventListener('keydown', function (event) {
+    var key = event.key || '';
+    var target = event.target;
+    var typing = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+
+    if ((key === 'k' || key === 'K') && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      openSearch();
+      return;
+    }
+
+    if (key === '/' && !typing) {
+      var open = document.getElementById('search-panel');
+      if (open && open.hidden) {
+        event.preventDefault();
+        openSearch();
+      }
+    }
+  });
+
   /* 滚动出现：设备允许动效且浏览器具备观察器时启用 */
   var motionAllowed = !capability || capability.allow('motion');
   var revealTargets = document.querySelectorAll('[data-reveal]');

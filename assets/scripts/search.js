@@ -298,14 +298,6 @@
     }
   }
 
-  listen(toggle, 'click', function () {
-    if (panel.hidden) {
-      open();
-    } else {
-      close();
-    }
-  });
-
   if (dismiss) {
     listen(dismiss, 'click', close);
   }
@@ -373,21 +365,16 @@
     }
   });
 
-  /* 站点级快捷键：斜杠键或 Ctrl+K 打开搜索，输入框内不拦截 */
-  listen(document, 'keydown', function (event) {
-    var key = event.key || '';
-    var target = event.target;
-    var typing = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
-
-    if ((key === 'k' || key === 'K') && (event.ctrlKey || event.metaKey)) {
-      event.preventDefault();
-      open();
-      return;
+  /* 入口与快捷键由 main.js 引导，这里只暴露开关供其调用 */
+  window.SiteSearch = {
+    open: open,
+    close: close,
+    toggle: function () {
+      if (panel.hidden) {
+        open();
+      } else {
+        close();
+      }
     }
-
-    if (key === '/' && !typing && panel.hidden) {
-      event.preventDefault();
-      open();
-    }
-  });
+  };
 })();
