@@ -70,6 +70,8 @@ Qi-blog-ds/
 
 本项目统一以 `node tools/check-content.mjs --sizes` 统计体积，范围内页面自身的 HTML、其引用的本地样式表与页面自带脚本，不含按需加载的第三方库、图片与字体，按 1 KB 等于 1024 字节换算。2026-10-17 的复测结果：首页 77.7 KB（gzip 21.4 KB）；文章列表 47.7 KB、关于 46.9 KB、归档 50.9 KB、作品 54.0 KB，gzip 在 13.6 KB 到 15.1 KB 之间；文章详情页在 74.3 KB 到 77.1 KB 之间，gzip 在 20.9 KB 到 21.7 KB 之间。未知地址页面 6.6 KB（gzip 2.5 KB）。单页 DOM 节点最多 391 个，360、768、1440 三种宽度下共二十七组测量，横向溢出与页面级越界元素均为 0。
 
+运行期数据由 `node tools/perf-check.mjs` 记录，采样窗口 2.4 秒，1440×900 视口，采样之前先以未知地址页面完成一次预热导航，因此首个页面的数据不含新档案的初始化代价。九个页面的帧间隔中位数落在 17.8 到 18.0 毫秒，第九十五百分位落在 18.3 到 18.6 毫秒；首页、文章详情页在加载阶段各出现一次 56 到 87 毫秒的长任务，其余页面没有长任务；累积布局偏移为 0 到 0.022，首次内容绘制为 44 到 192 毫秒。320 像素宽度下把行高放大到 1.5、字距 0.12em、词距 0.16em 之后，九个页面均无文档级横向溢出，宽于视口的元素只有代码块与表格内容，且都位于各自的横向滚动容器内。
+
 ## 维护脚本
 
 `tools/` 下的脚本只在开发与提交前运行，浏览页面不需要它们。运行需要 Node.js 20 以上；浏览器核对用到全局 WebSocket，建议 22 以上。环境变量 `QI_BROWSER` 可取 `chrome`、`edge`，或直接给出 Chromium 内核可执行文件地址；`QI_FIREFOX` 可给出 Firefox 可执行文件地址。
@@ -81,9 +83,10 @@ Qi-blog-ds/
 | `node tools/check-content.mjs --sizes` | 输出各页面首屏资源的体积统计 |
 | `node tools/browser-check.mjs` | 以无头 Chromium 核对布局、结构、星图、灯箱、复制、搜索与访问端分档 |
 | `node tools/browser-check.mjs --layout` | 只做布局与结构核对 |
-| `node tools/acceptance-check.mjs` | 核对站内链接点击前后配色、键盘流程、打印样式、第三方库按需加载，以及域名根与项目子目录两种托管方式 |
+| `node tools/acceptance-check.mjs` | 核对站内链接点击前后配色、键盘流程、搜索面板的滚动锁定与背景键盘屏蔽、打印样式、第三方库按需加载，以及域名根与项目子目录两种托管方式 |
+| `node tools/perf-check.mjs` | 记录九个页面的帧间隔、布局偏移、首次绘制与长任务，并在 320 像素宽度下放大文字复查横向重排 |
 | `node tools/a11y-check.mjs --axe <axe.min.js>` | 以 axe-core 扫描九个页面与暗色主题、搜索面板、灯箱三处状态 |
 | `node tools/static-server.mjs` | 按域名根或 `/Qi-blog-ds/` 子目录托管项目目录，供浏览器核对脚本使用 |
-| `node tools/firefox-check.mjs` | 以 Firefox 的 Marionette 通道完成同一套页面核对 |
+| `node tools/firefox-check.mjs` | 以 Firefox 的 Marionette 通道完成同一套页面核对，含搜索面板与灯箱的滚动锁定与背景键盘屏蔽 |
 | `node tools/marionette.mjs` | Firefox 核对脚本使用的 Marionette 客户端，只依赖 Node 内置模块 |
 

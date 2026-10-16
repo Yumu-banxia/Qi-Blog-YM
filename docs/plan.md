@@ -403,12 +403,15 @@ Qi-blog-ds/
 | 体积与 DOM 预算 | `node tools/check-content.mjs --sizes` | 首页 77.7 KB（gzip 21.4 KB），文章详情页 74.3 KB 到 77.1 KB，单页节点最多 391 个 |
 | 结构、布局、星图、灯箱、复制、搜索、访问端分档 | `node tools/browser-check.mjs` | 67 项，失败 0 项 |
 | 布局与结构 | `node tools/browser-check.mjs --layout` | 37 项，失败 0 项 |
-| 键盘流程、打印样式、按需加载、两种托管方式 | `node tools/acceptance-check.mjs` | 24 项，失败 0 项 |
+| 键盘流程、搜索面板的滚动锁定与背景键盘屏蔽、打印样式、按需加载、两种托管方式 | `node tools/acceptance-check.mjs` | 30 项，失败 0 项 |
 | 无障碍扫描 | `node tools/a11y-check.mjs --axe <axe.min.js>` | axe 4.14.0，13 项，失败 0 项 |
 | 规范校验 | `java -jar vnu.jar <九个页面>` | 消息 0 条，退出码 0 |
-| Firefox 引擎核对 | `node tools/firefox-check.mjs` | 34 项，失败 0 项 |
+| 运行期帧间隔、布局偏移、首次绘制、长任务与窄屏文字放大重排 | `node tools/perf-check.mjs` | 27 项，失败 0 项 |
+| Firefox 引擎核对 | `node tools/firefox-check.mjs` | 36 项，失败 0 项 |
 
 Firefox 一侧走 WebDriver 的 Marionette 通道，该版本自 141 起不再提供 DevTools 协议接口，核对客户端 `tools/marionette.mjs` 只使用 Node 内置模块。Firefox 无头实例没有剪贴板写入授权，复制按钮在该次核对中显示「复制失败」并按预期复位，成功提示路径由 Chrome 一侧覆盖。
+
+搜索面板的模态行为在核对的第二轮补齐：打开时把页面主体移出键盘访问范围，优先使用 `inert`，缺少支持时退回 `aria-hidden`；同时锁定页面滚动并补偿滚动条宽度，`Tab` 与 `Shift+Tab` 在面板内循环，关闭时逐项恢复。上一轮改动在 `Tab` 分支内声明了与选中项下标同名的局部变量，变量提升使 `ArrowDown`、`ArrowUp` 与 `Enter` 读到未定义值，方向键与回车选中因此失效；把该局部变量改名为 `focused` 之后恢复正常，对应的方向键、回车打开文章、滚动锁定与背景屏蔽断言分别写入 `tools/acceptance-check.mjs` 与 `tools/firefox-check.mjs`。运行期数据改用新增的 `tools/perf-check.mjs` 记录，脚本只作记录，长任务与帧间隔不设失败阈值，累积布局偏移、文档级横向溢出与脚本报错才计入失败。
 
 正文数据的更新会牵动派生文件。本轮 `pages/post-no-build.html` 中的体积数字改写之后，`assets/data/search-index.js` 的正文与文章页面不再一致，`node tools/check-content.mjs` 报出该项；以 `node tools/check-content.mjs --write-index` 重建索引后复检为零问题。
 

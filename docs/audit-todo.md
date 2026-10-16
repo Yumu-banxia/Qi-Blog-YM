@@ -200,14 +200,19 @@
 | 体积与 DOM 预算 | `node tools/check-content.mjs --sizes` | 首页 77.7 KB（gzip 21.4 KB），文章详情页 74.3 KB 到 77.1 KB，单页节点最多 391 个 |
 | 结构、布局、星图、灯箱、复制、搜索、访问端分档 | `node tools/browser-check.mjs` | 67 项，失败 0 项 |
 | 布局与结构 | `node tools/browser-check.mjs --layout` | 37 项，失败 0 项 |
-| 键盘流程、打印样式、按需加载、两种托管方式 | `node tools/acceptance-check.mjs` | 24 项，失败 0 项 |
+| 键盘流程、搜索面板的滚动锁定与背景键盘屏蔽、打印样式、按需加载、两种托管方式 | `node tools/acceptance-check.mjs` | 30 项，失败 0 项 |
 | 无障碍扫描 | `node tools/a11y-check.mjs --axe <axe.min.js>` | axe 4.14.0，13 项，失败 0 项 |
 | 规范校验 | `java -jar vnu.jar <九个页面>` | 消息 0 条，退出码 0 |
-| Firefox 引擎核对 | `node tools/firefox-check.mjs` | 34 项，失败 0 项 |
+| 运行期帧间隔、布局偏移、首次绘制、长任务与窄屏文字放大重排 | `node tools/perf-check.mjs` | 27 项，失败 0 项 |
+| Firefox 引擎核对 | `node tools/firefox-check.mjs` | 36 项，失败 0 项 |
 
 各阶段状态：第一阶段见提交 f3eff85，第二阶段见 f518f28，第三阶段见 53cc14c，第四阶段见 e1099ec 与 1d7bd0b，第五阶段的链接配色、星图注释与排版细节见本轮改动，逐条结果记录在 `docs/plan.md` 的第五阶段小节与 `docs/design-note.md` 的核对记录一节。
 
 本轮另外修正一处派生数据不同步：`pages/post-no-build.html` 的体积数字更新之后搜索索引正文未同步，以 `node tools/check-content.mjs --write-index` 重建 `assets/data/search-index.js`，复检九个页面零问题。
+
+搜索面板的模态行为在第二轮核对中与作品灯箱对齐：打开时把页面主体移出键盘访问范围，优先使用 `inert`，缺少支持时退回 `aria-hidden`；锁定页面滚动并补偿滚动条宽度；`Tab` 与 `Shift+Tab` 在面板内循环，关闭时恢复原状。修正过程中发现上一轮改动在 `Tab` 分支内声明了与选中项下标同名的局部变量 `active`，变量提升使 `ArrowDown`、`ArrowUp` 与 `Enter` 读到未定义值，方向键移动与回车打开文章失效，改名为 `focused` 后恢复。相应断言写入 `tools/acceptance-check.mjs` 与 `tools/firefox-check.mjs`。
+
+运行期数据改由新增的 `tools/perf-check.mjs` 记录。该脚本采样帧间隔、累积布局偏移、首次绘制与长任务，并在 320 像素宽度下放大行高、字距与词距复查重排。长任务与帧间隔随机器负载浮动，只作记录；累积布局偏移超过 0.1、出现文档级横向溢出或脚本报错才计入失败。2026-10-17 的结果：帧间隔中位数 17.8 至 18.0 毫秒，第九十五百分位 18.3 至 18.6 毫秒，累积布局偏移 0 至 0.022，首次内容绘制 44 至 192 毫秒，长任务只出现在首页与文章详情页的加载阶段。
 
 未取得结果的项：本机 Edge 版本为 155.0.4283.45，以 MSIX 包形式安装，无头实例启动后进程随即退出，`--remote-debugging-port` 未生成 `DevToolsActivePort`，未取得引擎结果；Safari 没有可用环境，记为未测；旧设备只有 UA 模拟结果，没有真机数据。
 
