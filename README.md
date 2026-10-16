@@ -42,7 +42,8 @@ Qi-blog-ds/
 │  ├─ styles/            设计令牌、基础样式、文章样式与兜底样式
 │  ├─ scripts/           能力分级、全局交互、星图交互、站内搜索与阅读增强
 │  ├─ vendor/            本地化的 highlight.js 与 KaTeX
-├─ docs/                 项目说明、内容规划、设计说明与开发记录
+├─ docs/                 项目说明、内容规划、设计说明、检查清单与开发记录
+├─ tools/                提交前运行的检查脚本（Node.js，不参与页面运行）
 ├─ .editorconfig
 ├─ .gitattributes        文字文件统一以 LF 存储
 ├─ .gitignore
@@ -63,9 +64,21 @@ Qi-blog-ds/
 6. 视觉打磨
 7. 打包与交付
 
-前六阶段已完成，第七阶段的设计说明已写入 `docs/design-note.md`，压缩包待按赛事命名规则打包。
+前六阶段已完成，第七阶段的设计说明已写入 `docs/design-note.md`，压缩包待按赛事命名规则打包。第二轮检查的修正项与执行顺序记录在 `docs/audit-todo.md`。
 
 ## 性能实测
 
-以本地文件方式打开，首屏资源（HTML、CSS 与页面脚本，未压缩）首页为 63.6 KB，文章列表、作品、关于三页在 37.0 KB 到 38.0 KB 之间，文章详情页在 62.2 KB 到 64.3 KB 之间。gzip 后分别为 20.5 KB、12.7 KB 到 12.8 KB、21.1 KB 到 21.8 KB。单页 DOM 节点最多 360 个，横向溢出在 360、753、1425 三种宽度下均为 0。
+本项目统一以 `node tools/check-content.mjs --sizes` 统计体积，范围为页面自身的 HTML、其引用的本地样式表与页面自带脚本，不含按需加载的第三方库、图片与字体，按 1 KB 等于 1024 字节换算。首页 77.5 KB（gzip 21.4 KB）；文章列表 47.6 KB、关于 46.8 KB、归档 50.7 KB、作品 53.9 KB，gzip 在 13.6 KB 到 15.1 KB 之间；文章详情页在 74.1 KB 到 77.0 KB 之间，gzip 在 20.8 KB 到 21.6 KB 之间。单页 DOM 节点最多 391 个，360、768、1440 三种宽度下共二十七组测量，横向溢出与页面级越界元素均为 0。
+
+## 维护脚本
+
+`tools/` 下的脚本只在开发与提交前运行，浏览页面不需要它们。运行需要 Node.js 20 以上；浏览器核对用到全局 WebSocket，建议 22 以上。
+
+| 脚本 | 用途 |
+| --- | --- |
+| `node tools/check-content.mjs` | 核对本地引用、锚点、图片固有尺寸、文章在列表与归档中的记录，以及搜索索引与文章头部是否一致 |
+| `node tools/check-content.mjs --write-index` | 按文章页面重建 `assets/data/search-index.js` |
+| `node tools/check-content.mjs --sizes` | 输出各页面首屏资源的体积统计 |
+| `node tools/browser-check.mjs` | 以无头 Chromium 核对布局、结构、星图、灯箱、复制、搜索与访问端分档 |
+| `node tools/browser-check.mjs --layout` | 只做布局与结构核对 |
 

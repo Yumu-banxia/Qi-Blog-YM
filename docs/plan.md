@@ -305,10 +305,10 @@ Qi-blog-ds/
 
 | 维度 | 目标 |
 | --- | --- |
-| 首屏关键资源（HTML 与 CSS） | 未压缩 120 KB 以内，实测首页 30.8 KB |
-| 页面自带脚本 | 未压缩 40 KB 以内，capability 与 main 合计 11.0 KB，首页另加 chart 21.3 KB，文章页另加 reader 14.5 KB |
-| 按需第三方库 | 仅在文章页命中内容时加载，highlight.js 约 129 KB，KaTeX 约 273 KB 加字体 296 KB |
-| 单页 DOM 节点 | 1500 以内，实测最多 360 |
+| 首屏关键资源（HTML 与 CSS） | 未压缩 120 KB 以内，实测首页 38.2 KB、文章页 45.7 KB |
+| 页面自带脚本 | 未压缩 40 KB 以内，capability 与 main 合计 14.2 KB，首页另加 chart 25.2 KB、文章页另加 reader 16.0 KB、作品页另加 gallery 4.0 KB |
+| 按需第三方库 | 仅在文章页命中内容时加载，highlight.js 约 126 KB，KaTeX 脚本与样式合计约 292 KB，字体约 254 KB |
+| 单页 DOM 节点 | 1500 以内，实测最多 391 |
 | 累计布局偏移 | 接近于零，媒体元素标注宽高 |
 | 目标浏览器 | Chrome 与 Edge 105 以上、Firefox 110 以上、Safari 15.4 以上 |
 | 响应式断点 | 375、768、1024、1440 |
