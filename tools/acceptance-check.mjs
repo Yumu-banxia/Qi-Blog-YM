@@ -91,6 +91,13 @@ const pressEscape = (client) => press(client, 'Escape', 27);
 const pressArrowDown = (client) => press(client, 'ArrowDown', 40);
 const pressEnter = (client) => pressWithText(client, 'Enter', 13, '\r');
 
+/* Shift+Tab：modifiers 取 8 表示 Shift */
+async function pressShiftTab(client) {
+  const base = { key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9, nativeVirtualKeyCode: 9, modifiers: 8 };
+  await client.send('Input.dispatchKeyEvent', Object.assign({ type: 'rawKeyDown' }, base));
+  await client.send('Input.dispatchKeyEvent', Object.assign({ type: 'keyUp' }, base));
+}
+
 /* 已访问链接配色对比用的取样点：首页“全部作品”链接及其周边留白 */
 const LINK_PROBE = `(() => {
   const link = Array.from(document.querySelectorAll('a')).find((item) => item.textContent.trim() === '全部作品');
@@ -213,6 +220,16 @@ try {
     await navigate(page.client, fileUrl(ROOT + '/index.html'));
     await sleep(400);
 
+    const baseline = await evaluate(page.client, `(() => {
+      const host = document.querySelector('.skip-link').closest('body > *');
+      return {
+        overflow: document.body.style.overflow,
+        paddingRight: document.body.style.paddingRight,
+        aria: host.getAttribute('aria-hidden'),
+        inertSupported: 'inert' in HTMLElement.prototype
+      };
+    })()`);
+
     await evaluate(page.client, `document.querySelector('.search-toggle').focus()`);
     await pressEnter(page.client);
     await sleep(800);
@@ -221,6 +238,30 @@ try {
       return { hidden: panel.hidden, focus: document.activeElement.className, expanded: document.querySelector('.search-toggle').getAttribute('aria-expanded') };
     })()`);
     check('搜索入口响应键盘并聚焦输入框', opened.hidden === false && /search-input/.test(opened.focus || '') && opened.expanded === 'true', JSON.stringify(opened));
+
+    const modal = await evaluate(page.client, `(() => {
+      const panel = document.getElementById('search-panel');
+      const host = document.querySelector('.skip-link').closest('body > *');
+      const outside = document.querySelector('.skip-link');
+      const gap = window.innerWidth - document.documentElement.clientWidth;
+      outside.focus();
+      const state = {
+        overflow: document.body.style.overflow,
+        paddingRight: document.body.style.paddingRight,
+        gap: gap,
+        hostInert: host.inert === true,
+        hostHidden: host.getAttribute('aria-hidden'),
+        panelInert: panel.inert === true,
+        outsideReachable: document.activeElement === outside
+      };
+      document.querySelector('.search-input').focus();
+      return state;
+    })()`);
+    check('搜索面板打开时暂停页面滚动', modal.overflow === 'hidden' && modal.paddingRight === (modal.gap > 0 ? modal.gap + 'px' : ''), JSON.stringify(modal));
+    const shielded = baseline.inertSupported
+      ? modal.hostInert === true && modal.outsideReachable === false
+      : modal.hostHidden === 'true';
+    check('搜索面板打开时背景退出键盘访问', modal.panelInert === false && shielded, JSON.stringify(modal));
 
     await page.client.send('Input.insertText', { text: '构建' });
     await sleep(500);
@@ -235,13 +276,52 @@ try {
     })()`);
     check('方向键移动选中项', current.length > 0, current);
 
+    const trap = await evaluate(page.client, `(() => {
+      const items = Array.from(document.querySelectorAll('#search-panel a[href], #search-panel button, #search-panel input'));
+      window.__trapFirst = items[0];
+      window.__trapLast = items[items.length - 1];
+      window.__trapLast.focus();
+      return { count: items.length, first: window.__trapFirst.className, last: window.__trapLast.className };
+    })()`);
+    await pressTab(page.client);
+    await sleep(150);
+    const wrapped = await evaluate(page.client, `(() => {
+      const panel = document.getElementById('search-panel');
+      return { isFirst: document.activeElement === window.__trapFirst, inside: panel.contains(document.activeElement), focus: document.activeElement.className };
+    })()`);
+    check('Tab 在面板内循环回到首个控件', trap.count > 1 && wrapped.isFirst === true && wrapped.inside === true, JSON.stringify(Object.assign({}, trap, wrapped)));
+
+    await pressShiftTab(page.client);
+    await sleep(150);
+    const reversed = await evaluate(page.client, `({ isLast: document.activeElement === window.__trapLast, focus: document.activeElement.className })`);
+    check('Shift+Tab 在面板内循环到末个控件', reversed.isLast === true, JSON.stringify(reversed));
+
     await pressEscape(page.client);
     await sleep(250);
     const closed = await evaluate(page.client, `(() => {
       const panel = document.getElementById('search-panel');
-      return { hidden: panel.hidden, focus: document.activeElement.className, expanded: document.querySelector('.search-toggle').getAttribute('aria-expanded') };
+      const host = document.querySelector('.skip-link').closest('body > *');
+      return {
+        hidden: panel.hidden,
+        focus: document.activeElement.className,
+        expanded: document.querySelector('.search-toggle').getAttribute('aria-expanded'),
+        overflow: document.body.style.overflow,
+        paddingRight: document.body.style.paddingRight,
+        inert: host.inert === true,
+        aria: host.getAttribute('aria-hidden')
+      };
     })()`);
     check('Esc 关闭搜索并归还焦点', closed.hidden === true && /search-toggle/.test(closed.focus || '') && closed.expanded === 'false', JSON.stringify(closed));
+    check('关闭搜索后解除滚动锁定与背景屏蔽', closed.overflow === baseline.overflow && closed.paddingRight === baseline.paddingRight && closed.inert === false && closed.aria === baseline.aria, JSON.stringify(closed));
+
+    const released = await evaluate(page.client, `(() => {
+      const link = document.getElementById('site-nav').querySelector('a');
+      link.focus();
+      const reachable = document.activeElement === link;
+      document.querySelector('.search-toggle').focus();
+      return reachable;
+    })()`);
+    check('关闭搜索后背景恢复键盘访问', released === true, String(released));
 
     await pressEnter(page.client);
     await sleep(800);

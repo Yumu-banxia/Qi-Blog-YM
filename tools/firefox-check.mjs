@@ -174,6 +174,36 @@ try {
     const hits = await waitFor(browser, "return document.querySelectorAll('.search-result').length;", 12000);
     check('站内搜索打开面板并给出结果', opened === true && hits > 0, JSON.stringify({ opened: opened, hits: hits }));
 
+    const searchModal = await evaluate(browser, `
+      const host = document.querySelector('.skip-link').closest('body > *');
+      const panel = document.getElementById('search-panel');
+      const link = document.querySelector('.skip-link');
+      link.focus();
+      return {
+        overflow: document.body.style.overflow,
+        hostInert: host.inert === true,
+        panelInert: panel.inert === true,
+        outside: document.activeElement === link
+      };
+    `);
+    check('搜索面板打开时锁定滚动并屏蔽背景键盘访问',
+      searchModal.overflow === 'hidden' && searchModal.hostInert === true && searchModal.panelInert === false && searchModal.outside === false,
+      JSON.stringify(searchModal));
+
+    const searchClosed = await evaluate(browser, `
+      document.querySelector('.search-dismiss').click();
+      const host = document.querySelector('.skip-link').closest('body > *');
+      return {
+        hidden: document.getElementById('search-panel').hidden,
+        overflow: document.body.style.overflow,
+        hostInert: host.inert === true,
+        focus: (document.activeElement && document.activeElement.className) || ''
+      };
+    `);
+    check('搜索面板关闭后还原滚动与背景键盘访问',
+      searchClosed.hidden === true && searchClosed.overflow === '' && searchClosed.hostInert === false && /search-toggle/.test(searchClosed.focus),
+      JSON.stringify(searchClosed));
+
     /* 三、作品页灯箱 */
     await navigate(browser, fileUrl('pages/works.html'));
     const lightbox = await evaluate(browser, `

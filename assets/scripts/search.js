@@ -290,12 +290,58 @@
     return panel.querySelectorAll('a[href], button, input');
   }
 
+  var supportsInert = typeof HTMLElement !== 'undefined' && 'inert' in HTMLElement.prototype;
+  var scrollLock = null;
+
+  /* 面板打开期间背景内容退出键盘访问，处理方式与作品灯箱一致：
+     优先使用 inert，缺少支持时退回 aria-hidden */
+  function setBackgroundHidden(hidden) {
+    var nodes = document.body.children;
+    for (var i = 0; i < nodes.length; i += 1) {
+      var node = nodes[i];
+      if (node === panel) {
+        continue;
+      }
+      if (supportsInert) {
+        node.inert = hidden;
+      } else if (hidden) {
+        node.setAttribute('aria-hidden', 'true');
+      } else {
+        node.removeAttribute('aria-hidden');
+      }
+    }
+  }
+
+  function lockScroll() {
+    var body = document.body;
+    var gap = window.innerWidth - document.documentElement.clientWidth;
+    scrollLock = {
+      overflow: body.style.overflow,
+      paddingRight: body.style.paddingRight
+    };
+    body.style.overflow = 'hidden';
+    if (gap > 0) {
+      body.style.paddingRight = gap + 'px';
+    }
+  }
+
+  function unlockScroll() {
+    if (!scrollLock) {
+      return;
+    }
+    document.body.style.overflow = scrollLock.overflow;
+    document.body.style.paddingRight = scrollLock.paddingRight;
+    scrollLock = null;
+  }
+
   function open() {
     if (!panel.hidden) {
       return;
     }
     lastFocus = document.activeElement;
     panel.hidden = false;
+    setBackgroundHidden(true);
+    lockScroll();
     toggle.setAttribute('aria-expanded', 'true');
     input.value = '';
     list.textContent = '';
@@ -324,6 +370,8 @@
       return;
     }
     panel.hidden = true;
+    setBackgroundHidden(false);
+    unlockScroll();
     toggle.setAttribute('aria-expanded', 'false');
     var target = lastFocus && lastFocus !== document.body ? lastFocus : toggle;
     if (target && typeof target.focus === 'function') {
@@ -397,16 +445,16 @@
       }
       var first = items[0];
       var last = items[items.length - 1];
-      var target = panel.getRootNode ? panel : null;
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
+      /* 变量名避开外层记录选中项下标的 active */
+      var focused = document.activeElement;
+      if (event.shiftKey) {
+        if (focused === first || !panel.contains(focused)) {
+          event.preventDefault();
+          last.focus();
+        }
+      } else if (focused === last || !panel.contains(focused)) {
         event.preventDefault();
         first.focus();
-      }
-      if (target === null) {
-        return;
       }
     }
   });
