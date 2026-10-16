@@ -25,6 +25,9 @@
     return;
   }
 
+  /* 缺少指针事件接口时只保留漂浮与键盘操作，不绑定指针交互 */
+  var pointerInput = !Capability.env || Capability.env.pointerEvents === true;
+
   var svg = canvas.querySelector('.chart-lines');
   var lines = svg ? svg.querySelectorAll('path') : [];
   var nodeList = canvas.querySelectorAll('.chart-node');
@@ -524,27 +527,32 @@
       setBasePosition(index, items[index].baseX + dx, items[index].baseY + dy);
     });
 
-    listen(link, 'pointerdown', onDown);
-    listen(link, 'pointermove', onMove);
-    listen(link, 'pointerup', finishDrag);
-    listen(link, 'pointercancel', finishDrag);
+    if (pointerInput) {
+      listen(link, 'pointerdown', onDown);
+      listen(link, 'pointermove', onMove);
+      listen(link, 'pointerup', finishDrag);
+      listen(link, 'pointercancel', finishDrag);
+    }
+
     listen(link, 'click', function (event) {
       if (suppressClick) {
         event.preventDefault();
       }
     });
 
-    listen(link, 'pointerenter', function () {
-      // 指针停在节点上时不施加推力，保证节点稳定可点
-      pointerOnNode = true;
-      setFocus(index);
-    });
-    listen(link, 'pointerleave', function () {
-      pointerOnNode = false;
-      if (!drag) {
-        setFocus(-1);
-      }
-    });
+    if (pointerInput) {
+      listen(link, 'pointerenter', function () {
+        // 指针停在节点上时不施加推力，保证节点稳定可点
+        pointerOnNode = true;
+        setFocus(index);
+      });
+      listen(link, 'pointerleave', function () {
+        pointerOnNode = false;
+        if (!drag) {
+          setFocus(-1);
+        }
+      });
+    }
     listen(link, 'focus', function () {
       pointerOnNode = true;
       setFocus(index);
@@ -783,14 +791,17 @@
     draw();
   }
 
-  listen(canvas, 'pointerdown', onCanvasDown);
-  listen(canvas, 'pointermove', onCanvasMove, { passive: true });
-  listen(canvas, 'pointerleave', onCanvasLeave);
+  if (pointerInput) {
+    listen(canvas, 'pointerdown', onCanvasDown);
+    listen(canvas, 'pointermove', onCanvasMove, { passive: true });
+    listen(canvas, 'pointerleave', onCanvasLeave);
+    listen(window, 'pointerup', finishPan, true);
+    listen(window, 'pointercancel', finishPan, true);
+    listen(window, 'pointerup', finishDrag, true);
+    listen(window, 'pointercancel', finishDrag, true);
+  }
+
   listen(canvas, 'wheel', onWheel, { passive: false });
-  listen(window, 'pointerup', finishPan, true);
-  listen(window, 'pointercancel', finishPan, true);
-  listen(window, 'pointerup', finishDrag, true);
-  listen(window, 'pointercancel', finishDrag, true);
 
   listen(chart, 'keydown', function (event) {
     if (event.key === 'Escape' || event.keyCode === 27) {

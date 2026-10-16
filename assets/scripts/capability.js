@@ -25,21 +25,30 @@
       window.CSS.supports(rule) === true;
   }
 
-  function canUseCanvas() {
-    try {
-      return Boolean(document.createElement('canvas').getContext);
-    } catch (error) {
-      return false;
+  /* 核心运行时：任一项缺失，脚本的增强部分都无从成立，判为最低档 */
+  var coreRuntime = {
+    querySelector: typeof document.querySelector === 'function',
+    events: typeof window.addEventListener === 'function',
+    customProperties: cssSupports('--probe: 0'),
+    matchMedia: typeof window.matchMedia === 'function',
+    animationFrame: typeof window.requestAnimationFrame === 'function'
+  };
+
+  var missingCore = '';
+  for (var coreKey in coreRuntime) {
+    if (Object.prototype.hasOwnProperty.call(coreRuntime, coreKey) && coreRuntime[coreKey] !== true) {
+      missingCore = coreKey;
+      break;
     }
   }
 
+  /* 非核心接口：缺失时只关闭对应增强，不改变档位。
+     intersectionObserver 供滚动出现与星图暂停使用；resizeObserver 供星图重新量取尺寸使用；
+     pointerEvents 供星图的指针交互使用，缺失时键盘微调与漂浮仍可用。 */
   var env = {
-    customProperties: cssSupports('--probe: 0'),
-    matchMedia: typeof window.matchMedia === 'function',
-    animationFrame: typeof window.requestAnimationFrame === 'function',
     intersectionObserver: typeof window.IntersectionObserver === 'function',
-    blur: cssSupports('backdrop-filter: blur(1px)') || cssSupports('-webkit-backdrop-filter: blur(1px)'),
-    canvas: canUseCanvas()
+    resizeObserver: typeof window.ResizeObserver === 'function',
+    pointerEvents: typeof window.PointerEvent === 'function'
   };
 
   var cores = nav.hardwareConcurrency || 0;
@@ -53,12 +62,18 @@
   var tier = 'medium';
   var reason = 'baseline';
 
-  if (legacyUA || !env.customProperties || !env.matchMedia || !env.animationFrame) {
+  if (legacyUA || missingCore) {
     tier = 'minimal';
     reason = legacyUA ? 'legacy-ua' : 'limited-runtime';
-  } else if (CONSTRAINED_PATTERN.test(ua) || (cores > 0 && cores <= 2) || (memory > 0 && memory <= 1) || saveData || slowNetwork) {
+  } else if (CONSTRAINED_PATTERN.test(ua)) {
     tier = 'low';
-    reason = (saveData || slowNetwork) ? 'network' : 'hardware';
+    reason = 'constrained-ua';
+  } else if (saveData || slowNetwork) {
+    tier = 'low';
+    reason = 'network';
+  } else if ((cores > 0 && cores <= 2) || (memory > 0 && memory <= 1)) {
+    tier = 'low';
+    reason = 'hardware';
   } else if (cores >= 8 && memory >= 4 && !prefersReducedMotion) {
     tier = 'high';
     reason = 'ample';
@@ -141,19 +156,6 @@
       } catch (error) {
         /* 存储不可用时仅保留当前会话状态 */
       }
-    },
-    load: function (name, src, onload) {
-      if (features[name] !== true) {
-        return false;
-      }
-      var script = document.createElement('script');
-      script.src = src;
-      script.async = true;
-      if (typeof onload === 'function') {
-        script.onload = onload;
-      }
-      head().appendChild(script);
-      return true;
     }
   };
 })();

@@ -84,16 +84,16 @@
 
 ### 访问端能力分级
 
-`assets/scripts/capability.js` 在首屏同步执行，从三处取信号：User-Agent 中的功能机与老式移动浏览器特征、硬件与网络线索（逻辑核数、设备内存、省流模式、2G 级连接）、运行时接口的可用性（自定义属性、`matchMedia`、`requestAnimationFrame`、`IntersectionObserver`、`backdrop-filter`、画布上下文）。
+`assets/scripts/capability.js` 在首屏同步执行，从三处取信号：User-Agent 中的功能机与老式移动浏览器特征、硬件与网络线索（逻辑核数、设备内存、省流模式、2G 级连接）、运行时接口的可用性。运行时接口分两组：核心组含 `document.querySelector`、`window.addEventListener`、CSS 自定义属性、`matchMedia`、`requestAnimationFrame`，缺失时判最低档；增强组含 `IntersectionObserver`、`ResizeObserver`、`PointerEvent`，缺失时只关闭对应增强。
 
 | 档位 | 判定条件 | 允许项 |
 | --- | --- | --- |
 | high | 逻辑核数 8 以上，内存 4 GB 以上，未偏好减少动态效果 | 全部动效与增强 |
 | medium | 未命中其他条件的现代设备 | 动效、模糊、按需脚本 |
 | low | 受限 UA、双核以内、内存 1 GB 以内、省流模式或 2G 级连接 | 静态内容与基础表现 |
-| minimal | 功能机 UA，或缺少自定义属性等基础接口 | 静态内容 |
+| minimal | 功能机 UA，或缺少核心运行时接口 | 静态内容 |
 
-判定结果写入根元素的 `data-cap`，来源写入 `data-cap-reason`。样式按属性选择器分支处理降级，脚本通过 `Capability.allow(name)` 查询单项能力，通过 `Capability.load(name, src)` 决定是否注入高开销脚本；未获允许时资源不进入请求队列。`minimal` 档位额外挂载 `assets/styles/lite.css`，该样式表不使用自定义属性、弹性布局、网格与逻辑属性。
+判定结果写入根元素的 `data-cap`，来源写入 `data-cap-reason`，取值区分 `legacy-ua`、`limited-runtime`、`constrained-ua`、`network`、`hardware`、`baseline` 与 `ample`。样式按属性选择器分支处理降级，脚本通过 `Capability.allow(name)` 查询单项能力，未获允许时不发起请求。`minimal` 档位额外挂载 `assets/styles/lite.css`，该样式表不使用自定义属性、弹性布局、网格与逻辑属性，其中跳转主内容的链接保持常驻可见。
 
 ### 阅读增强
 
@@ -103,7 +103,7 @@
 
 文章头部另给出阅读时长，按正文纯文本字数以每分钟 400 字估算，不足一分钟按一分钟计；文末列出其余文章作为延伸阅读，静态生成，无脚本时同样可见。
 
-代码块补上语言标注、折叠与复制。折叠阈值取 16 行；复制优先使用异步剪贴板接口，不可用时回退到临时文本域与 `execCommand`，在本地文件环境下同样有效；代码块可横向滚动，因此补上 `tabindex` 以便键盘进入。
+代码块补上语言标注、折叠与复制。折叠阈值取 16 行；复制优先使用异步剪贴板接口，不可用时回退到临时文本域与 `execCommand`，两条路径都按实际结果反馈，失败时按钮显示「复制失败」并播报提示；代码块可横向滚动，因此补上 `tabindex` 以便键盘进入。
 
 公式与代码高亮按需加载：代码高亮只在页面存在代码块时请求，公式渲染只在正文纯文本命中公式分隔符时请求，判定时跳过 `code` 与 `pre` 内部文本。KaTeX 与 highlight.js 以本地文件形式放在 `assets/vendor/`，随站点一起分发。
 

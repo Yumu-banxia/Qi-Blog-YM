@@ -88,11 +88,25 @@ svg {
   text-decoration: none;
 }
 
+/* 搜索与主题按钮依赖脚本与图标字体，兜底档位不显示 */
 .icon-button,
 .nav-toggle,
-.theme-toggle,
-.skip-link {
+.theme-toggle {
   display: none;
+}
+
+/* 兜底模式下跳转链接常驻可见，键盘访问不依赖 :focus 定位 */
+.skip-link {
+  position: static;
+  display: block;
+  inset-block-start: auto;
+  inset-inline-start: auto;
+  margin: 0 0 8px;
+  padding: 4px 0;
+  background: none;
+  border: 0;
+  color: #1a4fd6;
+  font-size: 14px;
 }
 
 .section {

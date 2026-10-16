@@ -99,7 +99,7 @@
           <p>判断放在 <code>&lt;head&gt;</code> 里同步执行的一小段脚本中，结果写到根元素的 <code>data-cap</code> 上，样式和后续脚本都读这一个属性，不再各自判断。依据来自三处。</p>
           <p>先是 User-Agent。功能机与老式移动浏览器（<code>MIDP</code>、<code>Symbian</code>、<code>Opera Mini</code>、<code>Trident</code> 这些片段）命中就判最低档；现代内核但硬件受限的机型（老 Android、UC、MIUI 之类）归为受限档。</p>
           <p>再看硬件与网络：逻辑核数、设备内存、省流模式，以及连接是不是 2G 级。</p>
-          <p>最后一处是运行时接口是否可用：<code>CSS.supports('--probe: 0')</code>、<code>matchMedia</code>、<code>requestAnimationFrame</code>、<code>IntersectionObserver</code>、<code>backdrop-filter</code>，还有画布上下文。其中任一项缺失，脚本与样式的增强部分都无从成立。</p>
+          <p>最后一处是运行时接口，把它拆成两组。核心组含 <code>querySelector</code>、<code>addEventListener</code>、<code>CSS.supports('--probe: 0')</code>、<code>matchMedia</code> 与 <code>requestAnimationFrame</code>，任一项缺失就判最低档；增强组含 <code>IntersectionObserver</code>、<code>ResizeObserver</code> 与 <code>PointerEvent</code>，缺失时只关掉对应功能，档位不变。</p>
 
           <h2>四档与各自能用的东西</h2>
           <div class="table-wrap" tabindex="0">
@@ -130,7 +130,7 @@
                 </tr>
                 <tr>
                   <th scope="row">minimal</th>
-                  <td>功能机 UA，或缺少自定义属性等基础接口</td>
+                  <td>功能机 UA，或缺少 querySelector、自定义属性等核心接口</td>
                   <td>静态内容</td>
                 </tr>
               </tbody>
@@ -138,28 +138,42 @@
           </div>
 
           <h2>样式与脚本怎么读这个结果</h2>
-          <p>样式按属性选择器分支。受限档位关掉页头模糊；最低档位把导航改回常驻排列，隐藏搜索与主题按钮，动画和过渡整个停掉。</p>
-          <p>脚本用 <code>Capability.allow(name)</code> 与 <code>Capability.load(name, src)</code>。未获权限时 <code>load</code> 返回 <code>false</code>，请求不会发出，比先下载再判断更省。</p>
+          <p>样式按属性选择器分支。受限档位关掉页头模糊；最低档位把导航改回常驻排列，隐藏搜索与主题按钮，动画和过渡整个停掉，跳转主内容的链接改为常驻可见。</p>
+          <p>脚本用 <code>Capability.allow(name)</code> 查询单项能力，未获允许时不发起请求，比先下载再判断更省。滚动出现依赖 <code>IntersectionObserver</code>，缺失时待入场元素保持可见；星图的指针交互依赖 <code>PointerEvent</code>，缺失时保留漂浮与键盘微调。</p>
 
-          <pre><code class="language-js">var tier = 'medium';
+          <pre><code class="language-js">var coreRuntime = {
+  querySelector: typeof document.querySelector === 'function',
+  events: typeof window.addEventListener === 'function',
+  customProperties: cssSupports('--probe: 0'),
+  matchMedia: typeof window.matchMedia === 'function',
+  animationFrame: typeof window.requestAnimationFrame === 'function'
+};
+
+/* 逐项检查上面的接口，记下第一个缺失项 */
+var missingCore = '';
+
+var tier = 'medium';
 var reason = 'baseline';
-var limited = (cores &gt; 0 &amp;&amp; cores &lt;= 2) || (memory &gt; 0 &amp;&amp; memory &lt;= 1);
 
-if (legacyUA || !env.customProperties || !env.matchMedia || !env.animationFrame) {
+if (legacyUA || missingCore) {
   tier = 'minimal';
   reason = legacyUA ? 'legacy-ua' : 'limited-runtime';
-} else if (CONSTRAINED_PATTERN.test(ua) || limited || saveData || slowNetwork) {
+} else if (CONSTRAINED_PATTERN.test(ua)) {
   tier = 'low';
-  reason = (saveData || slowNetwork) ? 'network' : 'hardware';
+  reason = 'constrained-ua';
+} else if (saveData || slowNetwork) {
+  tier = 'low';
+  reason = 'network';
+} else if ((cores &gt; 0 &amp;&amp; cores &lt;= 2) || (memory &gt; 0 &amp;&amp; memory &lt;= 1)) {
+  tier = 'low';
+  reason = 'hardware';
 } else if (cores &gt;= 8 &amp;&amp; memory &gt;= 4 &amp;&amp; !prefersReducedMotion) {
   tier = 'high';
   reason = 'ample';
 }
 
 var features = {
-  effects: tier === 'high' || tier === 'medium',
   motion: (tier === 'high' || tier === 'medium') &amp;&amp; !prefersReducedMotion,
-  blur: env.blur &amp;&amp; (tier === 'high' || tier === 'medium'),
   optionalScripts: tier === 'high' || tier === 'medium'
 };
 
@@ -168,7 +182,7 @@ root.setAttribute('data-cap-reason', reason);</code></pre>
 
           <h2>最低档位换一份样式表</h2>
           <p>仅有静态内容还不够。缺少自定义属性与弹性布局支持的浏览器，连主样式表都排不对，所以最低档位会追加一份兜底表：不用自定义属性，不用 flex 与 grid，正文 16 像素、行高 1.6，导航回到行内排列。</p>
-          <p>根元素上的 <code>data-cap-reason</code> 记着是哪组信号触发的降级（<code>legacy-ua</code>、<code>network</code>、<code>hardware</code>），在真机上排查时很省事。</p>
+          <p>根元素上的 <code>data-cap-reason</code> 记着是哪组信号触发的降级（<code>legacy-ua</code>、<code>limited-runtime</code>、<code>constrained-ua</code>、<code>network</code>、<code>hardware</code>），在真机上排查时很省事。</p>
 
           <h2>没解决的部分</h2>
           <p>内存与核数的阈值是估出来的，只在几台常见设备上核对过，没有做大规模验证；功能机实测也只有那一台。要做扎实，需要收集一批旧机型逐台验证，这一步尚未进行。</p>
