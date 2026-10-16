@@ -474,6 +474,27 @@ for (const page of htmlFiles) {
   }
 }
 
+/* 列表页的标题与摘要应与文章页面一致 */
+for (const page of ['index.html', 'pages/posts.html']) {
+  const html = documents[page] || '';
+  const pattern = /<h[23] class="list-title"><a href="((?:pages\/)?post-[^"#]+\.html)">([\s\S]*?)<\/a><\/h[23]>[\s\S]*?<p class="summary">([\s\S]*?)<\/p>/g;
+  let match = pattern.exec(html);
+  while (match) {
+    const file = 'pages/' + match[1].replace('pages/', '');
+    const article = articles.get(file);
+    if (article) {
+      const title = stripTags(match[2]);
+      const summary = stripTags(match[3]);
+      if (title !== article.title) {
+        problem(page, lineOf(html, match.index), '列表标题与文章页面不一致：' + title);
+      }
+      if (summary !== article.summary) {
+        problem(page, lineOf(html, match.index), '列表摘要与文章页面不一致：' + summary);
+      }
+    }
+    match = pattern.exec(html);
+  }
+}
 /* 归档页标签计数与分组内容 */
 {
   const html = documents['pages/archive.html'] || '';
