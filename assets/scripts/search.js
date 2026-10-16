@@ -50,20 +50,34 @@
   var base = resolveBase();
   var inPages = (document.baseURI || '').indexOf('/pages/') !== -1;
   var entries = null;
-  var loading = false;
+  var indexState = 'idle'; /* idle | loading | ready | failed */
+  var pendingReady = null;
   var active = -1;
   var currentResults = [];
   var lastFocus = null;
 
+  function settlePending() {
+    var ready = pendingReady;
+    pendingReady = null;
+    if (typeof ready === 'function') {
+      ready();
+    }
+  }
+
   function loadIndex(onReady) {
-    if (entries) {
-      onReady();
+    if (indexState === 'ready') {
+      if (typeof onReady === 'function') {
+        onReady();
+      }
       return;
     }
-    if (loading) {
+    if (indexState === 'loading') {
+      pendingReady = onReady;
       return;
     }
-    loading = true;
+
+    indexState = 'loading';
+    pendingReady = onReady;
 
     var script = document.createElement('script');
     script.src = base + 'assets/data/search-index.js';
@@ -80,13 +94,17 @@
           body: item.body || ''
         };
       });
-      loading = false;
-      onReady();
+      indexState = 'ready';
+      settlePending();
     };
     script.onerror = function () {
-      entries = [];
-      loading = false;
-      status.textContent = '索引加载失败，请稍后再试';
+      /* 请求失败：回到可重试状态，重新打开面板或再次输入时重新请求 */
+      indexState = 'failed';
+      pendingReady = null;
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+      status.textContent = '索引加载失败，重新打开搜索可再试一次';
     };
     document.head.appendChild(script);
   }
@@ -280,10 +298,25 @@
     panel.hidden = false;
     toggle.setAttribute('aria-expanded', 'true');
     input.value = '';
-    status.textContent = '正在载入索引';
-    render([], '');
+    list.textContent = '';
+    currentResults = [];
+    active = -1;
     input.focus();
-    loadIndex(update);
+
+    if (indexState === 'ready') {
+      render([], '');
+      return;
+    }
+
+    if (indexState === 'failed') {
+      /* 上次请求未成功，重新打开时重试 */
+      indexState = 'idle';
+    }
+
+    status.textContent = '正在载入索引';
+    loadIndex(function () {
+      render([], '');
+    });
   }
 
   function close() {
@@ -309,8 +342,21 @@
   });
 
   listen(input, 'input', function () {
-    if (entries) {
+    if (indexState === 'ready') {
       update();
+      return;
+    }
+
+    if (indexState === 'failed') {
+      indexState = 'idle';
+      status.textContent = '正在载入索引';
+      loadIndex(update);
+      return;
+    }
+
+    if (indexState === 'loading') {
+      /* 索引到达后按当前输入补一次检索 */
+      pendingReady = update;
     }
   });
 

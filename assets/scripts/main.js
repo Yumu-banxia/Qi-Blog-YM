@@ -165,21 +165,42 @@
     return base.indexOf('/pages/') !== -1 ? base.replace(/pages\/[^/]*$/, '') : base.replace(/[^/]*$/, '');
   }
 
+  /* 搜索脚本按需取用：加载期间不重复插入，请求失败后允许再次点击重试 */
+  var searchState = 'idle';
+
   function openSearch() {
     if (window.SiteSearch) {
+      searchState = 'ready';
       window.SiteSearch.toggle();
       return;
     }
+    if (searchState === 'loading') {
+      return;
+    }
+
+    searchState = 'loading';
     var toggle = document.querySelector('.search-toggle');
     var script = document.createElement('script');
     script.src = searchBase() + 'assets/scripts/search.js?v=8';
     script.async = true;
     script.onload = function () {
-      if (window.SiteSearch) {
-        window.SiteSearch.open();
-        if (toggle) {
-          toggle.setAttribute('aria-expanded', 'true');
-        }
+      if (!window.SiteSearch) {
+        searchState = 'idle';
+        return;
+      }
+      searchState = 'ready';
+      window.SiteSearch.open();
+      if (toggle) {
+        toggle.setAttribute('aria-expanded', 'true');
+      }
+    };
+    script.onerror = function () {
+      searchState = 'idle';
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+      if (toggle) {
+        toggle.setAttribute('aria-expanded', 'false');
       }
     };
     document.head.appendChild(script);

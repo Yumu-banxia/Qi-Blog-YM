@@ -51,26 +51,39 @@
     return script;
   }
 
-  function copyText(value, onDone) {
+  /* 复制：优先使用异步剪贴板接口，拒绝或不可用时退回 execCommand。
+     两条路径都以实际结果回调，调用方据此给出成功或失败反馈。 */
+  function copyText(value, onDone, onFail) {
     function fallback() {
       var area = document.createElement('textarea');
       area.value = value;
       area.setAttribute('readonly', 'readonly');
+      area.setAttribute('aria-hidden', 'true');
       area.style.position = 'fixed';
       area.style.top = '-1000px';
       document.body.appendChild(area);
       area.select();
+
+      var copied = false;
       try {
-        document.execCommand('copy');
-        onDone();
+        copied = typeof document.execCommand === 'function' && document.execCommand('copy') === true;
       } catch (error) {
-        /* 复制不可用时保留原文 */
+        copied = false;
       }
+
       document.body.removeChild(area);
+
+      if (copied) {
+        onDone();
+      } else {
+        onFail();
+      }
     }
 
     if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-      navigator.clipboard.writeText(value).then(onDone, fallback);
+      navigator.clipboard.writeText(value).then(function () {
+        onDone();
+      }, fallback);
       return;
     }
     fallback();
@@ -153,13 +166,26 @@
     copy.className = 'code-action';
     copy.textContent = '复制';
     copy.setAttribute('aria-label', '复制代码');
+    var copyTimer = 0;
+
+    /* 成功与失败使用同一套复位流程，连续点击时不叠加定时器 */
+    function flashCopy(label, message) {
+      copy.textContent = label;
+      announce(message);
+      if (copyTimer) {
+        window.clearTimeout(copyTimer);
+      }
+      copyTimer = window.setTimeout(function () {
+        copy.textContent = '复制';
+        copyTimer = 0;
+      }, 1800);
+    }
+
     copy.addEventListener('click', function () {
       copyText(code ? code.textContent : pre.textContent, function () {
-        copy.textContent = '已复制';
-        announce('代码已复制到剪贴板');
-        window.setTimeout(function () {
-          copy.textContent = '复制';
-        }, 1600);
+        flashCopy('已复制', '代码已复制到剪贴板');
+      }, function () {
+        flashCopy('复制失败', '复制失败，请手动选择代码后再复制');
       });
     });
     bar.appendChild(copy);

@@ -16,7 +16,12 @@
   }
 
   var Capability = window.Capability || null;
-  if (!Capability || typeof Capability.allow !== 'function' || !Capability.allow('motion')) {
+  if (!Capability || typeof Capability.allow !== 'function') {
+    return;
+  }
+  /* 低端与功能机档位不启用本脚本，星图保持 HTML 中的静态形态。
+     减少动态效果偏好改由停用与恢复处理，偏好改变时无需重新载入页面。 */
+  if (Capability.tier !== 'high' && Capability.tier !== 'medium') {
     return;
   }
 
@@ -418,6 +423,11 @@
     var offsetX = item.homeX - item.baseX;
     var offsetY = item.homeY - item.baseY;
 
+    /* 动效关闭时直接落位，不进入缓动流程 */
+    if (!enabled) {
+      setBasePosition(index, item.homeX, item.homeY);
+      return;
+    }
     if (Math.abs(offsetX) < 0.2 && Math.abs(offsetY) < 0.2 && Math.abs(item.ox) < 0.2 && Math.abs(item.oy) < 0.2) {
       setBasePosition(index, item.homeX, item.homeY);
       return;
@@ -575,10 +585,11 @@
 
   /* 复位视图：带缓动回到初始比例与位置；已经处于初始状态时直接落位 */
   function resetView() {
-    if (Math.abs(view.scale - 1) < 0.001 && Math.abs(view.x) < 0.5 && Math.abs(view.y) < 0.5) {
+    if (!enabled || (Math.abs(view.scale - 1) < 0.001 && Math.abs(view.x) < 0.5 && Math.abs(view.y) < 0.5)) {
       view.scale = 1;
       view.x = 0;
       view.y = 0;
+      viewTarget = null;
       applyView();
       return;
     }
@@ -693,24 +704,51 @@
     }
   }
 
-  /* 减少动态效果开启时终止漂浮与交互，节点回到基准位置 */
+  /* 停止漂浮与交互：位移、视图与指针状态回到初始值，连线按静止后的节点位置重算后保留。
+     监听器保持绑定，各处理函数在 enabled 为 false 时直接返回，因此恢复动效时不必重新注册。 */
   function stop() {
-    enabled = false;
-    setFocus(-1);
-    if (controller) {
-      controller.abort();
+    if (!enabled) {
+      return;
     }
+    enabled = false;
+    drag = null;
+    pan = null;
+    viewTarget = null;
+    pointerInside = false;
+    pointerOnNode = false;
+    pointerStrength = 0;
+    pointerVel.x = 0;
+    pointerVel.y = 0;
+    setFocus(-1);
     if (frameId) {
       window.cancelAnimationFrame(frameId);
       frameId = 0;
     }
+    lastTime = 0;
+    lastApply = 0;
     for (var i = 0; i < items.length; i += 1) {
       resetOffset(items[i]);
+      applyOffset(items[i]);
+      items[i].el.classList.remove('is-dragging');
     }
+    canvas.removeAttribute('data-dragging');
+    view.scale = 1;
+    view.x = 0;
+    view.y = 0;
     canvas.style.removeProperty('transform');
-    for (var j = 0; j < lines.length; j += 1) {
-      lines[j].removeAttribute('d');
+    draw();
+  }
+
+  /* 系统偏好恢复为允许动效时重新启用漂浮与交互 */
+  function start() {
+    if (enabled) {
+      return;
     }
+    enabled = true;
+    lastTime = 0;
+    lastApply = 0;
+    pointerStrength = 0;
+    schedule();
   }
 
   function build() {
@@ -769,6 +807,10 @@
 
   if (typeof window.ResizeObserver === 'function') {
     var observer = new window.ResizeObserver(function () {
+      /* 动效关闭时保持静态：位置与视图都停在初始状态，不必重算 */
+      if (!enabled) {
+        return;
+      }
       measure();
       var i;
       for (i = 0; i < items.length; i += 1) {
@@ -781,6 +823,9 @@
     observer.observe(canvas);
   } else {
     listen(window, 'resize', function () {
+      if (!enabled) {
+        return;
+      }
       measure();
       clampView();
       applyView();
@@ -804,6 +849,8 @@
     var onMotionChange = function () {
       if (motionQuery.matches) {
         stop();
+      } else {
+        start();
       }
     };
     if (typeof motionQuery.addEventListener === 'function') {
@@ -814,5 +861,11 @@
   }
 
   build();
-  schedule();
+
+  if (Capability.reducedMotion) {
+    /* 载入时即为减少动态效果：先以静态形态呈现，偏好恢复后再启用 */
+    stop();
+  } else {
+    schedule();
+  }
 })();
