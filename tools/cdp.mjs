@@ -1,5 +1,6 @@
 /* 浏览器核对用的 DevTools 协议客户端
  * 仅使用 Node 内置模块与全局 WebSocket，不引入依赖。Node 需要 22 以上。
+ * 内核默认为 Chrome；环境变量 QI_BROWSER 可取 chrome、edge，或直接给出可执行文件地址。
  * 无头浏览器按环境需要加上 --no-sandbox，便于在受限账户下运行。
  */
 
@@ -8,20 +9,37 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-const CANDIDATES = [
-  'C:/Program Files/Google/Chrome/Application/chrome.exe',
-  'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
-  'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
-  'C:/Program Files/Microsoft/Edge/Application/msedge.exe'
-];
+const CANDIDATES = {
+  chrome: [
+    'C:/Program Files/Google/Chrome/Application/chrome.exe',
+    'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
+  ],
+  edge: [
+    'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
+    'C:/Program Files/Microsoft/Edge/Application/msedge.exe'
+  ]
+};
+
+/* 环境变量同时接受内核名称与可执行文件地址，便于在缺少常用安装位置的机器上运行 */
+export function browserName() {
+  const value = (process.env.QI_BROWSER || '').trim();
+  if (value === 'edge' || value === 'chrome') {
+    return value;
+  }
+  return 'chrome';
+}
 
 export function browserPath() {
-  for (const item of CANDIDATES) {
+  const value = (process.env.QI_BROWSER || '').trim();
+  if (value && value !== 'edge' && value !== 'chrome' && fs.existsSync(value)) {
+    return value;
+  }
+  for (const item of CANDIDATES[browserName()]) {
     if (fs.existsSync(item)) {
       return item;
     }
   }
-  throw new Error('未找到 Chromium 内核浏览器');
+  throw new Error('未找到 ' + browserName() + ' 浏览器可执行文件');
 }
 
 export async function launch() {

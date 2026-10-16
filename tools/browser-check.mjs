@@ -8,11 +8,10 @@
  *   node tools/browser-check.mjs --layout   只做布局与结构核对
  */
 
-import http from 'node:http';
-import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { launch, shutdown, openPage, navigate, evaluate, setViewport, setReducedMotion, setUserAgent, closePage, fileUrl, sleep } from './cdp.mjs';
+import { startServer } from './static-server.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ONLY_LAYOUT = process.argv.includes('--layout');
@@ -151,42 +150,6 @@ const STRUCTURE_PROBE = `(() => {
   }
   return issues;
 })()`;
-
-/* 供未知地址页面核对使用的简易静态服务，行为与静态托管一致 */
-function startServer(prefix) {
-  const types = {
-    '.html': 'text/html; charset=utf-8',
-    '.css': 'text/css; charset=utf-8',
-    '.js': 'text/javascript; charset=utf-8',
-    '.webmanifest': 'application/manifest+json',
-    '.png': 'image/png',
-    '.jpg': 'image/jpeg',
-    '.webp': 'image/webp',
-    '.svg': 'image/svg+xml',
-    '.woff2': 'font/woff2',
-    '.txt': 'text/plain; charset=utf-8'
-  };
-  const server = http.createServer((req, res) => {
-    const url = decodeURIComponent(req.url.split('?')[0]);
-    if (prefix && url.indexOf(prefix) !== 0) {
-      res.writeHead(404, { 'content-type': 'text/html; charset=utf-8' });
-      res.end('<h1>outside</h1>');
-      return;
-    }
-    const rel = url.slice(prefix.length);
-    const file = path.join(ROOT, rel);
-    if (rel && fs.existsSync(file) && fs.statSync(file).isFile()) {
-      res.writeHead(200, { 'content-type': types[path.extname(file)] || 'application/octet-stream' });
-      fs.createReadStream(file).pipe(res);
-      return;
-    }
-    res.writeHead(404, { 'content-type': 'text/html; charset=utf-8' });
-    fs.createReadStream(path.join(ROOT, '404.html')).pipe(res);
-  });
-  return new Promise((resolve) => {
-    server.listen(0, '127.0.0.1', () => resolve({ server, port: server.address().port }));
-  });
-}
 
 const browser = await launch();
 
@@ -442,10 +405,10 @@ try {
       await closePage(page);
     }
 
-    /* 七、未知地址页面 */
-    {
-      const project = await startServer('/Qi-blog-ds/');
-      const root = await startServer('');
+      /* 七、未知地址页面 */
+      {
+        const project = await startServer(ROOT, '/Qi-blog-ds/');
+        const root = await startServer(ROOT, '');
       try {
         const page = await openPage(browser, 'about:blank');
         watch(page, '404.html(前缀)');
@@ -468,6 +431,204 @@ try {
         project.server.close();
         root.server.close();
       }
+    }
+    /* 八、星图动效复核：指针吸引的方向与幅度、回位、独立漂浮、复位缓动与连线平滑 */
+    {
+      const page = await openPage(browser, 'about:blank');
+      watch(page, 'index.html(星图)');
+      await setViewport(page.client, 1440, 900);
+      await navigate(page.client, fileUrl(ROOT + '/index.html'));
+      await sleep(1200);
+
+      const STATE = `(() => {
+        const canvas = document.querySelector('.chart-canvas');
+        const box = canvas.getBoundingClientRect();
+        const raw = getComputedStyle(canvas).transform;
+        const view = new DOMMatrix(raw === 'none' ? '' : raw);
+        return {
+          box: { left: box.left, top: box.top, width: box.width, height: box.height },
+          view: { x: view.m41, y: view.m42, scale: view.m11 },
+          paths: Array.from(document.querySelectorAll('.chart-lines path')).map((p) => p.getAttribute('d') || ''),
+          nodes: Array.from(canvas.querySelectorAll('.chart-node')).map((el) => {
+            const rect = el.getBoundingClientRect();
+            const matrix = getComputedStyle(el).transform;
+            const shape = new DOMMatrix(matrix === 'none' ? '' : matrix);
+            /* 自身变换为 translate(-50%, -50%) translate3d(x, y)，矩阵平移量含元素半宽偏移，需还原为实际漂浮位移 */
+            return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, ox: shape.m41 + rect.width / 2, oy: shape.m42 + rect.height / 2 };
+          })
+        };
+      })()`;
+
+      const move = (x, y) => page.client.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y, button: 'none', buttons: 0 });
+      const press = (x, y, count) => page.client.send('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', buttons: 1, clickCount: count });
+      const release = (x, y, count) => page.client.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', buttons: 0, clickCount: count });
+      const dblclick = async (x, y) => {
+        await press(x, y, 1);
+        await release(x, y, 1);
+        await press(x, y, 2);
+        await release(x, y, 2);
+      };
+      const sample = async (times, gap) => {
+        const list = [];
+        for (let i = 0; i < times; i += 1) {
+          await sleep(gap);
+          list.push(await evaluate(page.client, STATE));
+        }
+        return list;
+      };
+      const round = (value) => Number(value.toFixed(2));
+      const sizeOf = (node) => Math.hypot(node.ox, node.oy);
+      const spread = (list, index) => Math.max.apply(null, list.map((item) => sizeOf(item.nodes[index])));
+      const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+      /* 逐段累计路径长度与单步最大值，用于判断位移是连续推进还是瞬间落位 */
+      const progress = (points, threshold) => {
+        let total = 0;
+        let step = 0;
+        let moved = 0;
+        for (let i = 1; i < points.length; i += 1) {
+          const gap = distance(points[i], points[i - 1]);
+          total += gap;
+          step = Math.max(step, gap);
+          if (gap > (threshold || 0.5)) {
+            moved += 1;
+          }
+        }
+        return { total, step, moved };
+      };
+      const edgeOf = (d) => {
+        const nums = d.replace('M', ' ').replace('C', ' ').trim().split(' ').filter((item) => item.length > 0).map(Number);
+        return { a: [nums[0], nums[1]], c1: [nums[2], nums[3]], c2: [nums[4], nums[5]], b: [nums[6], nums[7]] };
+      };
+      const unit = (x, y) => {
+        const length = Math.hypot(x, y) || 1;
+        return [x / length, y / length];
+      };
+      /* 每个节点处，出边起点方向与入边到达方向应当一致，余弦越接近 1 曲线越平滑 */
+      const tangents = (paths) => {
+        const edges = paths.map(edgeOf);
+        const cosines = [];
+        for (let i = 0; i < edges.length; i += 1) {
+          const out = edges[i];
+          const incoming = edges[(i + edges.length - 1) % edges.length];
+          const forward = unit(out.c1[0] - out.a[0], out.c1[1] - out.a[1]);
+          const backward = unit(incoming.b[0] - incoming.c2[0], incoming.b[1] - incoming.c2[1]);
+          cosines.push(forward[0] * backward[0] + forward[1] * backward[1]);
+        }
+        return cosines;
+      };
+
+      /* 指针远离画布，先取一段静置样本作为漂浮幅度基准 */
+      await move(4, 4);
+      const drifting = await sample(16, 250);
+      const idle = drifting[drifting.length - 1];
+      const baseline = [0, 1, 2, 3].map((i) => spread(drifting, i));
+      const box = idle.box;
+      const anchor = idle.nodes[1];
+      let apart = 0;
+      for (let i = 0; i < 4; i += 1) {
+        for (let j = i + 1; j < 4; j += 1) {
+          apart = Math.max(apart, Math.max.apply(null, drifting.map((item) => Math.abs(item.nodes[i].ox - item.nodes[j].ox) + Math.abs(item.nodes[i].oy - item.nodes[j].oy))));
+        }
+      }
+      check('四个节点各自独立漂浮', baseline.every((value) => value >= 0.5) && apart > 0.4,
+        '静置位移 ' + baseline.map(round).join('、') + ' 像素，节点间最大差值 ' + round(apart));
+
+      const pointer = {
+        x: Math.max(box.left + 24, anchor.x - 110),
+        y: Math.min(box.top + box.height - 24, Math.max(box.top + 24, anchor.y + 30))
+      };
+      await move(pointer.x, pointer.y);
+      const pulled = await sample(14, 170);
+      const offsets = pulled.map((item) => item.nodes[1]);
+      const near = offsets.filter((node) => sizeOf(node) >= 3);
+      const toward = near.filter((node) => {
+        const dx = pointer.x - node.x;
+        const dy = pointer.y - node.y;
+        return (node.ox * dx + node.oy * dy) / (sizeOf(node) * Math.hypot(dx, dy)) > 0;
+      });
+      const peak = Math.max.apply(null, offsets.map(sizeOf));
+      check('指针靠近时节点朝指针方向偏移', near.length >= 4 && toward.length >= Math.ceil(near.length * 0.75),
+        '有效样本 ' + near.length + ' 个，朝向指针 ' + toward.length + ' 个');
+      check('指针吸引幅度保持轻微', peak >= baseline[1] + 4 && peak <= 40,
+        '最大偏移 ' + round(peak) + ' 像素，静置基准 ' + round(baseline[1]) + ' 像素');
+
+      /* 指针移开后不再保留指针方向的偏移：先等弹力把牵引造成的位移衰减掉，再取长窗口的平均偏移向量。
+         节点自主漂浮属于往复运动，其长时间均值接近零；若节点被指针偏移锁定，沿指针方向的均值会保持数十像素。 */
+      await move(4, 4);
+      await sleep(3000);
+      const released = await sample(100, 250);
+      const dir = unit(pointer.x - anchor.x, pointer.y - anchor.y);
+      const average = (list) => {
+        const sum = list.reduce((acc, node) => ({ ox: acc.ox + node.ox, oy: acc.oy + node.oy }), { ox: 0, oy: 0 });
+        return { ox: sum.ox / list.length, oy: sum.oy / list.length };
+      };
+      const heldMean = average(pulled.map((item) => item.nodes[1]).slice(-6));
+      const freeMean = average(released.map((item) => item.nodes[1]));
+      const residual = freeMean.ox * dir[0] + freeMean.oy * dir[1];
+      const heldSize = sizeOf(heldMean);
+      check('指针移开后节点不再保持指针方向的偏移',
+        Math.abs(residual) <= Math.max(4, heldSize * 0.3) && sizeOf(freeMean) <= Math.max(8, heldSize * 0.5),
+        '指针方向残余 ' + round(residual) + ' 像素，平均偏移 ' + round(sizeOf(freeMean)) + ' 像素，停留时偏移 ' + round(heldSize) + ' 像素');
+
+      /* 拖动节点：不选中文字、不触发拖拽事件、不误触链接 */
+      await evaluate(page.client, `window.__qiDragstart = 0; document.addEventListener('dragstart', () => { window.__qiDragstart += 1; });`);
+      const moving = (await evaluate(page.client, STATE)).nodes[2];
+      await move(moving.x, moving.y);
+      await press(moving.x, moving.y, 1);
+      for (let i = 1; i <= 6; i += 1) {
+        await move(moving.x + i * 15, moving.y + i * 7);
+        await sleep(60);
+      }
+      await release(moving.x + 90, moving.y + 42, 1);
+      await sleep(400);
+      const dragged = await evaluate(page.client, `({ selection: String(window.getSelection()), dragstart: window.__qiDragstart, page: location.pathname.split('/').pop() })`);
+      check('拖动节点不选中文字且不误触链接', dragged.selection.length === 0 && dragged.dragstart === 0 && dragged.page === 'index.html',
+        JSON.stringify(dragged));
+
+      const spot = { x: box.left + box.width * 0.5, y: box.top + box.height * 0.58 };
+      await dblclick(spot.x, spot.y);
+      const trail = (await sample(20, 70)).map((item) => item.nodes[2]);
+      const nodeMotion = progress(trail);
+      const last = trail[trail.length - 1];
+      check('双击复位过程中位移逐步收敛', nodeMotion.total > 20 && nodeMotion.step <= nodeMotion.total * 0.6 && nodeMotion.moved >= 4,
+        '累计位移 ' + round(nodeMotion.total) + ' 像素，单步最大 ' + round(nodeMotion.step) + ' 像素，有效步数 ' + nodeMotion.moved);
+      check('双击复位后节点回到拖动前位置', distance(last, moving) <= 40, '相距 ' + round(distance(last, moving)) + ' 像素');
+
+      await page.client.send('Input.dispatchMouseEvent', { type: 'mouseWheel', x: spot.x, y: spot.y, deltaX: 0, deltaY: -240 });
+      await sleep(200);
+      const zoomed = await evaluate(page.client, STATE);
+      await dblclick(spot.x, spot.y);
+      const viewTrail = (await sample(16, 70)).map((item) => item.view);
+      const viewMotion = progress(viewTrail.map((item) => ({ x: item.scale, y: 0 })), 0.002);
+      const endpoint = viewTrail[viewTrail.length - 1];
+      check('双击复位视图过程中缩放逐步还原', zoomed.view.scale > 1.05 && viewMotion.moved >= 3 && viewMotion.step <= viewMotion.total * 0.6,
+        '起始比例 ' + round(zoomed.view.scale) + '，单步最大 ' + round(viewMotion.step) + '，有效步数 ' + viewMotion.moved);
+      check('双击复位后视图回到初始变换', Math.abs(endpoint.scale - 1) < 0.01 && Math.abs(endpoint.x) < 1 && Math.abs(endpoint.y) < 1,
+        JSON.stringify({ scale: round(endpoint.scale), x: round(endpoint.x), y: round(endpoint.y) }));
+
+      const straight = tangents((await evaluate(page.client, STATE)).paths);
+      check('节点未移动时连线在节点处切线连续', straight.every((cos) => cos > 0.99),
+        '余弦 ' + straight.map((cos) => cos.toFixed(4)).join(' '));
+
+      /* 把作品节点拖到关于节点近旁形成交叉布局，切线仍应连续 */
+      const cross = (await evaluate(page.client, STATE)).nodes[3];
+      await move(moving.x, moving.y);
+      await press(moving.x, moving.y, 1);
+      for (let i = 1; i <= 5; i += 1) {
+        await move(moving.x + (cross.x - moving.x) * i / 5, moving.y + (cross.y - moving.y) * i / 5);
+        await sleep(60);
+      }
+      await release(cross.x, cross.y, 1);
+      await sleep(500);
+      const crossed = await evaluate(page.client, STATE);
+      const crossedCos = tangents(crossed.paths);
+      check('交叉布局下连线切线保持连续', crossedCos.every((cos) => cos > 0.99) && crossed.paths.every((d) => d.indexOf('NaN') === -1),
+        '余弦 ' + crossedCos.map((cos) => cos.toFixed(4)).join(' '));
+
+      await move(4, 4);
+      await dblclick(spot.x, spot.y);
+      await sleep(600);
+      await closePage(page);
     }
   }
 
