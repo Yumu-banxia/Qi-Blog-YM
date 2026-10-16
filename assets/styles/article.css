@@ -3,11 +3,11 @@
   --reading-scale: 1;
   --code-fold-lines: 16;
 
-  --hl-comment: #6a737d;
+  --hl-comment: #5f666f;
   --hl-keyword: #a626a4;
-  --hl-string: #3f8f3f;
+  --hl-string: #2e7530;
   --hl-number: #8a6100;
-  --hl-function: #2f6df6;
+  --hl-function: #2260e8;
   --hl-variable: #c8402f;
   --hl-builtin: #a06000;
 }

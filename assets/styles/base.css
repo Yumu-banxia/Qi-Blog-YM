@@ -79,7 +79,9 @@ video {
   height: auto;
 }
 
-a {
+/* 链接状态：未访问与已访问保持同一配色，仅在悬停、按下与键盘焦点时改变 */
+a:link,
+a:visited {
   color: var(--color-link);
   text-decoration-line: underline;
   text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);

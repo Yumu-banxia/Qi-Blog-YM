@@ -34,7 +34,8 @@ ol {
   padding-left: 20px;
 }
 
-a {
+a:link,
+a:visited {
   color: #1a4fd6;
 }
 
