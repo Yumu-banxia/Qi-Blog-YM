@@ -52,7 +52,7 @@ Qi-blog-ds/
 
 ## 开发环境
 
-本机 Node.js 位于 Windows 侧，版本 v24.19.0。在 WSL 中执行构建命令需调用 Windows 端可执行文件，或在 PowerShell、CMD 中运行。
+本机 Node.js 位于 Windows 侧，版本 v24.19.0。在 WSL 中执行构建命令需调用 Windows 端可执行文件，或在 PowerShell、CMD 中运行。浏览器核对使用 Chrome 155.0.8059.80 与 Firefox 157.0.1；Edge 在本机以 MSIX 包形式安装，命令行无法启动无头实例，未纳入引擎核对，Safari 无可用环境。
 
 ## 工作顺序
 
@@ -64,15 +64,15 @@ Qi-blog-ds/
 6. 视觉打磨
 7. 打包与交付
 
-前六阶段已完成，第七阶段的设计说明已写入 `docs/design-note.md`，压缩包待按赛事命名规则打包。第二轮检查的修正项与执行顺序记录在 `docs/audit-todo.md`。
+前六阶段与第二轮检查的阶段一至阶段五均已完成，设计说明写入 `docs/design-note.md`。第六阶段的核对于 2026-10-17 执行完毕，命令与结果记录在 `docs/audit-todo.md` 与 `docs/plan.md`，压缩包待按赛事命名规则打包。
 
 ## 性能实测
 
-本项目统一以 `node tools/check-content.mjs --sizes` 统计体积，范围为页面自身的 HTML、其引用的本地样式表与页面自带脚本，不含按需加载的第三方库、图片与字体，按 1 KB 等于 1024 字节换算。首页 77.5 KB（gzip 21.4 KB）；文章列表 47.6 KB、关于 46.8 KB、归档 50.7 KB、作品 53.9 KB，gzip 在 13.6 KB 到 15.1 KB 之间；文章详情页在 74.1 KB 到 77.0 KB 之间，gzip 在 20.8 KB 到 21.6 KB 之间。单页 DOM 节点最多 391 个，360、768、1440 三种宽度下共二十七组测量，横向溢出与页面级越界元素均为 0。
+本项目统一以 `node tools/check-content.mjs --sizes` 统计体积，范围内页面自身的 HTML、其引用的本地样式表与页面自带脚本，不含按需加载的第三方库、图片与字体，按 1 KB 等于 1024 字节换算。2026-10-17 的复测结果：首页 77.7 KB（gzip 21.4 KB）；文章列表 47.7 KB、关于 46.9 KB、归档 50.9 KB、作品 54.0 KB，gzip 在 13.6 KB 到 15.1 KB 之间；文章详情页在 74.3 KB 到 77.1 KB 之间，gzip 在 20.9 KB 到 21.7 KB 之间。未知地址页面 6.6 KB（gzip 2.5 KB）。单页 DOM 节点最多 391 个，360、768、1440 三种宽度下共二十七组测量，横向溢出与页面级越界元素均为 0。
 
 ## 维护脚本
 
-`tools/` 下的脚本只在开发与提交前运行，浏览页面不需要它们。运行需要 Node.js 20 以上；浏览器核对用到全局 WebSocket，建议 22 以上。
+`tools/` 下的脚本只在开发与提交前运行，浏览页面不需要它们。运行需要 Node.js 20 以上；浏览器核对用到全局 WebSocket，建议 22 以上。环境变量 `QI_BROWSER` 可取 `chrome`、`edge`，或直接给出 Chromium 内核可执行文件地址；`QI_FIREFOX` 可给出 Firefox 可执行文件地址。
 
 | 脚本 | 用途 |
 | --- | --- |
@@ -81,4 +81,9 @@ Qi-blog-ds/
 | `node tools/check-content.mjs --sizes` | 输出各页面首屏资源的体积统计 |
 | `node tools/browser-check.mjs` | 以无头 Chromium 核对布局、结构、星图、灯箱、复制、搜索与访问端分档 |
 | `node tools/browser-check.mjs --layout` | 只做布局与结构核对 |
+| `node tools/acceptance-check.mjs` | 核对站内链接点击前后配色、键盘流程、打印样式、第三方库按需加载，以及域名根与项目子目录两种托管方式 |
+| `node tools/a11y-check.mjs --axe <axe.min.js>` | 以 axe-core 扫描九个页面与暗色主题、搜索面板、灯箱三处状态 |
+| `node tools/static-server.mjs` | 按域名根或 `/Qi-blog-ds/` 子目录托管项目目录，供浏览器核对脚本使用 |
+| `node tools/firefox-check.mjs` | 以 Firefox 的 Marionette 通道完成同一套页面核对 |
+| `node tools/marionette.mjs` | Firefox 核对脚本使用的 Marionette 客户端，只依赖 Node 内置模块 |
 

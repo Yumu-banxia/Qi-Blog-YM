@@ -188,6 +188,31 @@
 
 比赛提交前依赛事要求生成压缩包。文件名采用“学号 + 姓名 + 班级 + 作品名”，设计说明包含设计理念与技术实现。学号、姓名、班级和最终作品名由作者确认；截至检查日，赛事邮件截止时间为 2026-10-20 22:00。
 
+## 执行记录（2026-10-17）
+
+执行范围：第一至第五阶段的条目已完成代码与文档修改，第六阶段的自动化核对已执行完毕，交付压缩包待作者补入学号、姓名、班级与作品名。
+
+核对日期 2026-10-17。执行环境为 Windows 上的 Node.js 24.19.0、Chrome 155.0.8059.80、Firefox 157.0、Nu 校验器 vnu.jar 26.10.12（Temurin JDK 25.0.4.1）与 axe-core 4.14.0。以下脚本只在本机核对时运行，浏览页面本身不经过它们。
+
+| 核对项 | 命令 | 结果 |
+| --- | --- | --- |
+| 本地引用、页内锚点、图片固有尺寸、列表与归档记录、搜索索引一致性 | `node tools/check-content.mjs` | 九个页面，问题 0 项 |
+| 体积与 DOM 预算 | `node tools/check-content.mjs --sizes` | 首页 77.7 KB（gzip 21.4 KB），文章详情页 74.3 KB 到 77.1 KB，单页节点最多 391 个 |
+| 结构、布局、星图、灯箱、复制、搜索、访问端分档 | `node tools/browser-check.mjs` | 67 项，失败 0 项 |
+| 布局与结构 | `node tools/browser-check.mjs --layout` | 37 项，失败 0 项 |
+| 键盘流程、打印样式、按需加载、两种托管方式 | `node tools/acceptance-check.mjs` | 24 项，失败 0 项 |
+| 无障碍扫描 | `node tools/a11y-check.mjs --axe <axe.min.js>` | axe 4.14.0，13 项，失败 0 项 |
+| 规范校验 | `java -jar vnu.jar <九个页面>` | 消息 0 条，退出码 0 |
+| Firefox 引擎核对 | `node tools/firefox-check.mjs` | 34 项，失败 0 项 |
+
+各阶段状态：第一阶段见提交 f3eff85，第二阶段见 f518f28，第三阶段见 53cc14c，第四阶段见 e1099ec 与 1d7bd0b，第五阶段的链接配色、星图注释与排版细节见本轮改动，逐条结果记录在 `docs/plan.md` 的第五阶段小节与 `docs/design-note.md` 的核对记录一节。
+
+本轮另外修正一处派生数据不同步：`pages/post-no-build.html` 的体积数字更新之后搜索索引正文未同步，以 `node tools/check-content.mjs --write-index` 重建 `assets/data/search-index.js`，复检九个页面零问题。
+
+未取得结果的项：本机 Edge 版本为 155.0.4283.45，以 MSIX 包形式安装，无头实例启动后进程随即退出，`--remote-debugging-port` 未生成 `DevToolsActivePort`，未取得引擎结果；Safari 没有可用环境，记为未测；旧设备只有 UA 模拟结果，没有真机数据。
+
+待作者确认的项：学号、姓名、班级、公开邮箱与最终作品名；`pages/about.html` 中的身份与联系方式描述；发布地址确定后把分享元数据的封面图改为绝对地址。
+
 ## 提供给 DeepSeek 的执行提示
 
 ```text
