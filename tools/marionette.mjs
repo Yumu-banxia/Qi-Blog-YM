@@ -59,20 +59,18 @@ function writePrefs(profile, prefs) {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function waitPort(port, timeout) {
+async function connectWhenReady(port, timeout) {
   const deadline = Date.now() + (timeout || 40000);
+  let lastError = null;
   while (Date.now() < deadline) {
-    const open = await new Promise((resolve) => {
-      const socket = net.connect(port, '127.0.0.1');
-      socket.once('connect', () => { socket.destroy(); resolve(true); });
-      socket.once('error', () => resolve(false));
-    });
-    if (open) {
-      return true;
+    try {
+      return await connect(port);
+    } catch (error) {
+      lastError = error;
     }
     await sleep(250);
   }
-  return false;
+  throw lastError || new Error('等待 Marionette 通道超时');
 }
 
 /* Marionette 的报文格式为「长度:JSON」，长度按 UTF-8 字节数计算 */
@@ -101,12 +99,14 @@ export async function launchFirefox(options) {
   let stderr = '';
   child.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
 
-  if (!(await waitPort(port, settings.timeout))) {
+  let client;
+  try {
+    client = await connectWhenReady(port, settings.timeout);
+  } catch (error) {
     try { child.kill(); } catch (error) { /* 忽略 */ }
-    throw new Error('等待 Marionette 端口超时：' + stderr.slice(-400));
+    throw new Error('等待 Marionette 通道超时：' + stderr.slice(-400));
   }
 
-  const client = await connect(port);
   const browser = { child, profile, port, client, stderr: () => stderr };
   await client.send('WebDriver:NewSession', { capabilities: { alwaysMatch: {} } });
   return browser;

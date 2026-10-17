@@ -197,14 +197,14 @@
 | 核对项 | 命令 | 结果 |
 | --- | --- | --- |
 | 本地引用、页内锚点、图片固有尺寸、列表与归档记录、搜索索引一致性 | `node tools/check-content.mjs` | 九个页面，问题 0 项 |
-| 体积与 DOM 预算 | `node tools/check-content.mjs --sizes` | 首页 79.4 KB（gzip 22.1 KB），文章详情页 76.0 KB 到 78.8 KB，单页节点最多 391 个 |
-| 结构、布局、星图、灯箱、复制、搜索、访问端分档、跳转衔接与预取 | `node tools/browser-check.mjs` | 73 项，失败 0 项 |
+| 体积与 DOM 预算 | `node tools/check-content.mjs --sizes` | 首页 79.4 KB（gzip 22.1 KB），文章详情页 77.0 KB 到 79.8 KB，单页节点最多 391 个 |
+| 结构、布局、星图、灯箱、代码块复制与框内滚动、搜索、访问端分档、跳转衔接与预取 | `node tools/browser-check.mjs` | 76 项，失败 0 项 |
 | 布局与结构 | `node tools/browser-check.mjs --layout` | 37 项，失败 0 项 |
 | 键盘流程、搜索面板的滚动锁定与背景键盘屏蔽、打印样式、按需加载、两种托管方式 | `node tools/acceptance-check.mjs` | 30 项，失败 0 项 |
 | 无障碍扫描 | `node tools/a11y-check.mjs --axe <axe.min.js>` | axe 4.14.0，13 项，失败 0 项 |
 | 规范校验 | `java -jar vnu.jar <九个页面>` | 消息 0 条，退出码 0 |
 | 运行期帧间隔、布局偏移、首次绘制、长任务与窄屏文字放大重排 | `node tools/perf-check.mjs` | 27 项，失败 0 项 |
-| Firefox 引擎核对 | `node tools/firefox-check.mjs` | 36 项，失败 0 项 |
+| Firefox 引擎核对 | `node tools/firefox-check.mjs` | 37 项，失败 0 项 |
 
 各阶段状态：第一阶段见提交 f3eff85，第二阶段见 f518f28，第三阶段见 53cc14c，第四阶段见 e1099ec 与 1d7bd0b，第五阶段的链接配色、星图注释与排版细节见本轮改动，逐条结果记录在 `docs/plan.md` 的第五阶段小节与 `docs/design-note.md` 的核对记录一节。
 

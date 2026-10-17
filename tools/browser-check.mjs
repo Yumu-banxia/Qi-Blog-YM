@@ -253,10 +253,11 @@ try {
       await closePage(page);
     }
 
-    /* 四、代码复制 */
+    /* 四、代码复制与框内滚动 */
     {
       const page = await openPage(browser, 'about:blank');
-      watch(page, 'post-reader.html(复制)');
+      watch(page, 'post-reader.html(代码块)');
+      await setViewport(page.client, 1440, 900);
       await navigate(page.client, fileUrl(ROOT + '/pages/post-reader.html'));
       await sleep(900);
       const failed = await evaluate(page.client, `(async () => {
@@ -288,6 +289,81 @@ try {
         return button.textContent;
       })()`);
       check('复制按钮文案自动复位', restored === '复制', restored);
+
+      const codeWindow = await evaluate(page.client, `(() => {
+        const toggle = document.querySelector('.code-block[data-folded] .code-action[aria-expanded]');
+        if (!toggle) {
+          return { found: false };
+        }
+        const wrapper = toggle.closest('.code-block');
+        const pre = wrapper.querySelector('pre');
+        toggle.click();
+        document.documentElement.style.scrollBehavior = 'auto';
+        pre.scrollIntoView({ block: 'center' });
+        pre.scrollTop = 0;
+        const style = getComputedStyle(pre);
+        return {
+          found: true,
+          expanded: toggle.getAttribute('aria-expanded'),
+          folded: wrapper.getAttribute('data-folded'),
+          clientHeight: pre.clientHeight,
+          scrollHeight: pre.scrollHeight,
+          overflowY: style.overflowY
+        };
+      })()`);
+      check('展开后的代码块形成独立纵向滚动窗口',
+        codeWindow.found === true && codeWindow.expanded === 'true' && codeWindow.folded === 'false' &&
+          codeWindow.overflowY === 'auto' && codeWindow.scrollHeight > codeWindow.clientHeight,
+        JSON.stringify(codeWindow));
+
+      await sleep(150);
+      const beforeWheel = await evaluate(page.client, `(() => {
+        const pre = document.querySelector('.code-block[data-folded="false"] pre');
+        const rect = pre.getBoundingClientRect();
+        return {
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2,
+          pageY: window.scrollY,
+          scrollTop: pre.scrollTop,
+          maxScroll: pre.scrollHeight - pre.clientHeight
+        };
+      })()`);
+      await page.client.send('Input.dispatchMouseEvent', {
+        type: 'mouseWheel', x: beforeWheel.x, y: beforeWheel.y, deltaX: 0, deltaY: 320
+      });
+      await sleep(250);
+      const afterWheel = await evaluate(page.client, `(() => {
+        const pre = document.querySelector('.code-block[data-folded="false"] pre');
+        return { pageY: window.scrollY, scrollTop: pre.scrollTop };
+      })()`);
+      check('代码框内滚轮只滚动代码',
+        beforeWheel.maxScroll > 1 && afterWheel.scrollTop > beforeWheel.scrollTop &&
+          Math.abs(afterWheel.pageY - beforeWheel.pageY) < 1,
+        JSON.stringify({ before: beforeWheel, after: afterWheel }));
+
+      const endWheel = await evaluate(page.client, `(() => {
+        const pre = document.querySelector('.code-block[data-folded="false"] pre');
+        pre.scrollTop = pre.scrollHeight;
+        const rect = pre.getBoundingClientRect();
+        return {
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2,
+          pageY: window.scrollY,
+          maxScroll: pre.scrollHeight - pre.clientHeight
+        };
+      })()`);
+      await page.client.send('Input.dispatchMouseEvent', {
+        type: 'mouseWheel', x: endWheel.x, y: endWheel.y, deltaX: 0, deltaY: 480
+      });
+      await sleep(250);
+      const endState = await evaluate(page.client, `(() => {
+        const pre = document.querySelector('.code-block[data-folded="false"] pre');
+        return { pageY: window.scrollY, scrollTop: pre.scrollTop, maxScroll: pre.scrollHeight - pre.clientHeight };
+      })()`);
+      check('代码滚到末尾后页面位置保持不变',
+        endState.maxScroll > 1 && endState.scrollTop >= endState.maxScroll - 1 &&
+          Math.abs(endState.pageY - endWheel.pageY) < 1,
+        JSON.stringify({ before: endWheel, after: endState }));
       await closePage(page);
     }
 

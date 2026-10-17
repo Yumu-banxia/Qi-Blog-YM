@@ -262,6 +262,22 @@ try {
         fold.before.folded === 'true' && fold.after.folded === 'false',
       JSON.stringify(fold));
 
+    const codeWindow = await evaluate(browser, `
+      const pre = document.querySelector('.code-block[data-folded="false"] pre');
+      if (!pre) { return { found: false }; }
+      return {
+        found: true,
+        clientHeight: pre.clientHeight,
+        scrollHeight: pre.scrollHeight,
+        overflowY: getComputedStyle(pre).overflowY,
+        scrollTop: pre.scrollTop
+      };
+    `);
+    check('展开后的代码块在 Firefox 下形成独立纵向滚动窗口',
+      codeWindow.found === true && codeWindow.overflowY === 'auto' &&
+        codeWindow.scrollHeight > codeWindow.clientHeight && codeWindow.scrollTop === 0,
+      JSON.stringify(codeWindow));
+
     const clicked = await evaluate(browser, `
       const button = document.querySelector('.code-action[aria-label="复制代码"]');
       if (!button) { return false; }

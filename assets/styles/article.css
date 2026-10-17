@@ -223,6 +223,14 @@
   overflow-y: hidden;
 }
 
+/* 展开后保留独立阅读窗口，滚到代码边界时继续滚轮由脚本拦截 */
+.code-block[data-folded="false"] pre {
+  max-block-size: clamp(20rem, 56vh, 38rem);
+  overflow-x: auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 /* 回到顶部 */
 .back-to-top {
   position: fixed;
@@ -367,7 +375,8 @@
     overflow: visible;
   }
 
-  .code-block[data-folded="true"] pre {
+  .code-block[data-folded="true"] pre,
+  .code-block[data-folded="false"] pre {
     max-height: none;
     overflow: visible;
   }

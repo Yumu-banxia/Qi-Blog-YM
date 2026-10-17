@@ -1,5 +1,5 @@
 /* 文章页阅读增强
- * 提供阅读进度、目录、字号切换、返回顶部，以及代码块的复制与折叠。
+ * 提供阅读进度、目录、字号切换、返回顶部，以及代码块的复制、折叠与框内滚动。
  * 第三方渲染库按需加载：代码高亮用 highlight.js，公式用 KaTeX，
  * 两者都只在页面确实存在对应内容且设备档位允许时进入请求队列。
  */
@@ -114,7 +114,7 @@
       return;
     }
 
-    /* 代码块可横向滚动，需要能通过键盘到达 */
+    /* 代码块可独立滚动，需要能通过键盘到达 */
     if (!pre.getAttribute('tabindex')) {
       pre.setAttribute('tabindex', '0');
     }
@@ -156,6 +156,7 @@
         wrapper.setAttribute('data-folded', folded ? 'false' : 'true');
         toggle.setAttribute('aria-expanded', folded ? 'true' : 'false');
         toggle.textContent = folded ? '收起' : '展开剩余 ' + restLines + ' 行';
+        pre.scrollTop = 0;
       });
       wrapper.setAttribute('data-folded', 'true');
       bar.appendChild(toggle);
@@ -191,6 +192,28 @@
     bar.appendChild(copy);
 
     wrapper.insertBefore(bar, pre);
+
+    /* 展开态接管框内纵向滚轮，避免浏览器把余量传给页面 */
+    wrapper.addEventListener('wheel', function (event) {
+      if (wrapper.getAttribute('data-folded') === 'true' || event.shiftKey) {
+        return;
+      }
+
+      var delta = event.deltaY;
+      if (!delta || Math.abs(delta) <= Math.abs(event.deltaX)) {
+        return;
+      }
+
+      var maxScroll = pre.scrollHeight - pre.clientHeight;
+      if (maxScroll < 1) {
+        return;
+      }
+
+      var unit = event.deltaMode === 1 ? 16 : (event.deltaMode === 2 ? pre.clientHeight : 1);
+      var next = Math.max(0, Math.min(maxScroll, pre.scrollTop + delta * unit));
+      pre.scrollTop = next;
+      event.preventDefault();
+    }, { passive: false });
   }
 
   function enhanceCodeBlocks() {
