@@ -1,11 +1,4 @@
-/* 站点星图的流动交互
- * 一、自主漂浮：每个节点以基准位置为锚，受低频扰动、回中弹力与阻尼作用，相位与振幅各不相同，
- *     位移因此互不关联，观感像各自漂浮的天体。
- * 二、指针响应：指针在画布内移动时形成力场，近旁节点被轻微吸引，并带一点沿指针运动方向的拖尾，
- *     吸力随距离衰减，指针移开后节点在弹力作用下缓慢回到基准位置。
- * 三、连线用三次贝塞尔连接，随节点位置连续变化，节点位置变化时曲线保持平滑，不产生折点。
- * 指针不做跟随装饰，不牵引连线形状；节点可拖动、画布可缩放平移。只在允许动效的档位启用。
- */
+/* 站点星图：节点独立漂浮，指针靠近时轻微吸引，连线随位置平滑变化。 */
 (function () {
   'use strict';
 
@@ -19,60 +12,35 @@
   if (!Capability || typeof Capability.allow !== 'function') {
     return;
   }
-  /* 低端与功能机档位不启用本脚本，星图保持 HTML 中的静态形态。
-     减少动态效果偏好改由停用与恢复处理，偏好改变时无需重新载入页面。 */
+  /* 低端与功能机档位保持 HTML 静态星图；减少动态效果在运行中停用与恢复。 */
   if (Capability.tier !== 'high' && Capability.tier !== 'medium') {
     return;
   }
 
-  /* 缺少指针事件接口时只保留漂浮与键盘操作，不绑定指针交互 */
+  /* 缺少指针事件接口时只保留漂浮与键盘操作 */
   var pointerInput = !Capability.env || Capability.env.pointerEvents === true;
 
-  var svg = canvas.querySelector('.chart-lines');
-  var lines = svg ? svg.querySelectorAll('path') : [];
+  var lines = canvas.querySelectorAll('.chart-lines path');
   var nodeList = canvas.querySelectorAll('.chart-node');
   if (!lines.length || !nodeList.length) {
     return;
   }
 
   var EDGES = [[0, 1], [1, 2], [2, 3], [3, 0]];
-  var DRAG_THRESHOLD = 4;
-  var POSITION_MIN = 6;
-  var POSITION_MAX = 94;
-  var MIN_SCALE = 1;
-  var MAX_SCALE = 1.8;
-  var ZOOM_STEP = 0.14;
+  var DRAG_THRESHOLD = 4, POSITION_MIN = 6, POSITION_MAX = 94;
+  var MIN_SCALE = 1, MAX_SCALE = 1.8, ZOOM_STEP = 0.14;
+  /* 漂浮与指针力场参数，偏移量单位为画布百分比，距离单位为像素 */
+  var SPRING = 3.6, FORCE = 22, DAMPING = 0.88, OFFSET_LIMIT_PX = 34;
+  var POINTER_RADIUS = 180, POINTER_ACCEL = 420, VELOCITY_WEIGHT = 0.2, VELOCITY_LIMIT = 700;
+  var DAMP_RATE = Math.log(DAMPING) * 60;
 
-  /* 漂浮：回中弹力、扰动幅度、阻尼与偏移上限，单位为画布百分比 */
-  var SPRING = 3.6;
-  var FORCE = 22;
-  var DAMPING = 0.88;
-  var OFFSET_LIMIT_PX = 34;
-
-  /* 指针力场：半径按像素计，近旁节点被轻微吸引，并带一点沿指针运动方向的拖尾 */
-  var POINTER_RADIUS = 180;
-  var POINTER_ACCEL = 420;
-  var VELOCITY_WEIGHT = 0.2;
-  var VELOCITY_LIMIT = 700;
-
-  var items = [];
-  var width = 1;
-  var height = 1;
-  var enabled = true;
-  var paused = false;
-  var focusIndex = -1;
-  var drag = null;
-  var pan = null;
-  var suppressClick = false;
+  var items = [], width = 1, height = 1, pctX = 100, pctY = 100;
+  var enabled = true, paused = false, focusIndex = -1, suppressClick = false;
+  var drag = null, pan = null, viewTarget = null, chartBox = null;
   var view = { scale: 1, x: 0, y: 0 };
-  var frameId = 0;
-  var lastTime = 0;
-  var lastApply = 0;
-  var frameInterval = 1000 / 40;
-  var drawThreshold = 0.25;
-  var lastDrawn = null;
+  var frameId = 0, lastApply = 0, frameInterval = 25, drawThreshold = 0.25;
   var EASE_RESET = 0.14;
-  var viewTarget = null;
+  var force = { v: 0, w: 0 };
 
   var controller = typeof window.AbortController === 'function' ? new window.AbortController() : null;
 
@@ -100,31 +68,29 @@
     return value < min ? min : (value > max ? max : value);
   }
 
-  function readNumber(el, name, fallback) {
-    if (!el || !window.getComputedStyle) {
-      return fallback;
+  function readPosition(el) {
+    if (!window.getComputedStyle) {
+      return [50, 50];
     }
-    var value = parseFloat(window.getComputedStyle(el).getPropertyValue(name));
-    return isNaN(value) ? fallback : value;
+    var style = window.getComputedStyle(el);
+    var x = parseFloat(style.getPropertyValue('--x'));
+    var y = parseFloat(style.getPropertyValue('--y'));
+    return [isNaN(x) ? 50 : x, isNaN(y) ? 50 : y];
   }
 
   function measure() {
     width = canvas.offsetWidth || 1;
     height = canvas.offsetHeight || 1;
+    pctX = 100 / width;
+    pctY = 100 / height;
+    chartBox = null;
   }
 
-  function nodeX(item) {
-    return item.baseX + item.ox;
+  function r2(value) {
+    return Math.round(value * 100) / 100;
   }
 
-  function nodeY(item) {
-    return item.baseY + item.oy;
-  }
-
-
-  /* 每个节点的切线取前后两个邻点的连线方向，也就是曲线穿过该节点时的走向。
-     相邻两条边在同一节点处的进出方向因此完全一致，四段边连成一条平滑的闭合曲线，
-     节点移动时切线连续变化，形状不会翻转，也不会出现折角。前后邻点重合时退化为直线。 */
+  /* 切线取前后邻点的连线方向，四段边因此连续；邻点重合时退化为直线。 */
   function buildTangents() {
     var count = items.length;
     for (var i = 0; i < count; i += 1) {
@@ -132,13 +98,13 @@
       var prev = items[(i + count - 1) % count];
       var next = items[(i + 1) % count];
 
-      var tx = nodeX(next) - nodeX(prev);
-      var ty = nodeY(next) - nodeY(prev);
+      var tx = next.px - prev.px;
+      var ty = next.py - prev.py;
       var length = Math.sqrt(tx * tx + ty * ty);
 
       if (length < 0.0001) {
-        tx = nodeX(next) - nodeX(self);
-        ty = nodeY(next) - nodeY(self);
+        tx = next.px - self.px;
+        ty = next.py - self.py;
         length = Math.sqrt(tx * tx + ty * ty);
       }
 
@@ -152,73 +118,57 @@
     }
   }
 
-  /* 连线用三次贝塞尔，控制点沿两端节点的切线方向偏移，曲率随节点位置连续变化 */
+  /* 三次贝塞尔的控制点沿两端切线偏移，曲率随节点位置连续变化 */
   function draw() {
     buildTangents();
-
     for (var i = 0; i < EDGES.length; i += 1) {
       var path = lines[i];
-      if (!path) {
-        continue;
-      }
       var a = items[EDGES[i][0]];
       var b = items[EDGES[i][1]];
-      if (!a || !b) {
+      if (!path || !a || !b) {
         continue;
       }
-
-      var ax = nodeX(a);
-      var ay = nodeY(a);
-      var bx = nodeX(b);
-      var by = nodeY(b);
+      var ax = a.px, ay = a.py, bx = b.px, by = b.py;
       var dx = bx - ax;
       var dy = by - ay;
-      var length = Math.sqrt(dx * dx + dy * dy) || 1;
-      var offset = length * 0.3;
-
-      var offA = a.tx !== 0 || a.ty !== 0 ? offset : 0;
-      var offB = b.tx !== 0 || b.ty !== 0 ? offset : 0;
-      var c1x = ax + a.tx * offA;
-      var c1y = ay + a.ty * offA;
-      var c2x = bx - b.tx * offB;
-      var c2y = by - b.ty * offB;
-
+      var offset = (Math.sqrt(dx * dx + dy * dy) || 1) * 0.3;
+      var offA = a.tx || a.ty ? offset : 0;
+      var offB = b.tx || b.ty ? offset : 0;
       path.setAttribute('d',
-        'M' + ax.toFixed(2) + ' ' + ay.toFixed(2) +
-        ' C' + c1x.toFixed(2) + ' ' + c1y.toFixed(2) +
-        ' ' + c2x.toFixed(2) + ' ' + c2y.toFixed(2) +
-        ' ' + bx.toFixed(2) + ' ' + by.toFixed(2));
+        'M' + r2(ax) + ' ' + r2(ay) +
+        ' C' + r2(ax + a.tx * offA) + ' ' + r2(ay + a.ty * offA) +
+        ' ' + r2(bx - b.tx * offB) + ' ' + r2(by - b.ty * offB) +
+        ' ' + r2(bx) + ' ' + r2(by));
     }
-
-    rememberDrawn();
+    for (i = 0; i < items.length; i += 1) {
+      items[i].drawnX = items[i].px;
+      items[i].drawnY = items[i].py;
+    }
   }
 
-  /* 节点位移累计超过阈值才重绘连线，位移平缓时省去大量路径写入 */
+  /* 位移超过阈值才重绘连线，平缓漂浮期间省去路径写入 */
   function needDraw() {
-    if (!lastDrawn || lastDrawn.length !== items.length) {
-      return true;
-    }
     for (var i = 0; i < items.length; i += 1) {
-      if (Math.abs(nodeX(items[i]) - lastDrawn[i][0]) > drawThreshold ||
-          Math.abs(nodeY(items[i]) - lastDrawn[i][1]) > drawThreshold) {
+      var item = items[i];
+      if (Math.abs(item.px - item.drawnX) > drawThreshold ||
+          Math.abs(item.py - item.drawnY) > drawThreshold) {
         return true;
       }
     }
     return false;
   }
 
-  function rememberDrawn() {
-    lastDrawn = [];
-    for (var i = 0; i < items.length; i += 1) {
-      lastDrawn.push([nodeX(items[i]), nodeY(items[i])]);
-    }
-  }
-
-  /* 每帧只写一次 transform，省去自定义属性解析带来的额外样式重算 */
+  /* 像素坐标统一在这里更新，连线与力场直接复用；位移未变时跳过样式写入 */
   function applyOffset(item) {
-    var x = ((item.ox / 100) * width).toFixed(2);
-    var y = ((item.oy / 100) * height).toFixed(2);
-    item.el.style.transform = 'translate(-50%, -50%) translate3d(' + x + 'px, ' + y + 'px, 0)';
+    item.px = (item.baseX + item.ox) * width * 0.01;
+    item.py = (item.baseY + item.oy) * height * 0.01;
+    var x = r2(item.ox * width * 0.01);
+    var y = r2(item.oy * height * 0.01);
+    if (x !== item.sx || y !== item.sy) {
+      item.sx = x;
+      item.sy = y;
+      item.el.style.transform = 'translate(-50%, -50%) translate3d(' + x + 'px, ' + y + 'px, 0)';
+    }
   }
 
   function resetOffset(item) {
@@ -229,16 +179,13 @@
     applyOffset(item);
   }
 
-  /* 指针力场：在像素空间计算距离与方向，再换算回百分比加速度 */
-  function pointerForce(item, fx, fy) {
+  /* 指针力场在像素空间计算距离与方向，再换算回百分比加速度 */
+  function pointerForce(item) {
     if (pointerStrength < 0.01) {
       return;
     }
-
-    var nodePx = ((item.baseX + item.ox) / 100) * width;
-    var nodePy = ((item.baseY + item.oy) / 100) * height;
-    var dx = pointerPos.x - nodePx;
-    var dy = pointerPos.y - nodePy;
+    var dx = pointerPos.x - item.px;
+    var dy = pointerPos.y - item.py;
     var distance = Math.sqrt(dx * dx + dy * dy);
     if (distance > POINTER_RADIUS) {
       return;
@@ -248,14 +195,14 @@
     var pull = falloff * falloff * POINTER_ACCEL * pointerStrength;
 
     if (distance > 0.5) {
-      fx.v += ((dx / distance) * pull * 100) / width;
-      fy.v += ((dy / distance) * pull * 100) / height;
+      force.v += (dx / distance) * pull * pctX;
+      force.w += (dy / distance) * pull * pctY;
     }
 
     var vx = clamp(pointerVel.x, -VELOCITY_LIMIT, VELOCITY_LIMIT);
     var vy = clamp(pointerVel.y, -VELOCITY_LIMIT, VELOCITY_LIMIT);
-    fx.v += ((vx * VELOCITY_WEIGHT * falloff) * 100) / width;
-    fy.v += ((vy * VELOCITY_WEIGHT * falloff) * 100) / height;
+    force.v += vx * VELOCITY_WEIGHT * falloff * pctX;
+    force.w += vy * VELOCITY_WEIGHT * falloff * pctY;
   }
 
   function tick(now) {
@@ -264,7 +211,7 @@
       return;
     }
 
-    /* 节点运动缓慢，按 40 帧上限更新，减少样式重算 */
+    /* 节点运动缓慢，按 40 帧上限更新 */
     if (lastApply && now - lastApply < frameInterval) {
       schedule();
       return;
@@ -272,11 +219,12 @@
 
     var dt = lastApply ? Math.min((now - lastApply) / 1000, 0.05) : 0.016;
     lastApply = now;
-    lastTime = now;
 
     if (!paused) {
-      var damp = Math.pow(DAMPING, dt * 60);
-      var seconds = now / 1000;
+      var damp = Math.exp(DAMP_RATE * dt);
+      var seconds = now * 0.001;
+      var limitX = OFFSET_LIMIT_PX * pctX;
+      var limitY = OFFSET_LIMIT_PX * pctY;
       var target = pointerInside && !pointerOnNode && !pan ? 1 : 0;
       pointerStrength += (target - pointerStrength) * Math.min(1, dt * 8);
 
@@ -290,8 +238,8 @@
           if (Math.abs(item.targetOx - item.ox) < 0.05 && Math.abs(item.targetOy - item.oy) < 0.05) {
             item.baseX = clamp(item.homeX, POSITION_MIN, POSITION_MAX);
             item.baseY = clamp(item.homeY, POSITION_MIN, POSITION_MAX);
-            item.el.style.setProperty('--x', item.baseX.toFixed(2) + '%');
-            item.el.style.setProperty('--y', item.baseY.toFixed(2) + '%');
+            item.el.style.setProperty('--x', r2(item.baseX) + '%');
+            item.el.style.setProperty('--y', r2(item.baseY) + '%');
             item.ox = 0;
             item.oy = 0;
             item.vx = 0;
@@ -300,20 +248,15 @@
           }
         } else if (!(drag && drag.index === i)) {
           var amp = FORCE * item.amp;
-          var force = { v: Math.sin(seconds / 4.5 + item.phase) * Math.cos(seconds / 9 + item.phase2) * amp };
-          var forceY = { v: Math.cos(seconds / 5.5 + item.phase2) * Math.sin(seconds / 8.5 + item.phase) * amp };
-          force.v -= item.ox * SPRING;
-          forceY.v -= item.oy * SPRING;
-
-          pointerForce(item, force, forceY);
+          force.v = Math.sin(seconds / 4.5 + item.phase) * Math.cos(seconds / 9 + item.phase2) * amp - item.ox * SPRING;
+          force.w = Math.cos(seconds / 5.5 + item.phase2) * Math.sin(seconds / 8.5 + item.phase) * amp - item.oy * SPRING;
+          pointerForce(item);
 
           item.vx = (item.vx + force.v * dt) * damp;
-          item.vy = (item.vy + forceY.v * dt) * damp;
+          item.vy = (item.vy + force.w * dt) * damp;
           item.ox += item.vx * dt;
           item.oy += item.vy * dt;
 
-          var limitX = (OFFSET_LIMIT_PX * 100) / width;
-          var limitY = (OFFSET_LIMIT_PX * 100) / height;
           item.ox = clamp(item.ox, -limitX, limitX);
           item.oy = clamp(item.oy, -limitY, limitY);
           item.ox = clamp(item.ox, 3 - item.baseX, 97 - item.baseX);
@@ -339,7 +282,7 @@
         applyView();
       }
 
-      /* 指针速度按帧衰减，指针停止后推力随之消失 */
+      /* 指针停止后推力随速度衰减 */
       pointerVel.x *= 0.9;
       pointerVel.y *= 0.9;
 
@@ -403,30 +346,33 @@
     drag = null;
   }
 
-  /* 基准位置：拖动与键盘微调共用，写入后清零漂浮偏移并重绘连线 */
+  /* 基准位置由拖动与键盘微调共用，写入后清零漂浮位移 */
   function setBasePosition(index, x, y) {
     var item = items[index];
     item.resetting = false;
     item.baseX = clamp(x, POSITION_MIN, POSITION_MAX);
     item.baseY = clamp(y, POSITION_MIN, POSITION_MAX);
-    item.el.style.setProperty('--x', item.baseX.toFixed(2) + '%');
-    item.el.style.setProperty('--y', item.baseY.toFixed(2) + '%');
+    item.el.style.setProperty('--x', r2(item.baseX) + '%');
+    item.el.style.setProperty('--y', r2(item.baseY) + '%');
     item.ox = 0;
     item.oy = 0;
     item.vx = 0;
     item.vy = 0;
     applyOffset(item);
-    draw();
+    /* 拖动期间把连线交给动画帧，避免每个 pointermove 都同步重排 SVG 路径 */
+    if (enabled) {
+      schedule();
+    } else {
+      draw();
+    }
   }
 
-  /* 复位单个节点：带缓动回到初始位置，动画结束后把位移提交到布局位置；
-     已经处于初始位置时直接落位，避免无谓的逐帧开销 */
+  /* 复位带缓动，动画结束时把位移提交到布局位置；已在原位时直接落位 */
   function resetNodePosition(index) {
     var item = items[index];
     var offsetX = item.homeX - item.baseX;
     var offsetY = item.homeY - item.baseY;
 
-    /* 动效关闭时直接落位，不进入缓动流程 */
     if (!enabled) {
       setBasePosition(index, item.homeX, item.homeY);
       return;
@@ -458,7 +404,7 @@
       if (event.pointerType === 'mouse' && event.button !== 0) {
         return;
       }
-      // 节点上的拖动由本模块处理，阻止事件到达画布上的平移处理
+      /* 节点拖动由本模块处理，阻止事件到达画布平移 */
       event.stopPropagation();
       items[index].resetting = false;
       drag = {
@@ -487,20 +433,22 @@
         return;
       }
 
-      drag.moved = true;
-      items[drag.index].el.classList.add('is-dragging');
-      canvas.setAttribute('data-dragging', 'true');
+      if (!drag.moved) {
+        drag.moved = true;
+        items[drag.index].el.classList.add('is-dragging');
+        canvas.setAttribute('data-dragging', 'true');
+      }
       setBasePosition(drag.index, drag.originX + (dx * 100) / width, drag.originY + (dy * 100) / height);
     }
 
-    /* 拖动时浏览器不应把链接当作可拖拽元素，也不参与文本选择 */
+    /* 链接不参与浏览器拖拽与文本选择 */
     link.setAttribute('draggable', 'false');
     listen(link, 'dragstart', function (event) {
       event.preventDefault();
     });
 
 
-    /* 键盘微调：方向键移动节点，按住 Shift 加快 */
+    /* 方向键微调，Shift 加速，Home 复位 */
     listen(link, 'keydown', function (event) {
       var step = event.shiftKey ? 4 : 1.5;
       var dx = 0;
@@ -542,7 +490,7 @@
 
     if (pointerInput) {
       listen(link, 'pointerenter', function () {
-        // 指针停在节点上时不施加推力，保证节点稳定可点
+        /* 指针停在节点上时不施加推力 */
         pointerOnNode = true;
         setFocus(index);
       });
@@ -580,7 +528,7 @@
     if (Math.abs(scale - view.scale) < 0.001) {
       return;
     }
-    var box = chart.getBoundingClientRect();
+    var box = chartBox || (chartBox = chart.getBoundingClientRect());
     var px = clientX - box.left - box.width / 2;
     var py = clientY - box.top - box.height / 2;
     var ratio = scale / view.scale;
@@ -591,7 +539,7 @@
     applyView();
   }
 
-  /* 复位视图：带缓动回到初始比例与位置；已经处于初始状态时直接落位 */
+  /* 视图复位带缓动；已在初始状态时直接落位 */
   function resetView() {
     if (!enabled || (Math.abs(view.scale - 1) < 0.001 && Math.abs(view.x) < 0.5 && Math.abs(view.y) < 0.5)) {
       view.scale = 1;
@@ -626,7 +574,7 @@
     if (event.target && event.target.closest && event.target.closest('.chart-node')) {
       return;
     }
-    /* 触摸在初始比例下不平移，避免与页面纵向滚动互相干扰 */
+    /* 初始比例下触摸不平移，避免与页面滚动冲突 */
     if (event.pointerType === 'touch' && view.scale <= 1.001) {
       return;
     }
@@ -638,12 +586,13 @@
       originX: view.x,
       originY: view.y
     };
+    canvas.setAttribute('data-dragging', 'true');
     if (typeof canvas.setPointerCapture === 'function') {
       canvas.setPointerCapture(event.pointerId);
     }
   }
 
-  /* 指针位置换算到画布坐标系，并记录移动速度供力场使用 */
+  /* 指针位置换算到画布坐标，并记录移动速度 */
   function onCanvasMove(event) {
     if (!enabled || paused) {
       return;
@@ -654,7 +603,6 @@
       view.y = pan.originY + (event.clientY - pan.startY);
       clampView();
       applyView();
-      canvas.setAttribute('data-dragging', 'true');
       return;
     }
 
@@ -662,7 +610,7 @@
       return;
     }
 
-    var box = chart.getBoundingClientRect();
+    var box = chartBox || (chartBox = chart.getBoundingClientRect());
     if (!box.width || !box.height) {
       return;
     }
@@ -707,13 +655,11 @@
     paused = next;
     if (!paused) {
       lastApply = 0;
-      lastTime = 0;
       schedule();
     }
   }
 
-  /* 停止漂浮与交互：位移、视图与指针状态回到初始值，连线按静止后的节点位置重算后保留。
-     监听器保持绑定，各处理函数在 enabled 为 false 时直接返回，因此恢复动效时不必重新注册。 */
+  /* 停止漂浮与交互并回到静态形态；监听器保留，处理函数按 enabled 返回 */
   function stop() {
     if (!enabled) {
       return;
@@ -732,11 +678,9 @@
       window.cancelAnimationFrame(frameId);
       frameId = 0;
     }
-    lastTime = 0;
     lastApply = 0;
     for (var i = 0; i < items.length; i += 1) {
       resetOffset(items[i]);
-      applyOffset(items[i]);
       items[i].el.classList.remove('is-dragging');
     }
     canvas.removeAttribute('data-dragging');
@@ -753,28 +697,22 @@
       return;
     }
     enabled = true;
-    lastTime = 0;
     lastApply = 0;
     pointerStrength = 0;
     schedule();
   }
 
   function build() {
+    var pos;
     for (var i = 0; i < nodeList.length; i += 1) {
       var el = nodeList[i];
       var link = el.querySelector('a');
+      pos = readPosition(el);
       items.push({
         el: el,
-        baseX: readNumber(el, '--x', 50),
-        baseY: readNumber(el, '--y', 50),
-        homeX: readNumber(el, '--x', 50),
-        homeY: readNumber(el, '--y', 50),
-        ox: 0,
-        oy: 0,
-        vx: 0,
-        vy: 0,
-        tx: 0,
-        ty: 0,
+        baseX: pos[0], baseY: pos[1], homeX: pos[0], homeY: pos[1],
+        ox: 0, oy: 0, vx: 0, vy: 0, tx: 0, ty: 0,
+        px: 0, py: 0, sx: null, sy: null, drawnX: 0, drawnY: 0,
         resetting: false,
         targetOx: 0,
         targetOy: 0,
@@ -787,6 +725,20 @@
       }
     }
     measure();
+    for (i = 0; i < items.length; i += 1) {
+      applyOffset(items[i]);
+    }
+    applyView();
+    draw();
+  }
+
+  /* 画布尺寸变化后同步像素坐标、视图边界与连线 */
+  function layout() {
+    measure();
+    for (var i = 0; i < items.length; i += 1) {
+      applyOffset(items[i]);
+    }
+    clampView();
     applyView();
     draw();
   }
@@ -795,11 +747,18 @@
     listen(canvas, 'pointerdown', onCanvasDown);
     listen(canvas, 'pointermove', onCanvasMove, { passive: true });
     listen(canvas, 'pointerleave', onCanvasLeave);
+    listen(canvas, 'pointerenter', function () {
+      chartBox = null;
+    });
     listen(window, 'pointerup', finishPan, true);
     listen(window, 'pointercancel', finishPan, true);
     listen(window, 'pointerup', finishDrag, true);
     listen(window, 'pointercancel', finishDrag, true);
   }
+
+  listen(window, 'scroll', function () {
+    chartBox = null;
+  }, { passive: true });
 
   listen(canvas, 'wheel', onWheel, { passive: false });
 
@@ -818,18 +777,11 @@
 
   if (typeof window.ResizeObserver === 'function') {
     var observer = new window.ResizeObserver(function () {
-      /* 动效关闭时保持静态：位置与视图都停在初始状态，不必重算 */
+      /* 动效关闭时位置与视图已静止，无需重算 */
       if (!enabled) {
         return;
       }
-      measure();
-      var i;
-      for (i = 0; i < items.length; i += 1) {
-        applyOffset(items[i]);
-      }
-      clampView();
-      applyView();
-      draw();
+      layout();
     });
     observer.observe(canvas);
   } else {
@@ -837,10 +789,7 @@
       if (!enabled) {
         return;
       }
-      measure();
-      clampView();
-      applyView();
-      draw();
+      layout();
     }, { passive: true });
   }
 
@@ -874,7 +823,7 @@
   build();
 
   if (Capability.reducedMotion) {
-    /* 载入时即为减少动态效果：先以静态形态呈现，偏好恢复后再启用 */
+    /* 载入时即减少动态效果：先呈现静态，偏好恢复后再启用 */
     stop();
   } else {
     schedule();

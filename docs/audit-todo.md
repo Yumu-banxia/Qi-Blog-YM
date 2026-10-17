@@ -197,7 +197,7 @@
 | 核对项 | 命令 | 结果 |
 | --- | --- | --- |
 | 本地引用、页内锚点、图片固有尺寸、列表与归档记录、搜索索引一致性 | `node tools/check-content.mjs` | 九个页面，问题 0 项 |
-| 体积与 DOM 预算 | `node tools/check-content.mjs --sizes` | 首页 79.4 KB（gzip 22.1 KB），文章详情页 77.0 KB 到 79.8 KB，单页节点最多 391 个 |
+| 体积与 DOM 预算 | `node tools/check-content.mjs --sizes` | 首页 77.5 KB（gzip 21.4 KB），文章详情页 77.0 KB 到 79.8 KB，单页节点最多 391 个 |
 | 结构、布局、星图、灯箱、代码块复制与框内滚动、搜索、访问端分档、跳转衔接与预取 | `node tools/browser-check.mjs` | 76 项，失败 0 项 |
 | 布局与结构 | `node tools/browser-check.mjs --layout` | 37 项，失败 0 项 |
 | 键盘流程、搜索面板的滚动锁定与背景键盘屏蔽、打印样式、按需加载、两种托管方式 | `node tools/acceptance-check.mjs` | 30 项，失败 0 项 |
