@@ -24,6 +24,23 @@ html {
   }
 }
 
+/* 同源页面之间跳转时由内核承接交叉过渡，页头与页脚声明同名过渡组，
+   位置在跳转前后保持连续。未实现该规则的引擎跳过未知内容，
+   减少动态效果偏好下整段不注册，跳转维持原有行为。 */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+
+  .site-header {
+    view-transition-name: site-header;
+  }
+
+  .site-footer {
+    view-transition-name: site-footer;
+  }
+}
+
 body {
   display: flex;
   flex-direction: column;

@@ -278,5 +278,46 @@
       }
     });
   }
+
+  /* 同源页面预取
+   * 仅在 HTTP 环境下、且设备档位允许加载增强脚本时注册规则，
+   * 指针悬停意图出现后由内核提前取回目标页面。
+   * 本地文件打开与省流模式下一律跳过，避免额外请求。
+   */
+  function registerPrefetch() {
+    if (window.location.protocol !== 'http:' && window.location.protocol !== 'https:') {
+      return;
+    }
+    if (!capability || typeof capability.allow !== 'function' || !capability.allow('optionalScripts')) {
+      return;
+    }
+    if (capability.saveData === true) {
+      return;
+    }
+    if (document.querySelector('script[type="speculationrules"]')) {
+      return;
+    }
+
+    var rules = {
+      prefetch: [{
+        source: 'document',
+        where: {
+          and: [
+            { href_matches: '/*' },
+            { not: { href_matches: '/assets/*' } },
+            { not: { selector_matches: 'a[target="_blank"]' } }
+          ]
+        },
+        eagerness: 'moderate'
+      }]
+    };
+
+    var node = document.createElement('script');
+    node.type = 'speculationrules';
+    node.textContent = JSON.stringify(rules);
+    document.head.appendChild(node);
+  }
+
+  registerPrefetch();
 })();
 

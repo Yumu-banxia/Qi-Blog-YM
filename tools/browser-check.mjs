@@ -630,6 +630,106 @@ try {
       await sleep(600);
       await closePage(page);
     }
+
+    /* 九、跳转衔接与页面预取 */
+    {
+      const local = await openPage(browser, 'about:blank');
+      watch(local, 'index.html(本地文件)');
+      await navigate(local.client, fileUrl(ROOT + '/index.html'));
+      await sleep(800);
+      const localRules = await evaluate(local.client, `document.querySelectorAll('script[type="speculationrules"]').length`);
+      check('本地文件打开时不注册页面预取', localRules === 0, '规则节点 ' + localRules);
+      await closePage(local);
+
+      const hosted = await startServer(ROOT, '');
+      try {
+        const page = await openPage(browser, 'about:blank');
+        watch(page, 'index.html(静态托管)');
+        await navigate(page.client, 'http://127.0.0.1:' + hosted.port + '/index.html');
+        await sleep(800);
+
+        const prefetch = await evaluate(page.client, `(() => {
+          const node = document.querySelector('script[type="speculationrules"]');
+          let parsed = null;
+          try {
+            parsed = JSON.parse(node ? node.textContent : '');
+          } catch (error) {
+            parsed = null;
+          }
+          const rule = parsed && Array.isArray(parsed.prefetch) ? parsed.prefetch[0] : null;
+          const where = rule && rule.where && Array.isArray(rule.where.and) ? rule.where.and : [];
+          return {
+            present: Boolean(node),
+            source: rule ? rule.source : '',
+            eagerness: rule ? rule.eagerness : '',
+            include: where.length ? where[0].href_matches || '' : '',
+            excludeAsset: where.length > 1 && Boolean(where[1].not && where[1].not.href_matches),
+            tier: window.Capability.tier
+          };
+        })()`);
+        check('静态托管下注册页面预取规则',
+          prefetch.present && prefetch.source === 'document' && prefetch.eagerness === 'moderate' && prefetch.include === '/*' && prefetch.excludeAsset,
+          JSON.stringify(prefetch));
+
+        const naming = await evaluate(page.client, `(() => {
+          const name = (selector) => getComputedStyle(document.querySelector(selector)).getPropertyValue('view-transition-name').trim();
+          let declared = false;
+          for (const sheet of document.styleSheets) {
+            let rules = [];
+            try {
+              rules = Array.from(sheet.cssRules);
+            } catch (error) {
+              continue;
+            }
+            if (rules.some((item) => (item.cssText || '').indexOf('@view-transition') !== -1)) {
+              declared = true;
+            }
+          }
+          return { header: name('.site-header'), footer: name('.site-footer'), declared };
+        })()`);
+        check('页头页脚声明同名过渡组', naming.declared === true && naming.header === 'site-header' && naming.footer === 'site-footer', JSON.stringify(naming));
+
+        await setReducedMotion(page.client, 'reduce');
+        await sleep(250);
+        const reduced = await evaluate(page.client, `(() => {
+          const name = (selector) => getComputedStyle(document.querySelector(selector)).getPropertyValue('view-transition-name').trim();
+          return { header: name('.site-header'), footer: name('.site-footer') };
+        })()`);
+        check('减少动态效果时撤下过渡组命名', (reduced.header === 'none' || reduced.header === '') && (reduced.footer === 'none' || reduced.footer === ''), JSON.stringify(reduced));
+        await setReducedMotion(page.client, 'no-preference');
+        await closePage(page);
+
+        const leaving = await openPage(browser, 'about:blank');
+        watch(leaving, 'index.html(省流模式)');
+        await leaving.client.send('Page.addScriptToEvaluateOnNewDocument', {
+          source: 'Object.defineProperty(navigator, "connection", { configurable: true, get: function () { return { saveData: true, effectiveType: "4g" }; } });'
+        });
+        await navigate(leaving.client, 'http://127.0.0.1:' + hosted.port + '/index.html');
+        await sleep(800);
+        const saving = await evaluate(leaving.client, `({
+          tier: window.Capability.tier,
+          reason: window.Capability.reason,
+          saveData: window.Capability.saveData,
+          rules: document.querySelectorAll('script[type="speculationrules"]').length
+        })`);
+        check('省流模式下降档且不注册页面预取', saving.saveData === true && saving.tier === 'low' && saving.reason === 'network' && saving.rules === 0, JSON.stringify(saving));
+        await closePage(leaving);
+
+        const legacy = await openPage(browser, 'about:blank');
+        watch(legacy, 'index.html(功能机静态托管)');
+        await setUserAgent(legacy.client, 'Nokia2700c/09.80 Profile/MIDP-2.1 Configuration/CLDC-1.1');
+        await navigate(legacy.client, 'http://127.0.0.1:' + hosted.port + '/index.html');
+        await sleep(800);
+        const lowest = await evaluate(legacy.client, `({
+          tier: window.Capability.tier,
+          rules: document.querySelectorAll('script[type="speculationrules"]').length
+        })`);
+        check('最低档位不注册页面预取', lowest.tier === 'minimal' && lowest.rules === 0, JSON.stringify(lowest));
+        await closePage(legacy);
+      } finally {
+        hosted.server.close();
+      }
+    }
   }
 
   check('页面脚本错误为空', pageErrors.length === 0, pageErrors.join(' | ').slice(0, 400));

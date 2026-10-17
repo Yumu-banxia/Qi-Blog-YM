@@ -125,17 +125,17 @@
 
 | 维度 | 预算 | 实测 |
 | --- | --- | --- |
-| 首屏 HTML 与 CSS | 未压缩 120 KB 以内 | 首页 38.3 KB，文章页 45.8 KB |
-| 页面自带脚本 | 未压缩 40 KB 以内 | 每页共用的 capability 与 main 合计 14.2 KB；首页另加 chart 25.3 KB，文章页另加 reader 16.0 KB，作品页另加 gallery 4.0 KB |
+| 首屏 HTML 与 CSS | 未压缩 120 KB 以内 | 首页 38.8 KB，文章页 46.3 KB |
+| 页面自带脚本 | 未压缩 40 KB 以内 | 每页共用的 capability 与 main 合计 15.3 KB；首页另加 chart 25.3 KB，文章页另加 reader 16.0 KB，作品页另加 gallery 4.0 KB |
 | 第三方渲染库 | 命中内容时才加载 | 文章页按需，highlight.js 约 126 KB、KaTeX 脚本与样式合计约 292 KB、字体约 254 KB |
 | 单页 DOM 节点 | 1500 以内 | 最多 391 |
 | 横向溢出 | 0 | 360、768、1440 三种宽度下均为 0 |
 
-首屏资源（HTML、其引用的样式表与页面自带脚本）由 `node tools/check-content.mjs --sizes` 统计，不含按需加载的第三方库、图片与字体，按 1 KB 等于 1024 字节换算。2026-10-17 的复测结果：首页 77.7 KB（gzip 21.4 KB）；文章列表 47.7 KB、关于 46.9 KB、归档 50.9 KB、作品 54.0 KB，gzip 在 13.6 KB 到 15.1 KB 之间；文章详情页在 74.3 KB 到 77.1 KB 之间，gzip 在 20.9 KB 到 21.7 KB 之间。脚本预算的使用率偏紧，其中星图脚本占 25.3 KB，是后续优先压缩的部分。
+首屏资源（HTML、其引用的样式表与页面自带脚本）由 `node tools/check-content.mjs --sizes` 统计，不含按需加载的第三方库、图片与字体，按 1 KB 等于 1024 字节换算。2026-10-17 的复测结果：首页 79.4 KB（gzip 22.1 KB）；文章列表 49.4 KB、关于 48.6 KB、归档 52.5 KB、作品 55.7 KB，gzip 在 14.2 KB 到 15.8 KB 之间；文章详情页在 76.0 KB 到 78.8 KB 之间，gzip 在 21.5 KB 到 22.3 KB 之间。脚本预算的使用率偏紧，其中星图脚本占 25.3 KB，是后续优先压缩的部分。
 
 ### 兼容性
 
-布局与交互的基线为 Chrome 与 Edge 105 以上、Firefox 110 以上、Safari 15.4 以上。在此之上使用若干渐进增强项，取值不支持时按声明回退，不影响页面成立：`text-wrap: balance` 与 `text-wrap: pretty`、`color-mix()`、`backdrop-filter`、`mask-image`、`aspect-ratio`。样式表中的回退写法保证旧引擎读到前一条声明。2026-10-17 的引擎核对于 Chrome 155.0.8059.80 与 Firefox 157.0.1 完成；Edge 在本机以 MSIX 包形式安装，命令行无法启动无头实例，Safari 无可用环境，两项记为未测。
+布局与交互的基线为 Chrome 与 Edge 105 以上、Firefox 110 以上、Safari 15.4 以上。在此之上使用若干渐进增强项，取值不支持时按声明回退，不影响页面成立：`text-wrap: balance` 与 `text-wrap: pretty`、`color-mix()`、`backdrop-filter`、`mask-image`、`aspect-ratio`、跨文档视图过渡用的 `@view-transition` 与 `view-transition-name`、页面预取用的 `speculationrules`。样式表中的回退写法保证旧引擎读到前一条声明，未识别 `speculationrules` 的引擎把该节点视作普通数据块，不发出请求。2026-10-17 的引擎核对于 Chrome 155.0.8059.80 与 Firefox 157.0.1 完成；Edge 在本机以 MSIX 包形式安装，命令行无法启动无头实例，Safari 无可用环境，两项记为未测。
 
 ### 无障碍
 
@@ -164,13 +164,14 @@
 | 核对项 | 命令 | 结果 |
 | --- | --- | --- |
 | 本地引用、页内锚点、图片固有尺寸、列表与归档记录、搜索索引一致性 | `node tools/check-content.mjs` | 九个页面，问题 0 项 |
-| 体积与 DOM 预算 | `node tools/check-content.mjs --sizes` | 首页 77.7 KB（gzip 21.4 KB），文章详情页 74.3 KB 到 77.1 KB，单页节点最多 391 个 |
-| 结构、布局、星图、灯箱、复制、搜索、访问端分档 | `node tools/browser-check.mjs` | 67 项，失败 0 项 |
+| 体积与 DOM 预算 | `node tools/check-content.mjs --sizes` | 首页 79.4 KB（gzip 22.1 KB），文章详情页 76.0 KB 到 78.8 KB，单页节点最多 391 个 |
+| 结构、布局、星图、灯箱、复制、搜索、访问端分档、跳转衔接与预取 | `node tools/browser-check.mjs` | 73 项，失败 0 项 |
 | 布局与结构 | `node tools/browser-check.mjs --layout` | 37 项，失败 0 项 |
-| 键盘流程、打印样式、按需加载、两种托管方式 | `node tools/acceptance-check.mjs` | 24 项，失败 0 项 |
+| 键盘流程、搜索面板的滚动锁定与背景键盘屏蔽、打印样式、按需加载、两种托管方式 | `node tools/acceptance-check.mjs` | 30 项，失败 0 项 |
 | 无障碍扫描 | `node tools/a11y-check.mjs --axe <axe.min.js>` | axe 4.14.0，13 项，失败 0 项 |
 | 规范校验 | `java -jar vnu.jar <九个页面>` | 消息 0 条，退出码 0 |
-| Firefox 引擎核对 | `node tools/firefox-check.mjs` | 34 项，失败 0 项 |
+| 运行期帧间隔、布局偏移、首次绘制、长任务与窄屏文字放大重排 | `node tools/perf-check.mjs` | 27 项，失败 0 项 |
+| Firefox 引擎核对 | `node tools/firefox-check.mjs` | 36 项，失败 0 项 |
 
 Firefox 一侧走 WebDriver 的 Marionette 通道，该版本自 141 起不再提供 DevTools 协议接口，核对客户端 `tools/marionette.mjs` 只使用 Node 内置模块。Firefox 无头实例没有剪贴板写入授权，复制按钮在该次核对中显示「复制失败」并按预期复位，成功提示路径由 Chrome 一侧覆盖。
 

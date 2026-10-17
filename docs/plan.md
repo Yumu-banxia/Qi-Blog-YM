@@ -305,8 +305,8 @@ Qi-blog-ds/
 
 | 维度 | 目标 |
 | --- | --- |
-| 首屏关键资源（HTML 与 CSS） | 未压缩 120 KB 以内，实测首页 38.3 KB、文章页 45.8 KB |
-| 页面自带脚本 | 未压缩 40 KB 以内，capability 与 main 合计 14.2 KB，首页另加 chart 25.3 KB、文章页另加 reader 16.0 KB、作品页另加 gallery 4.0 KB |
+| 首屏关键资源（HTML 与 CSS） | 未压缩 120 KB 以内，实测首页 38.8 KB、文章页 46.3 KB |
+| 页面自带脚本 | 未压缩 40 KB 以内，capability 与 main 合计 15.3 KB，首页另加 chart 25.3 KB、文章页另加 reader 16.0 KB、作品页另加 gallery 4.0 KB |
 | 按需第三方库 | 仅在文章页命中内容时加载，highlight.js 约 126 KB，KaTeX 脚本与样式合计约 292 KB，字体约 254 KB |
 | 单页 DOM 节点 | 1500 以内，实测最多 391 |
 | 累计布局偏移 | 接近于零，媒体元素标注宽高 |
@@ -314,7 +314,7 @@ Qi-blog-ds/
 | 响应式断点 | 375、768、1024、1440 |
 | 动画属性 | 仅 transform 与 opacity |
 
-面积类数值按 1 KB 等于 1024 字节换算。目标浏览器一栏为布局与交互的基线；`text-wrap: balance`、`text-wrap: pretty`、`color-mix()`、`backdrop-filter`、`mask-image`、`aspect-ratio` 六项属于渐进增强，取值不被支持时按声明回退，页面结构不受影响。
+面积类数值按 1 KB 等于 1024 字节换算。目标浏览器一栏为布局与交互的基线；`text-wrap: balance`、`text-wrap: pretty`、`color-mix()`、`backdrop-filter`、`mask-image`、`aspect-ratio`、跨文档视图过渡用的 `@view-transition` 与 `view-transition-name`、页面预取用的 `speculationrules` 属于渐进增强，取值不被支持时按声明回退，页面结构不受影响。
 
 ## 五、验证方式
 
@@ -373,7 +373,7 @@ Qi-blog-ds/
 2. 内容一致性缺少检查。新增 `tools/check-content.mjs`：核对本地 `href`、`src` 与样式表中的 `url()` 是否指向存在的文件，页内锚点是否有对应 id，id 是否重复，图片是否标注与文件相符的固有尺寸，文章是否在列表页与归档页都出现，标签计数与分区条数是否相等，搜索索引与文章头部是否一致。`--write-index` 按文章页面重建索引，`--sizes` 输出体积统计。
 3. 链接与索引的失效反馈。检查覆盖 `pages/` 子目录与 `404.html`；外部地址只核对格式，不以网络可用性判定。索引载入异常后的重试在第一阶段完成。
 
-第三阶段的核对结果：九个页面、零问题。注入一处不存在的链接、一个重复 id 与一条被改写的列表摘要后，检查分别给出文件名与行号并以退出码 1 结束；还原后重新通过。体积与布局数值在视觉阶段改动后于 2026-10-17 复测：首页 77.7 KB（gzip 21.4 KB），文章列表 47.7 KB、关于 46.9 KB、归档 50.9 KB、作品 54.0 KB，文章详情页 74.3 KB 到 77.1 KB；单页 DOM 节点最多 391 个；360、768、1440 三种宽度共二十七组测量，横向溢出与页面级越界元素均为 0。浏览器核对五十六项全部通过，无页面脚本错误。
+第三阶段的核对结果：九个页面、零问题。注入一处不存在的链接、一个重复 id 与一条被改写的列表摘要后，检查分别给出文件名与行号并以退出码 1 结束；还原后重新通过。体积与布局数值在视觉阶段与后续两轮改动后于 2026-10-17 复测：首页 79.4 KB（gzip 22.1 KB），文章列表 49.4 KB、关于 48.6 KB、归档 52.5 KB、作品 55.7 KB，文章详情页 76.0 KB 到 78.8 KB；单页 DOM 节点最多 391 个；360、768、1440 三种宽度共二十七组测量，横向溢出与页面级越界元素均为 0。浏览器核对七十三项全部通过，无页面脚本错误。
 
 ### 第四阶段 文案与作品信息
 
@@ -400,8 +400,8 @@ Qi-blog-ds/
 | 核对项 | 命令 | 结果 |
 | --- | --- | --- |
 | 本地引用、页内锚点、图片固有尺寸、列表与归档记录、搜索索引一致性 | `node tools/check-content.mjs` | 九个页面，问题 0 项 |
-| 体积与 DOM 预算 | `node tools/check-content.mjs --sizes` | 首页 77.7 KB（gzip 21.4 KB），文章详情页 74.3 KB 到 77.1 KB，单页节点最多 391 个 |
-| 结构、布局、星图、灯箱、复制、搜索、访问端分档 | `node tools/browser-check.mjs` | 67 项，失败 0 项 |
+| 体积与 DOM 预算 | `node tools/check-content.mjs --sizes` | 首页 79.4 KB（gzip 22.1 KB），文章详情页 76.0 KB 到 78.8 KB，单页节点最多 391 个 |
+| 结构、布局、星图、灯箱、复制、搜索、访问端分档、跳转衔接与预取 | `node tools/browser-check.mjs` | 73 项，失败 0 项 |
 | 布局与结构 | `node tools/browser-check.mjs --layout` | 37 项，失败 0 项 |
 | 键盘流程、搜索面板的滚动锁定与背景键盘屏蔽、打印样式、按需加载、两种托管方式 | `node tools/acceptance-check.mjs` | 30 项，失败 0 项 |
 | 无障碍扫描 | `node tools/a11y-check.mjs --axe <axe.min.js>` | axe 4.14.0，13 项，失败 0 项 |
@@ -414,6 +414,8 @@ Firefox 一侧走 WebDriver 的 Marionette 通道，该版本自 141 起不再�
 搜索面板的模态行为在核对的第二轮补齐：打开时把页面主体移出键盘访问范围，优先使用 `inert`，缺少支持时退回 `aria-hidden`；同时锁定页面滚动并补偿滚动条宽度，`Tab` 与 `Shift+Tab` 在面板内循环，关闭时逐项恢复。上一轮改动在 `Tab` 分支内声明了与选中项下标同名的局部变量，变量提升使 `ArrowDown`、`ArrowUp` 与 `Enter` 读到未定义值，方向键与回车选中因此失效；把该局部变量改名为 `focused` 之后恢复正常，对应的方向键、回车打开文章、滚动锁定与背景屏蔽断言分别写入 `tools/acceptance-check.mjs` 与 `tools/firefox-check.mjs`。运行期数据改用新增的 `tools/perf-check.mjs` 记录，脚本只作记录，长任务与帧间隔不设失败阈值，累积布局偏移、文档级横向溢出与脚本报错才计入失败。
 
 正文数据的更新会牵动派生文件。本轮 `pages/post-no-build.html` 中的体积数字改写之后，`assets/data/search-index.js` 的正文与文章页面不再一致，`node tools/check-content.mjs` 报出该项；以 `node tools/check-content.mjs --write-index` 重建索引后复检为零问题。
+
+同源跳转的衔接与页面预取在本轮补入。`assets/styles/base.css` 注册 `@view-transition` 并把页头与页脚声明为同名过渡组，整段包在 `prefers-reduced-motion: no-preference` 之内，注册条件跟随系统动态效果偏好而非设备档位；`assets/scripts/main.js` 在静态托管、设备档位允许加载增强脚本且未开启省流时注入 `speculationrules`，规则以 `document` 为来源、`moderate` 为急切度，排除资源目录与新窗口链接，本地文件打开时协议判断先行，不注册。核对写入 `tools/browser-check.mjs` 的第九节：本地文件下规则节点为 0；静态托管下规则可解析，来源、急切度与首要匹配分别为 `document`、`moderate`、`/*`；页头与页脚的计算值分别为 `site-header` 与 `site-footer`，模拟减少动态效果后回落为 `none`；省流模式下降为 `low` 档且不注册；功能机 UA 下为 `minimal` 档且不注册。两处改动使每页共用的样式与脚本从 14.2 KB 增至 15.3 KB。
 
 未取得结果的项：本机 Edge 版本为 155.0.4283.45，以 MSIX 包形式安装，无头实例启动后进程随即退出，`--remote-debugging-port` 未生成 `DevToolsActivePort`，未取得引擎结果；Safari 没有可用环境，记为未测；旧设备只有 UA 模拟结果，没有真机数据。
 
