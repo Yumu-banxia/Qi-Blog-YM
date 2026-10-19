@@ -704,22 +704,47 @@ try {
         const project = await startServer(ROOT, '/Qi-Blog-YM/');
         const root = await startServer(ROOT, '');
       try {
+        const rootHomeResponse = await fetch(root.origin + '/');
+        const rootHomeMarkup = await rootHomeResponse.text();
+        check('域名根下访问首页返回 200', rootHomeResponse.status === 200 && rootHomeMarkup.includes('<title>语暮的技术手记</title>'), 'status=' + rootHomeResponse.status);
+
+        const projectHomeResponse = await fetch(project.origin);
+        const projectHomeMarkup = await projectHomeResponse.text();
+        check('项目子目录根地址返回首页', projectHomeResponse.status === 200 && projectHomeMarkup.includes('<title>语暮的技术手记</title>'), 'status=' + projectHomeResponse.status);
+
+        const projectResponse = await fetch(project.origin + 'pages/missing');
+        const projectMarkup = await projectResponse.text();
+        check('项目子目录下未知地址返回自定义 404 页面与状态码', projectResponse.status === 404 && projectResponse.url.endsWith('/pages/missing') && projectMarkup.includes('<h1>页面不存在</h1>'), 'status=' + projectResponse.status + ' url=' + projectResponse.url);
+
+        const traversalResponse = await fetch(root.origin + '/%5C..%5C..%5CWindows%5Cwin.ini');
+        check('请求路径越出项目目录时返回 404', traversalResponse.status === 404, 'status=' + traversalResponse.status);
+
         const page = await openPage(browser, 'about:blank');
         watch(page, '404.html(前缀)');
         await navigate(page.client, 'http://127.0.0.1:' + project.port + '/Qi-Blog-YM/pages/missing');
         await sleep(900);
+        const projectMissing = await evaluate(page.client, `({ path: location.pathname, title: document.title })`);
+        check('项目子目录下触发 404 时保留原地址', projectMissing.path === '/Qi-Blog-YM/pages/missing' && projectMissing.title === '页面不存在 · 语暮的技术手记', JSON.stringify(projectMissing));
         const hrefs = await evaluate(page.client, `Array.from(document.querySelectorAll('a[data-site-link]')).map((a) => a.getAttribute('href'))`);
         check('项目子目录下的未知地址链接指向站点根', hrefs.length > 0 && hrefs.every((h) => h.indexOf('/Qi-Blog-YM/') === 0), hrefs[0] || '');
+        await evaluate(page.client, `document.querySelector('.actions a[href$="index.html"]').click()`);
+        await sleep(400);
+        const projectLanding = await evaluate(page.client, `({ path: location.pathname, title: document.title })`);
+        check('项目子目录下的 404 页面可返回首页', projectLanding.path === '/Qi-Blog-YM/index.html' && projectLanding.title === '语暮的技术手记', JSON.stringify(projectLanding));
 
         const rootHrefs = await (async () => {
           const inner = await openPage(browser, 'about:blank');
           await navigate(inner.client, 'http://127.0.0.1:' + root.port + '/pages/missing');
           await sleep(900);
           const list = await evaluate(inner.client, `Array.from(document.querySelectorAll('a[data-site-link]')).map((a) => a.getAttribute('href'))`);
+          await evaluate(inner.client, `document.querySelector('.actions a[href$="posts.html"]').click()`);
+          await sleep(400);
+          const landing = await evaluate(inner.client, `({ path: location.pathname, title: document.title })`);
           await closePage(inner);
-          return list;
+          return { list, landing };
         })();
-        check('域名根下的未知地址链接指向根', rootHrefs.indexOf('/pages/posts.html') !== -1, rootHrefs[0] || '');
+        check('域名根下的未知地址链接指向根', rootHrefs.list.indexOf('/pages/posts.html') !== -1, rootHrefs.list[0] || '');
+        check('域名根下的 404 页面可跳转文章列表', rootHrefs.landing.path === '/pages/posts.html' && rootHrefs.landing.title.indexOf('文章') !== -1, JSON.stringify(rootHrefs.landing));
         await closePage(page);
       } finally {
         project.server.close();

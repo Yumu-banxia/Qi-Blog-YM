@@ -149,7 +149,9 @@
 打印时页面切换为纸质阅读形态：导航、主题按钮、跳转链接、星图与进度条隐藏，链接统一为黑色并带下划线，按钮与标签去掉边框与底色，页头改为静态定位，区块间距收窄，折叠的代码块展开，文章页的目录与工具条不进入纸张。待入场元素在打印媒体下不保留初始状态，导出为 PDF 时内容完整。
 ## 五、运行方式
 
-直接双击 `index.html` 即可浏览全部页面。如需以静态托管方式查看，在项目根目录执行 `python -m http.server` 后访问本地端口，两种方式行为一致。
+双击 `index.html` 可浏览站点页面。自定义 404 需要 HTTP 服务或静态托管平台处理未知地址。运行 `node tools/static-server.mjs` 后访问终端显示的本地地址即可核对；服务默认使用 8000 端口，冲突时可运行 `node tools/static-server.mjs --port 8001`。站点根地址返回 `index.html`，未知地址返回根目录 `404.html`，并保留 HTTP 404 状态码与原请求地址。
+
+发布时，托管平台须将未知地址映射到发布目录根部的 `404.html`。GitHub Pages 使用该文件作为自定义错误页；其他平台需配置错误页规则。`file://` 协议没有服务器级错误回退，Python 自带静态服务器也不会自动读取项目的 `404.html`。
 
 ## 六、已知限制
 
@@ -166,7 +168,7 @@
 | 本地引用（含 `picture/srcset`）、页内锚点、图片固有尺寸、列表与归档记录、搜索索引一致性 | `node tools/check-content.mjs` | 九个页面，问题 0 项 |
 | 项目脚本语法 | `node tools/check-syntax.mjs` | 16 个脚本通过 |
 | 体积与 DOM 预算 | `node tools/check-content.mjs --sizes` | 首页 86.0 KB（gzip 23.0 KB），文章详情页 85.4 KB 到 87.6 KB，单页节点最多 297 个 |
-| 结构、布局、星图、灯箱、代码块复制与框内滚动、搜索、访问端分档、跳转衔接与预取、WebP 与 PNG 回退 | `node tools/browser-check.mjs` | 85 项，失败 0 项 |
+| 结构、布局、星图、灯箱、代码块复制与框内滚动、搜索、访问端分档、跳转衔接与预取、WebP 与 PNG 回退、404 服务状态 | `node tools/browser-check.mjs` | 92 项，失败 0 项 |
 | 布局与结构 | `node tools/browser-check.mjs --layout` | 37 项，失败 0 项 |
 | 键盘流程、搜索面板的滚动锁定与背景键盘屏蔽、打印样式、按需加载、两种托管方式 | `node tools/acceptance-check.mjs` | 30 项，失败 0 项 |
 | 无障碍扫描 | `node tools/a11y-check.mjs --axe <axe.min.js>` | axe 4.14.0，13 项，失败 0 项 |
@@ -175,6 +177,8 @@
 | Firefox 引擎核对 | `node tools/firefox-check.mjs` | 38 项，失败 0 项；四张延迟加载截图全部载入 |
 
 Firefox 一侧走 WebDriver 的 Marionette 通道，该版本自 141 起不再提供 DevTools 协议接口，核对客户端 `tools/marionette.mjs` 只使用 Node 内置模块。Firefox 无头实例没有剪贴板写入授权，复制按钮在该次核对中显示「复制失败」并按预期复位，成功提示路径由 Chrome 一侧覆盖。
+
+本地 HTTP 服务把根地址映射到 `index.html`，未知地址以原请求路径返回 `404.html` 且状态码为 404；测试覆盖域名根、`/Qi-Blog-YM/` 项目子目录与越出项目目录的请求路径。
 
 axe-core 与 Nu HTML 校验结果沿用 2026-10-17 的检查记录，本轮改动没有调整控件语义、链接结构或正文标签。未取得结果的项：本机 Edge 版本为 155.0.4283.45，以 MSIX 包形式安装，无头实例启动后进程随即退出，`--remote-debugging-port` 未生成 `DevToolsActivePort`，未取得引擎结果；Safari 没有可用环境，记为未测；旧设备只有 UA 模拟结果，没有真机数据。
 
