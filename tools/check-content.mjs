@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* 站内一致性检查
- * 依据 docs/content-plan.md 的约定核对：本地引用与锚点、图片固有尺寸、文章在列表与归档中的记录、
+ * 依据 docs/content-plan.md 的约定核对：本地引用（含 picture/srcset）与锚点、图片固有尺寸、文章在列表与归档中的记录、
  * 搜索索引与文章头部是否一致。默认只读，加 --write-index 按文章页面重建索引，
  * 加 --sizes 输出各页面首屏资源的体积统计。
  *
@@ -261,6 +261,15 @@ for (const file of htmlFiles) {
     }
     if ((tag.name === 'img' || tag.name === 'script') && tag.attrs.src) {
       targets.push(['src', tag.attrs.src]);
+    }
+    if (tag.name === 'source' && tag.attrs.srcset) {
+      const candidates = tag.attrs.srcset
+        .split(',')
+        .map((candidate) => candidate.trim().split(/\s+/)[0])
+        .filter(Boolean);
+      for (const candidate of candidates) {
+        targets.push(['srcset', candidate]);
+      }
     }
     if (tag.name === 'link' && tag.attrs.href) {
       targets.push(['href', tag.attrs.href]);

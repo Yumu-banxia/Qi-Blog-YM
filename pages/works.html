@@ -15,7 +15,6 @@
   <meta property="og:title" content="作品">
   <meta property="og:description" content="展示本站的静态博客实现与部署于腾讯云的 Typecho 个人博客，附项目截图、技术栈与访问地址。">
   <meta property="og:locale" content="zh_CN">
-  <meta property="og:image" content="../assets/media/og-cover.png">
   <link rel="stylesheet" href="../assets/styles/tokens.css?v=9">
   <link rel="stylesheet" href="../assets/styles/base.css?v=10">
   <script src="../assets/scripts/capability.js?v=9"></script>
@@ -79,7 +78,10 @@
               <p class="summary">本站源码。八个页面，原生 HTML、CSS 与 JavaScript，没有构建步骤；本地双击打开与静态托管两种方式都能完整运行。</p>
               <figure class="work-shot">
                 <button type="button" class="shot-open" aria-label="放大查看本站首页截图">
-                  <img src="../assets/media/works/home-desktop.png" alt="语暮的技术手记首页：诗句标题、文章入口与四栏目星图" width="1200" height="750" loading="lazy" decoding="async">
+                  <picture>
+                    <source srcset="../assets/media/works/home-desktop.webp" type="image/webp">
+                    <img src="../assets/media/works/home-desktop.png" alt="语暮的技术手记首页：诗句标题、文章入口与四栏目星图" width="1200" height="750" loading="lazy" decoding="async">
+                  </picture>
                 </button>
               </figure>
 
@@ -99,7 +101,10 @@
               <p class="summary">首屏判断访问端条件并写入根元素，样式与脚本读同一个结果。低端设备据此停掉模糊、动效与渲染库。</p>
               <figure class="work-shot work-shot--narrow">
                 <button type="button" class="shot-open" aria-label="放大查看窄屏首屏截图">
-                  <img src="../assets/media/works/home-mobile.png" alt="移动端首页：品牌标题、导航按钮、诗句标题与纵向星图" width="780" height="1688" loading="lazy" decoding="async">
+                  <picture>
+                    <source srcset="../assets/media/works/home-mobile.webp" type="image/webp">
+                    <img src="../assets/media/works/home-mobile.png" alt="移动端首页：品牌标题、导航按钮、诗句标题与纵向星图" width="780" height="1688" loading="lazy" decoding="async">
+                  </picture>
                 </button>
               </figure>
 
@@ -119,7 +124,10 @@
               <p class="summary">文章页的目录、进度、字号与代码块操作。公式与高亮只在内容确实需要时才请求。</p>
               <figure class="work-shot">
                 <button type="button" class="shot-open" aria-label="放大查看文章页截图">
-                  <img src="../assets/media/works/article-desktop.png" alt="阅读增强文章：左侧章节目录，正文展示代码操作工具条、局部滚动说明与公式排版" width="1200" height="750" loading="lazy" decoding="async">
+                  <picture>
+                    <source srcset="../assets/media/works/article-desktop.webp" type="image/webp">
+                    <img src="../assets/media/works/article-desktop.png" alt="阅读增强文章：左侧章节目录，正文展示代码操作工具条、局部滚动说明与公式排版" width="1200" height="750" loading="lazy" decoding="async">
+                  </picture>
                 </button>
               </figure>
 
@@ -139,7 +147,10 @@
               <p class="summary">部署于腾讯云的个人博客，使用 Typecho 内容管理系统与 Handsome 主题运行。</p>
               <figure class="work-shot">
                 <button type="button" class="shot-open" aria-label="放大查看语暮的小站截图">
-                  <img src="../assets/media/works/vesperrill-blog.png" alt="语暮的小站首页：Handsome 深色主题、侧边导航与博客信息栏，主内容区当前没有文章列表" width="1200" height="750" loading="lazy" decoding="async">
+                  <picture>
+                    <source srcset="../assets/media/works/vesperrill-blog.webp" type="image/webp">
+                    <img src="../assets/media/works/vesperrill-blog.png" alt="语暮的小站首页：Handsome 深色主题、侧边导航与博客信息栏，主内容区当前没有文章列表" width="1200" height="750" loading="lazy" decoding="async">
+                  </picture>
                 </button>
               </figure>
               <ul class="tags">

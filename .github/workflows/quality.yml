@@ -1,0 +1,26 @@
+name: Static site quality checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check local content and resources
+        run: node tools/check-content.mjs
+
+      - name: Check first-party JavaScript syntax
+        run: node tools/check-syntax.mjs

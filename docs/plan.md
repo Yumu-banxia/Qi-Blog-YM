@@ -23,7 +23,7 @@
 
 1. 流畅性。无框架运行时，首屏开销集中在 HTML 与 CSS。动画只使用 transform 与 opacity，交由合成层处理，重排与重绘的出现面降到最小。
 2. 兼容性。classic script 与相对地址的组合，使页面在 file:// 与静态托管两种环境下都能运行。ES module 在 file:// 下受跨源策略限制，外部模块与本地区块数据读取都会失败，因此不作为加载方式。
-3. 赛事契合。赛事点名 HTML、CSS、JavaScript 三项技术，原生实现与技术说明一一对应。
+3. 技术一致性。项目以 HTML、CSS、JavaScript 为基础，原生实现与技术说明一一对应。
 4. 环境契合。本机 Node 位于 Windows 侧，构建链调用成本偏高，无构建方案在开发与验证环节更轻便。
 
 ### 未采用项
@@ -57,15 +57,21 @@ high 与 medium 之外，`data-motion="reduced"` 生效，动画与过渡关闭�
 ```text
 Qi-Blog-YM/
 ├─ index.html              首页
+├─ 404.html                未知地址页面
+├─ manifest.webmanifest    应用清单
 ├─ pages/
 │  ├─ posts.html           文章列表
 │  ├─ post-reader.html     文章详情：阅读增强与按需渲染
 │  ├─ post-capability.html 文章详情：访问端能力分级
 │  ├─ post-no-build.html   文章详情：无构建方案
+│  ├─ archive.html         归档
 │  ├─ works.html           作品陈列
 │  └─ about.html           个人介绍
 ├─ assets/
+│  ├─ data/                 站内搜索索引
 │  ├─ favicon.svg          站点图标
+│  ├─ icons/                应用图标
+│  ├─ media/works/         项目截图：WebP 与 PNG 回退
 │  ├─ styles/
 │  │  ├─ tokens.css        设计令牌
 │  │  ├─ base.css          重置、排版、布局、星图与组件样式
@@ -75,16 +81,17 @@ Qi-Blog-YM/
 │  │  ├─ capability.js     设备能力分级
 │  │  ├─ chart.js          首页星图交互
 │  │  ├─ reader.js         文章页阅读增强
-│  │  └─ main.js           全局交互
+│  │  ├─ gallery.js         图片浏览器
+│  │  ├─ search.js          站内搜索
+│  │  └─ main.js            全局交互
 │  ├─ vendor/
 │  │  ├─ highlight/        highlight.js 构建与许可证
 │  │  └─ katex/            KaTeX 构建、样式与字体
-├─ docs/
-│  ├─ content-plan.md      内容与栏目结构
-│  ├─ project-brief.md
-│  ├─ design-note.md       设计说明（交付材料）
-│  └─ plan.md
+├─ docs/                   项目说明、内容规划、设计记录与审查事项
+├─ tools/                  内容、浏览器、性能与语法检查
+├─ .github/workflows/      推送与合并请求的自动检查
 ├─ .gitattributes          文字文件统一以 LF 存储
+├─ .gitignore
 └─ README.md
 ```
 
@@ -310,13 +317,13 @@ Qi-Blog-YM/
 第二十二轮的核对结果：`node --check` 与内容检查通过；首页体积 77.5 KB（gzip 21.4 KB），较上一轮的 79.4 KB 下降 1.9 KB。星图静置位移 1.71 至 14.79 像素，指针靠近时 14 个样本全部朝指针方向偏移，指针移开后残余 1.11 像素；双击复位的单步最大位移 6.33 像素，缩放复位的单步最大变化 0.03；普通与交叉布局的四段连线切线余弦均为 1.0000。Chrome 76 项、Firefox 37 项、验收 30 项、性能 27 项、axe 13 项均无失败，Nu 校验零消息。
 验收标准：整站观感统一，各断点下无破版。
 
-### 阶段七 打包与交付
+### 阶段七 本地运行与维护
 
-核对资源体积，按赛事要求命名压缩包，撰写包含设计理念与技术实现的设计说明。
+核对资源体积，整理项目文档与静态资源，保持本地浏览无需构建步骤。
 
-设计说明已写入 `docs/design-note.md`，内容包含设计理念、视觉系统、技术实现、性能与兼容性核对结果。压缩包按「学号 + 姓名 + 班级 + 作品名」命名后提交，其中学号、姓名与班级三项信息由作者本人补入；`release/` 与 `*.zip` 已在 `.gitignore` 中排除，打包产物不进入仓库。
+设计说明见 `docs/design-note.md`，内容包含设计理念、视觉系统、技术实现、性能与兼容性核对结果。README 提供本地浏览方式、维护命令和文档索引。
 
-验收标准：解压后双击 index.html 即可完整浏览。
+验收标准：双击 `index.html` 后可完整浏览各页面。
 
 ## 四、性能与兼容性预算
 
@@ -325,7 +332,7 @@ Qi-Blog-YM/
 | 首屏关键资源（HTML 与 CSS） | 未压缩 120 KB 以内，实测首页 38.8 KB、文章页 46.3 KB |
 | 页面自带脚本 | 未压缩 40 KB 以内，capability 与 main 合计 15.3 KB，首页另加 chart 23.4 KB、文章页另加 reader 16.0 KB、作品页另加 gallery 4.0 KB |
 | 按需第三方库 | 仅在文章页命中内容时加载，highlight.js 约 126 KB，KaTeX 脚本与样式合计约 292 KB，字体约 254 KB |
-| 单页 DOM 节点 | 1500 以内，实测最多 391 |
+| 单页 DOM 节点 | 1500 以内，当前实测最多 297 |
 | 累计布局偏移 | 接近于零，媒体元素标注宽高 |
 | 目标浏览器 | Chrome 与 Edge 105 以上、Firefox 110 以上、Safari 15.4 以上 |
 | 响应式断点 | 375、768、1024、1440 |
@@ -410,21 +417,11 @@ Qi-Blog-YM/
 
 第五阶段的核对结果：链接点击前后配色一致；指针只产生轻微吸引，四个节点各自独立漂浮，连线在节点处切线余弦为 1.0000；拖动既不选中文字也不误触链接；双击复位的位移与缩放逐步收敛。
 
-### 第六阶段 提交前验收与比赛交付
+### 第六阶段 验收与兼容性检查
 
-核对日期 2026-10-17。执行环境为 Windows 上的 Node.js 24.19.0、Chrome 155.0.8059.80、Firefox 157.0、Nu 校验器 vnu.jar 26.10.12（Temurin JDK 25.0.4.1）与 axe-core 4.14.0。以下脚本只在本机核对时运行，浏览页面本身不经过它们。
+核对日期为 2026-10-17。执行环境、命令、各项检查结果与未测范围集中记录在 [项目审查记录](audit-todo.md)，避免在规划、说明与审查文档重复维护同一份数据。性能与兼容性摘要保留在 [设计说明](design-note.md)。
 
-| 核对项 | 命令 | 结果 |
-| --- | --- | --- |
-| 本地引用、页内锚点、图片固有尺寸、列表与归档记录、搜索索引一致性 | `node tools/check-content.mjs` | 九个页面，问题 0 项 |
-| 体积与 DOM 预算 | `node tools/check-content.mjs --sizes` | 首页 77.5 KB（gzip 21.4 KB），文章详情页 77.0 KB 到 79.8 KB，单页节点最多 391 个 |
-| 结构、布局、星图、灯箱、代码块复制与框内滚动、搜索、访问端分档、跳转衔接与预取 | `node tools/browser-check.mjs` | 76 项，失败 0 项 |
-| 布局与结构 | `node tools/browser-check.mjs --layout` | 37 项，失败 0 项 |
-| 键盘流程、搜索面板的滚动锁定与背景键盘屏蔽、打印样式、按需加载、两种托管方式 | `node tools/acceptance-check.mjs` | 30 项，失败 0 项 |
-| 无障碍扫描 | `node tools/a11y-check.mjs --axe <axe.min.js>` | axe 4.14.0，13 项，失败 0 项 |
-| 规范校验 | `java -jar vnu.jar <九个页面>` | 消息 0 条，退出码 0 |
-| 运行期帧间隔、布局偏移、首次绘制、长任务与窄屏文字放大重排 | `node tools/perf-check.mjs` | 27 项，失败 0 项 |
-| Firefox 引擎核对 | `node tools/firefox-check.mjs` | 37 项，失败 0 项 |
+本轮新增 `tools/check-syntax.mjs`，用于本地和 GitHub Actions 检查项目自有脚本的语法；自动检查在推送与合并请求时运行内容一致性及脚本语法检查。浏览器交互测试仍在有对应浏览器的本地环境运行。
 
 Firefox 一侧走 WebDriver 的 Marionette 通道，该版本自 141 起不再提供 DevTools 协议接口，核对客户端 `tools/marionette.mjs` 只使用 Node 内置模块。Firefox 无头实例没有剪贴板写入授权，复制按钮在该次核对中显示「复制失败」并按预期复位，成功提示路径由 Chrome 一侧覆盖。
 
@@ -436,4 +433,4 @@ Firefox 一侧走 WebDriver 的 Marionette 通道，该版本自 141 起不再�
 
 未取得结果的项：本机 Edge 版本为 155.0.4283.45，以 MSIX 包形式安装，无头实例启动后进程随即退出，`--remote-debugging-port` 未生成 `DevToolsActivePort`，未取得引擎结果；Safari 没有可用环境，记为未测；旧设备只有 UA 模拟结果，没有真机数据。
 
-交付项：压缩包按「学号 + 姓名 + 班级 + 作品名」命名，设计说明取 `docs/design-note.md`。学号、姓名、班级、公开邮箱与最终作品名由作者确认后填写，赛事邮件截止时间为 2026-10-20 22:00。
+站点元数据与静态访问方式见 [项目说明](project-brief.md)。

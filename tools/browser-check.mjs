@@ -301,10 +301,34 @@ try {
           overflow: document.body.style.overflow,
           headerInert: document.querySelector('.site-header').inert === true,
           closeFocused: /lightbox-close/.test(document.activeElement.className),
-          imageLoaded: document.querySelector('.lightbox-image').naturalWidth > 0
+          imageLoaded: document.querySelector('.lightbox-image').naturalWidth > 0,
+          pictureSource: document.querySelector('.shot-open picture source').type,
+          imageVariant: document.querySelector('.shot-open img').currentSrc.split('/').pop()
         };
       })()`);
       check('灯箱打开后锁定滚动并限制背景访问', opened.hidden === false && opened.overflow === 'hidden' && opened.headerInert === true && opened.closeFocused === true && opened.imageLoaded === true, JSON.stringify(opened));
+      check('作品截图优先载入无损 WebP 且保留 PNG 回退', opened.pictureSource === 'image/webp' && opened.imageVariant === 'home-desktop.webp', JSON.stringify(opened));
+
+      const fallback = await evaluate(page.client, `new Promise((resolve) => {
+        const picture = document.querySelector('.shot-open picture');
+        const source = picture.querySelector('source');
+        const image = picture.querySelector('img');
+        let finished = false;
+        let timeout = 0;
+        const finish = () => {
+          if (finished) return;
+          finished = true;
+          window.clearTimeout(timeout);
+          resolve({ file: image.currentSrc.split('/').pop(), width: image.naturalWidth });
+        };
+        image.addEventListener('load', finish, { once: true });
+        source.remove();
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          if (image.complete && image.naturalWidth > 0 && image.currentSrc.endsWith('.png')) finish();
+        }));
+        timeout = window.setTimeout(finish, 5000);
+      })`);
+      check('移除 WebP 来源后 PNG 回退图可正常读取', fallback.file === 'home-desktop.png' && fallback.width === 1200, JSON.stringify(fallback));
 
       const mobileLayout = await evaluate(page.client, `(() => {
         const box = document.getElementById('lightbox');
