@@ -295,16 +295,42 @@
   margin: 0;
   padding: 0;
   list-style: none;
+  overflow: hidden;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
 }
 
 .related-list li + li {
-  margin-top: var(--space-2);
+  border-block-start: 1px solid var(--color-border);
+}
+
+.related-list a {
+  display: flex;
+  min-block-size: 3rem;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-link);
+  text-decoration: none;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
+}
+
+.related-list a:hover,
+.related-list a:active {
+  background-color: var(--color-bg);
+  color: var(--color-link-hover);
+}
+
+.related-list a:focus-visible {
+  outline-offset: -3px;
 }
 
 /* 上下篇导航 */
 .article-pager {
-  margin-top: var(--space-7);
-  padding-top: var(--space-5);
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
   border-top: 1px solid var(--color-border);
 }
 

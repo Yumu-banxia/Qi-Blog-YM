@@ -234,3 +234,39 @@ svg {
   border-top: 1px solid #cccccc;
 }
 
+.related-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid #cccccc;
+  border-radius: 6px;
+}
+
+.related-list li + li {
+  border-top: 1px solid #cccccc;
+}
+
+.related-list a {
+  display: block;
+  min-height: 44px;
+  padding: 12px;
+  color: #1a4fd6;
+  text-decoration: none;
+}
+
+.link-action {
+  display: inline-block;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #cccccc;
+  border-radius: 6px;
+  color: #1a4fd6;
+  text-decoration: none;
+}
+
+.link-action:link,
+.link-action:visited {
+  color: #1a4fd6;
+  text-decoration: none;
+}
+

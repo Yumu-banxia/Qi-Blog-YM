@@ -118,6 +118,35 @@ a:active {
   text-decoration-thickness: 0.1em;
 }
 
+.link-action {
+  display: inline-flex;
+  min-block-size: 2.75rem;
+  align-items: center;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-link);
+  text-decoration: none;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
+}
+
+.link-action:link,
+.link-action:visited {
+  color: var(--color-link);
+  text-decoration: none;
+}
+
+.link-action:hover,
+.link-action:active {
+  background-color: var(--color-surface);
+  border-color: var(--color-link);
+  color: var(--color-link-hover);
+  text-decoration: none;
+}
+
 .prose a,
 .summary a {
   overflow-wrap: break-word;
@@ -679,7 +708,9 @@ button {
   .site-header,
   .card-list > li,
   .tags li,
+  .related-list,
   .pager a,
+  .link-action,
   .icon-button,
   .code-action,
   .code-toolbar {
@@ -1515,7 +1546,8 @@ button {
   }
 
   .actions a,
-  .pager a {
+  .pager a,
+  .link-action {
     display: inline;
     padding: 0;
     background-color: transparent;
