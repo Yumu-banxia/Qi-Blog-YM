@@ -245,6 +245,13 @@ try {
     `, 15000);
     check('代码高亮在 Firefox 下按需生效', highlight === true, String(highlight));
 
+    await navigate(browser, fileUrl('pages/post-capability.html'));
+    const longCode = await waitFor(browser, `
+      const code = document.querySelector('.prose pre code');
+      return !!code && code.textContent.split('\\n').length > 16;
+    `, 8000);
+    check('折叠核对加载超过阈值的代码示例', longCode === true, String(longCode));
+
     const fold = await evaluate(browser, `
       const toggle = document.querySelector('.code-block[data-folded] .code-action[aria-expanded]');
       if (!toggle) { return { found: false }; }
@@ -337,7 +344,7 @@ try {
 
     /* 六、HTTP 托管：域名根与项目子目录 */
     const rootServer = await startServer(ROOT, '');
-    const subServer = await startServer(ROOT, '/Qi-blog-ds/');
+    const subServer = await startServer(ROOT, '/Qi-Blog-YM/');
     servers = [rootServer, subServer];
     const targets = [
       { title: '域名根', origin: rootServer.origin },

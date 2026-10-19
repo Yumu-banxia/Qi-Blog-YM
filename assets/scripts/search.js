@@ -80,7 +80,7 @@
     pendingReady = onReady;
 
     var script = document.createElement('script');
-    script.src = base + 'assets/data/search-index.js';
+    script.src = base + 'assets/data/search-index.js?v=2';
     script.async = true;
     script.onload = function () {
       var raw = window.SearchIndex || [];

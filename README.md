@@ -1,4 +1,4 @@
-# Qi-blog-ds
+# Qi-Blog-YM
 
 个人博客的前端设计项目。页面围绕个人介绍、文章阅读与作品陈列组织内容，视觉语言取自星图意象，全部由原生 HTML、CSS 与 JavaScript 实现，没有构建步骤。
 
@@ -23,7 +23,7 @@
 ## 目录结构
 
 ```text
-Qi-blog-ds/
+Qi-Blog-YM/
 ├─ index.html            首页
 ├─ 404.html              托管环境下的未知地址页面
 ├─ manifest.webmanifest  应用清单
@@ -54,7 +54,7 @@ Qi-blog-ds/
 
 ## 开发环境
 
-本机 Node.js 位于 Windows 侧，版本 v24.19.0。在 WSL 中执行构建命令需调用 Windows 端可执行文件，或在 PowerShell、CMD 中运行。浏览器核对使用 Chrome 155.0.8059.80 与 Firefox 157.0.1；Edge 在本机以 MSIX 包形式安装，命令行无法启动无头实例，未纳入引擎核对，Safari 无可用环境。
+页面由静态文件组成，无需构建步骤。维护脚本使用 Windows 侧 Node.js v24.19.0；在 WSL 中运行时需调用 Windows 端 Node.js，或在 PowerShell、CMD 中运行。浏览器核对使用 Chrome 155.0.8059.80 与 Firefox 157.0.1；Edge 在本机以 MSIX 包形式安装，命令行无法启动无头实例，未纳入引擎核对，Safari 无可用环境。
 
 ## 工作顺序
 
@@ -83,12 +83,12 @@ Qi-blog-ds/
 | `node tools/check-content.mjs` | 核对本地引用、锚点、图片固有尺寸、文章在列表与归档中的记录，以及搜索索引与文章头部是否一致 |
 | `node tools/check-content.mjs --write-index` | 按文章页面重建 `assets/data/search-index.js` |
 | `node tools/check-content.mjs --sizes` | 输出各页面首屏资源的体积统计 |
-| `node tools/browser-check.mjs` | 以无头 Chromium 核对布局、结构、星图、灯箱、代码块复制与框内滚动、搜索、访问端分档，以及页面跳转衔接与预取规则的注册条件 |
+| `node tools/browser-check.mjs` | 以无头 Chromium 核对布局、结构、星图、图片浏览器的缩放、切换、复制与下载、代码块复制与框内滚动、搜索、访问端分档，以及页面跳转衔接与预取规则的注册条件 |
 | `node tools/browser-check.mjs --layout` | 只做布局与结构核对 |
 | `node tools/acceptance-check.mjs` | 核对站内链接点击前后配色、键盘流程、搜索面板的滚动锁定与背景键盘屏蔽、打印样式、第三方库按需加载，以及域名根与项目子目录两种托管方式 |
 | `node tools/perf-check.mjs` | 记录九个页面的帧间隔、布局偏移、首次绘制与长任务，并在 320 像素宽度下放大文字复查横向重排 |
 | `node tools/a11y-check.mjs --axe <axe.min.js>` | 以 axe-core 扫描九个页面与暗色主题、搜索面板、灯箱三处状态 |
-| `node tools/static-server.mjs` | 按域名根或 `/Qi-blog-ds/` 子目录托管项目目录，供浏览器核对脚本使用 |
+| `node tools/static-server.mjs` | 按域名根或 `/Qi-Blog-YM/` 子目录托管项目目录，供浏览器核对脚本使用 |
 | `node tools/firefox-check.mjs` | 以 Firefox 的 Marionette 通道完成同一套页面核对，含代码块滚动窗口、搜索面板与灯箱的滚动锁定及背景键盘屏蔽 |
 | `node tools/marionette.mjs` | Firefox 核对脚本使用的 Marionette 客户端，只依赖 Node 内置模块 |
 

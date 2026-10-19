@@ -207,8 +207,11 @@ try {
     await evaluate(page.client, `document.querySelector('.theme-toggle').focus()`);
     await pressEnter(page.client);
     await sleep(250);
-    const themed = await evaluate(page.client, `({ theme: document.documentElement.getAttribute('data-theme'), pressed: document.querySelector('.theme-toggle').getAttribute('aria-pressed') })`);
-    check('主题按钮响应键盘并同步状态', themed.theme !== before && themed.pressed === String(themed.theme === 'dark'), before + ' -> ' + JSON.stringify(themed));
+    const themed = await evaluate(page.client, `({ theme: document.documentElement.getAttribute('data-theme'), pressed: document.querySelector('.theme-toggle').getAttribute('aria-pressed'), themeColor: document.querySelector('meta[name="theme-color"]').content })`);
+    const expectedThemeColor = themed.theme === 'dark' ? '#0b1120' : '#f8f9fc';
+    check('主题按钮响应键盘并同步页面与浏览器界面', themed.theme !== before &&
+      themed.pressed === String(themed.theme === 'dark') && themed.themeColor === expectedThemeColor,
+    before + ' -> ' + JSON.stringify(themed));
     await closePage(page);
   }
 
@@ -388,7 +391,7 @@ try {
   }
 
   /* 六、HTTP 托管：域名根与项目子目录 */
-  for (const prefix of ['', '/Qi-blog-ds/']) {
+  for (const prefix of ['', '/Qi-Blog-YM/']) {
     const site = await startServer(ROOT, prefix);
     const title = prefix ? '项目子目录' : '域名根';
     const failures = [];

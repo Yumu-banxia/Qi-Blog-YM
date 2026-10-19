@@ -4,10 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>页面不存在 · Qi 的个人博客</title>
+  <title>页面不存在 · 语暮的技术手记</title>
   <meta name="description" content="这个地址没有对应的页面，可返回首页或浏览文章列表。">
-  <meta name="theme-color" content="#ffffff">
-  <meta property="og:site_name" content="Qi 的个人博客">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f8f9fc">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b1120">
+  <meta property="og:site_name" content="语暮的技术手记">
   <meta property="og:type" content="website">
   <meta property="og:title" content="页面不存在">
   <meta property="og:description" content="目标地址没有对应的内容，可返回首页或浏览文章列表。">
@@ -17,20 +18,26 @@
        无论请求路径落在哪一层，都能直接呈现，不依赖站点资源是否可达。 */
     :root {
       color-scheme: light dark;
-      --bg: #ffffff;
-      --text: #12172a;
-      --muted: #525b73;
-      --border: #dde2ee;
-      --link: #1b4fd8;
+      --bg: #f8f9fc;
+      --surface: #eef1f7;
+      --text: #182235;
+      --muted: #566174;
+      --border: #d5ddea;
+      --accent: #d9a233;
+      --accent-contrast: #182235;
+      --link: #214f9b;
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #0a0e18;
-        --text: #e7ecf7;
-        --muted: #98a3bd;
-        --border: #242c40;
-        --link: #8fb4ff;
+        --bg: #0b1120;
+        --surface: #141d2d;
+        --text: #edf1f7;
+        --muted: #a3afc2;
+        --border: #2c3850;
+        --accent: #f0c675;
+        --accent-contrast: #0b1120;
+        --link: #a6c5ff;
       }
     }
 
@@ -45,6 +52,9 @@
     }
 
     body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
       margin: 0;
       background-color: var(--bg);
       color: var(--text);
@@ -88,43 +98,89 @@
     }
 
     .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background-color: var(--bg);
       border-bottom: 1px solid var(--border);
     }
 
     .header-inner {
       display: flex;
       flex-wrap: wrap;
-      align-items: baseline;
-      gap: 1.5rem;
-      padding: 0.875rem 1.5rem;
+      align-items: center;
+      gap: 1.25rem;
+      min-height: 4rem;
+      padding: 0.5rem 1.5rem;
     }
 
     .brand {
+      margin-inline-end: auto;
       color: var(--text);
+      font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong", "SimSun", Georgia, serif;
       font-weight: 600;
       text-decoration: none;
+    }
+
+    .brand:visited {
+      color: var(--text);
     }
 
     .site-nav ul {
       display: flex;
       flex-wrap: wrap;
-      gap: 1.25rem;
+      gap: 0.25rem;
       margin: 0;
       padding: 0;
       list-style: none;
     }
 
-    main {
+    .site-nav a {
       display: block;
+      padding: 0.4rem 0.65rem;
+      border-radius: 999px;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .site-nav a:hover {
+      background-color: var(--surface);
+    }
+
+    main {
+      position: relative;
+      isolation: isolate;
+      flex: 1;
+      display: block;
+      width: 100%;
       max-width: 40rem;
       margin: 0 auto;
-      padding: 4rem 1.5rem 5rem;
+      padding: clamp(4rem, 12vh, 8rem) 1.5rem 7rem;
+    }
+
+    main::before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      inset-block: 0;
+      inset-inline-start: 50%;
+      width: min(calc(100% + 40vw), 100vw);
+      transform: translateX(-50%);
+      background-image:
+        radial-gradient(1px 1px at 24px 36px, var(--border) 50%, transparent 51%),
+        radial-gradient(1.5px 1.5px at 82px 104px, var(--border) 50%, transparent 51%);
+      background-size: 120px 120px, 160px 160px;
+      opacity: 0.7;
+      pointer-events: none;
     }
 
     h1 {
-      margin: 0 0 1rem;
-      font-size: 1.9rem;
-      line-height: 1.3;
+      margin: 0 0 1.5rem;
+      font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong", "SimSun", Georgia, serif;
+      font-size: clamp(2.25rem, 1.7rem + 2vw, 3.4rem);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
     }
 
     .lede {
@@ -142,15 +198,30 @@
     }
 
     .actions a {
-      display: inline-block;
-      padding: 0.5rem 1rem;
+      display: inline-flex;
+      align-items: center;
+      min-height: 2.75rem;
+      padding: 0.5rem 1.25rem;
+      background-color: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 12px;
+      color: var(--text);
       text-decoration: none;
+    }
+
+    .actions li:first-child a {
+      background-color: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-contrast);
+    }
+
+    .actions a:hover {
+      border-color: var(--accent);
     }
 
     .site-footer {
       padding: 1.5rem;
+      background-color: var(--surface);
       border-top: 1px solid var(--border);
       color: var(--muted);
       font-size: 0.875rem;
@@ -162,7 +233,7 @@
 
   <header class="site-header">
     <div class="header-inner">
-      <a class="brand" href="index.html" data-site-link>Qi 的个人博客</a>
+      <a class="brand" href="index.html" data-site-link>语暮的技术手记</a>
       <nav class="site-nav" aria-label="主导航">
         <ul>
           <li><a href="index.html" data-site-link>首页</a></li>
@@ -186,7 +257,7 @@
   </main>
 
   <footer class="site-footer">
-    <div class="wrap">© <span data-year>2026</span> Qi 的个人博客</div>
+    <div class="wrap">© <span data-year>2026</span> 语暮的技术手记</div>
   </footer>
 
   <script>

@@ -4,29 +4,29 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>作品 · Qi 的个人博客</title>
-  <meta name="description" content="三项都来自这个站点的搭建过程，附技术栈与源码地址。">
-  <meta name="theme-color" content="#ffffff">
-  <link rel="manifest" href="../manifest.webmanifest">
+  <title>作品 · 语暮的技术手记</title>
+  <meta name="description" content="展示本站的静态博客实现与部署于腾讯云的 Typecho 个人博客，附项目截图、技术栈与访问地址。">
+  <meta name="theme-color" content="#f8f9fc">
+  <link rel="manifest" href="../manifest.webmanifest?v=2">
   <link rel="apple-touch-icon" href="../assets/icons/icon-192.png">
   <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-  <meta property="og:site_name" content="Qi 的个人博客">
+  <meta property="og:site_name" content="语暮的技术手记">
   <meta property="og:type" content="website">
   <meta property="og:title" content="作品">
-  <meta property="og:description" content="三项都来自这个站点的搭建过程，附技术栈与源码地址。">
+  <meta property="og:description" content="展示本站的静态博客实现与部署于腾讯云的 Typecho 个人博客，附项目截图、技术栈与访问地址。">
   <meta property="og:locale" content="zh_CN">
-  <meta property="og:image" content="../assets/media/og-cover.jpg">
-  <link rel="stylesheet" href="../assets/styles/tokens.css?v=8">
-  <link rel="stylesheet" href="../assets/styles/base.css?v=8">
-  <script src="../assets/scripts/capability.js?v=8"></script>
-  <script src="../assets/scripts/main.js?v=8" defer></script>
+  <meta property="og:image" content="../assets/media/og-cover.png">
+  <link rel="stylesheet" href="../assets/styles/tokens.css?v=9">
+  <link rel="stylesheet" href="../assets/styles/base.css?v=10">
+  <script src="../assets/scripts/capability.js?v=9"></script>
+  <script src="../assets/scripts/main.js?v=9" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主要内容</a>
 
   <header class="site-header">
     <div class="container header-inner">
-      <a class="brand" href="../index.html">Qi 的个人博客</a>
+      <a class="brand" href="../index.html">语暮的技术手记</a>
 
       <nav id="site-nav" class="site-nav" aria-label="主导航">
         <ul>
@@ -70,16 +70,16 @@
     <section class="section">
       <div class="container">
         <h1>作品</h1>
-        <p class="lede">三项都来自这个站点的搭建过程，附技术栈与源码地址；截图可点击放大。</p>
+        <p class="lede">作品涵盖本站实现与独立博客实践；截图支持切换、滚轮缩放、拖动查看、复制与下载。</p>
 
         <ul class="card-list">
           <li data-reveal>
             <article>
-              <h2 class="list-title">Qi-blog-ds 个人博客</h2>
+              <h2 class="list-title">Qi-Blog-YM 个人博客</h2>
               <p class="summary">本站源码。八个页面，原生 HTML、CSS 与 JavaScript，没有构建步骤；本地双击打开与静态托管两种方式都能完整运行。</p>
               <figure class="work-shot">
                 <button type="button" class="shot-open" aria-label="放大查看本站首页截图">
-                  <img src="../assets/media/works/home-desktop.webp" alt="本站首页：左侧为站点说明与两个入口按钮，右侧为四栏目星图，节点之间以曲线相连" width="1200" height="750" loading="lazy" decoding="async">
+                  <img src="../assets/media/works/home-desktop.png" alt="语暮的技术手记首页：诗句标题、文章入口与四栏目星图" width="1200" height="750" loading="lazy" decoding="async">
                 </button>
               </figure>
 
@@ -89,7 +89,7 @@
                 <li>原生 JavaScript</li>
               </ul>
               <ul class="actions">
-                <li><a href="https://github.com/Yumu-banxia/Qi-blog-ds">仓库地址</a></li>
+                <li><a href="https://github.com/Yumu-banxia/Qi-Blog-YM">仓库地址</a></li>
               </ul>
             </article>
           </li>
@@ -99,7 +99,7 @@
               <p class="summary">首屏判断访问端条件并写入根元素，样式与脚本读同一个结果。低端设备据此停掉模糊、动效与渲染库。</p>
               <figure class="work-shot work-shot--narrow">
                 <button type="button" class="shot-open" aria-label="放大查看窄屏首屏截图">
-                  <img src="../assets/media/works/home-mobile.webp" alt="窄屏下的首页：星图改为纵向堆叠，导航收入折叠面板" width="780" height="1688" loading="lazy" decoding="async">
+                  <img src="../assets/media/works/home-mobile.png" alt="移动端首页：品牌标题、导航按钮、诗句标题与纵向星图" width="780" height="1688" loading="lazy" decoding="async">
                 </button>
               </figure>
 
@@ -109,7 +109,7 @@
                 <li>降级策略</li>
               </ul>
               <ul class="actions">
-                <li><a href="https://github.com/Yumu-banxia/Qi-blog-ds/blob/main/assets/scripts/capability.js">模块源码</a></li>
+                <li><a href="https://github.com/Yumu-banxia/Qi-Blog-YM/blob/main/assets/scripts/capability.js">模块源码</a></li>
               </ul>
             </article>
           </li>
@@ -119,7 +119,7 @@
               <p class="summary">文章页的目录、进度、字号与代码块操作。公式与高亮只在内容确实需要时才请求。</p>
               <figure class="work-shot">
                 <button type="button" class="shot-open" aria-label="放大查看文章页截图">
-                  <img src="../assets/media/works/article-desktop.webp" alt="文章页正文：左侧为目录与进度，正文含代码块与公式，代码块带复制与折叠操作" width="1200" height="750" loading="lazy" decoding="async">
+                  <img src="../assets/media/works/article-desktop.png" alt="阅读增强文章：左侧章节目录，正文展示代码操作工具条、局部滚动说明与公式排版" width="1200" height="750" loading="lazy" decoding="async">
                 </button>
               </figure>
 
@@ -129,7 +129,26 @@
                 <li>KaTeX</li>
               </ul>
               <ul class="actions">
-                <li><a href="https://github.com/Yumu-banxia/Qi-blog-ds/blob/main/assets/scripts/reader.js">模块源码</a></li>
+                <li><a href="https://github.com/Yumu-banxia/Qi-Blog-YM/blob/main/assets/scripts/reader.js">模块源码</a></li>
+              </ul>
+            </article>
+          </li>
+          <li data-reveal>
+            <article>
+              <h2 class="list-title"><a href="https://blog.vesperrill.top/" target="_blank" rel="noopener noreferrer">语暮的小站</a></h2>
+              <p class="summary">部署于腾讯云的个人博客，使用 Typecho 内容管理系统与 Handsome 主题运行。</p>
+              <figure class="work-shot">
+                <button type="button" class="shot-open" aria-label="放大查看语暮的小站截图">
+                  <img src="../assets/media/works/vesperrill-blog.png" alt="语暮的小站首页：Handsome 深色主题、侧边导航与博客信息栏，主内容区当前没有文章列表" width="1200" height="750" loading="lazy" decoding="async">
+                </button>
+              </figure>
+              <ul class="tags">
+                <li>腾讯云</li>
+                <li>Typecho</li>
+                <li>Handsome 主题</li>
+              </ul>
+              <ul class="actions">
+                <li><a href="https://blog.vesperrill.top/" target="_blank" rel="noopener noreferrer">访问线上博客</a></li>
               </ul>
             </article>
           </li>
@@ -140,7 +159,7 @@
 
   <footer class="site-footer">
     <div class="container">
-      <p>© <span data-year>2026</span> Qi 的个人博客</p>
+      <p>© <span data-year>2026</span> 语暮的技术手记</p>
     </div>
   </footer>
   <div class="search-panel" id="search-panel" hidden>
@@ -165,17 +184,40 @@
   </div>
 
   <div class="lightbox" id="lightbox" data-placeholder="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" hidden>
-    <div class="lightbox-inner" role="dialog" aria-modal="true" aria-label="放大查看作品截图">
-      <img class="lightbox-image" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
-      <button type="button" class="icon-button lightbox-close" aria-label="关闭放大查看">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
-          <path d="M6 6l12 12"></path>
-          <path d="M18 6 6 18"></path>
-        </svg>
-      </button>
+    <div class="lightbox-inner" role="dialog" aria-modal="true" aria-labelledby="lightbox-title" aria-describedby="lightbox-caption">
+      <h2 class="visually-hidden" id="lightbox-title">作品图片浏览</h2>
+      <div class="lightbox-toolbar" aria-label="图片操作">
+        <div class="lightbox-control-group" role="group" aria-label="切换图片">
+          <button type="button" class="lightbox-control" id="lightbox-previous" aria-label="上一张图片">上一张</button>
+          <span class="lightbox-count" id="lightbox-count" aria-live="polite"></span>
+          <button type="button" class="lightbox-control" id="lightbox-next" aria-label="下一张图片">下一张</button>
+        </div>
+        <div class="lightbox-control-group" role="group" aria-label="调整图片大小">
+          <button type="button" class="lightbox-control" id="lightbox-zoom-out" aria-label="缩小图片">缩小</button>
+          <output class="lightbox-zoom-level" id="lightbox-zoom-level" aria-live="polite">适合窗口</output>
+          <button type="button" class="lightbox-control" id="lightbox-zoom-in" aria-label="放大图片">放大</button>
+          <button type="button" class="lightbox-control" id="lightbox-fit">适合窗口</button>
+          <button type="button" class="lightbox-control" id="lightbox-actual">原始大小</button>
+        </div>
+        <div class="lightbox-control-group" role="group" aria-label="图片文件操作">
+          <button type="button" class="lightbox-control" id="lightbox-copy">复制图片</button>
+          <a class="lightbox-control" id="lightbox-download" download>下载原图</a>
+          <button type="button" class="lightbox-control lightbox-close" aria-label="关闭图片浏览">关闭</button>
+        </div>
+      </div>
+      <div class="lightbox-stage" id="lightbox-stage">
+        <div class="lightbox-frame">
+          <img class="lightbox-image" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
+        </div>
+      </div>
+      <div class="lightbox-info">
+        <p class="lightbox-caption" id="lightbox-caption"></p>
+        <p class="lightbox-help">滚轮缩放；放大后按住鼠标拖动；方向键切换。</p>
+        <p class="lightbox-status" id="lightbox-status" role="status" aria-live="polite"></p>
+      </div>
     </div>
   </div>
 
-  <script src="../assets/scripts/gallery.js?v=8" defer></script></body>
+  <script src="../assets/scripts/gallery.js?v=10" defer></script></body>
 </html>
 

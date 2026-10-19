@@ -4,30 +4,30 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>Qi 的个人博客</title>
-  <meta name="description" content="个人博客。文章围绕这个站点本身的技术选择与核对记录。">
-  <meta name="theme-color" content="#ffffff">
-  <link rel="manifest" href="manifest.webmanifest">
+  <title>语暮的技术手记</title>
+  <meta name="description" content="记录前端实现、系统工具与网站构建中的技术选择和验证过程。">
+  <meta name="theme-color" content="#f8f9fc">
+  <link rel="manifest" href="manifest.webmanifest?v=2">
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <meta property="og:site_name" content="Qi 的个人博客">
+  <meta property="og:site_name" content="语暮的技术手记">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Qi 的个人博客">
-  <meta property="og:description" content="个人博客。文章围绕这个站点本身的技术选择与核对记录。">
+  <meta property="og:title" content="语暮的技术手记">
+  <meta property="og:description" content="记录前端实现、系统工具与网站构建中的技术选择和验证过程。">
   <meta property="og:locale" content="zh_CN">
-  <meta property="og:image" content="assets/media/og-cover.jpg">
-  <link rel="stylesheet" href="assets/styles/tokens.css?v=8">
-  <link rel="stylesheet" href="assets/styles/base.css?v=8">
-  <script src="assets/scripts/capability.js?v=8"></script>
-  <script src="assets/scripts/main.js?v=8" defer></script>
-  <script src="assets/scripts/chart.js?v=8" defer></script>
+  <meta property="og:image" content="assets/media/og-cover.png">
+  <link rel="stylesheet" href="assets/styles/tokens.css?v=9">
+  <link rel="stylesheet" href="assets/styles/base.css?v=10">
+  <script src="assets/scripts/capability.js?v=9"></script>
+  <script src="assets/scripts/main.js?v=9" defer></script>
+  <script src="assets/scripts/chart.js?v=10" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主要内容</a>
 
   <header class="site-header">
     <div class="container header-inner">
-      <a class="brand" href="index.html">Qi 的个人博客</a>
+      <a class="brand" href="index.html">语暮的技术手记</a>
 
       <nav id="site-nav" class="site-nav" aria-label="主导航">
         <ul>
@@ -71,8 +71,8 @@
     <section class="section hero">
       <div class="container hero-inner">
         <div class="hero-copy">
-          <h1>记录学习过程、技术笔记与做过的项目</h1>
-          <p class="lede">计算机学院本科生。文章多写这个站点自身的技术选择、核对记录与失败尝试。</p>
+          <h1>纸上得来终觉浅，绝知此事要躬行。</h1>
+          <p class="lede">计算机学院本科生，关注前端实现与系统工具。这里以站点实践为主，记录技术选择、实现过程与验证结果。</p>
           <ul class="actions">
             <li><a href="pages/posts.html" data-variant="primary">阅读文章</a></li>
             <li><a href="pages/works.html">查看作品</a></li>
@@ -113,7 +113,7 @@
                     <path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12Z"></path>
                   </svg>
                   <span class="chart-label">作品</span>
-                  <span class="chart-meta">3 项</span>
+                  <span class="chart-meta">4 项</span>
                 </a>
               </li>
               <li class="chart-node chart-node-about">
@@ -138,16 +138,16 @@
         <ul class="card-list">
           <li data-reveal>
             <article>
-              <h3 class="list-title"><a href="pages/post-reader.html">文章页的阅读增强：按需渲染与代码块操作</a></h3>
+              <h3 class="list-title"><a href="pages/post-reader.html">文章页阅读增强：目录、代码块与公式</a></h3>
               <p class="meta"><time datetime="2026-10-13">2026-10-13</time><span>阅读体验</span></p>
-              <p class="summary">文章页的目录、进度、字号与代码块操作的实现方式，以及公式与高亮的加载条件。</p>
+              <p class="summary">文章页实现章节目录、阅读进度、代码块交互与公式排版，并说明字号设置和渲染库的按需加载。</p>
             </article>
           </li>
           <li data-reveal>
             <article>
-              <h3 class="list-title"><a href="pages/post-capability.html">老设备也要能读：按访问端条件分级</a></h3>
+              <h3 class="list-title"><a href="pages/post-capability.html">兼顾功能机与现代设备：访问端能力分级</a></h3>
               <p class="meta"><time datetime="2026-10-12">2026-10-12</time><span>兼容性</span></p>
-              <p class="summary">在一台功能机上核对后加的分级机制：按访问端条件分四档，决定给多少表现。</p>
+              <p class="summary">以 Nokia 2700c 核验为起点，介绍依据浏览器、硬件、网络与运行时能力控制样式和脚本的四档机制。</p>
             </article>
           </li>
         </ul>
@@ -161,7 +161,7 @@
         <ul class="card-list">
           <li data-reveal>
             <article>
-              <h3 class="list-title"><a href="pages/works.html">Qi-blog-ds 个人博客</a></h3>
+              <h3 class="list-title"><a href="pages/works.html">Qi-Blog-YM 个人博客</a></h3>
               <p class="summary">本站源码。八个页面，原生 HTML、CSS 与 JavaScript，没有构建步骤，双击 index.html 即可浏览。</p>
               <ul class="tags">
                 <li>HTML5</li>
@@ -192,6 +192,17 @@
               </ul>
             </article>
           </li>
+          <li data-reveal>
+            <article>
+              <h3 class="list-title"><a href="https://blog.vesperrill.top/" target="_blank" rel="noopener noreferrer">语暮的小站</a></h3>
+              <p class="summary">部署于腾讯云的个人博客，使用 Typecho 与 Handsome 主题构建。</p>
+              <ul class="tags">
+                <li>腾讯云</li>
+                <li>Typecho</li>
+                <li>Handsome 主题</li>
+              </ul>
+            </article>
+          </li>
         </ul>
         <p><a href="pages/works.html">全部作品</a></p>
       </div>
@@ -200,7 +211,7 @@
     <section class="section">
       <div class="container">
         <h2>关于</h2>
-        <p>方向偏前端实现与系统工具。技术选择连同测量数字一起写下：原生 CSS 的取舍、不加构建步骤的理由、低端设备上关闭的项目。</p>
+        <p>关注前端实现与系统工具，本站文章侧重页面构建、技术取舍与本地验证。</p>
         <p><a href="pages/about.html">了解更多</a></p>
       </div>
     </section>
@@ -208,7 +219,7 @@
 
   <footer class="site-footer">
     <div class="container">
-      <p>© <span data-year>2026</span> Qi 的个人博客</p>
+      <p>© <span data-year>2026</span> 语暮的技术手记</p>
     </div>
   </footer>
   <div class="search-panel" id="search-panel" hidden>

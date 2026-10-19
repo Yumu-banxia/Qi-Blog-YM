@@ -35,7 +35,8 @@
   var DAMP_RATE = Math.log(DAMPING) * 60;
 
   var items = [], width = 1, height = 1, pctX = 100, pctY = 100;
-  var enabled = true, paused = false, focusIndex = -1, suppressClick = false;
+  var pageVisible = !document.hidden, chartVisible = true;
+  var enabled = true, paused = !pageVisible, focusIndex = -1, suppressClick = false;
   var drag = null, pan = null, viewTarget = null, chartBox = null;
   var view = { scale: 1, x: 0, y: 0 };
   var frameId = 0, lastApply = 0, frameInterval = 25, drawThreshold = 0.25;
@@ -134,11 +135,12 @@
       var offset = (Math.sqrt(dx * dx + dy * dy) || 1) * 0.3;
       var offA = a.tx || a.ty ? offset : 0;
       var offB = b.tx || b.ty ? offset : 0;
+      /* SVG 使用 0–100 的 viewBox；像素位置先归一化，避免连线被裁在画布外。 */
       path.setAttribute('d',
-        'M' + r2(ax) + ' ' + r2(ay) +
-        ' C' + r2(ax + a.tx * offA) + ' ' + r2(ay + a.ty * offA) +
-        ' ' + r2(bx - b.tx * offB) + ' ' + r2(by - b.ty * offB) +
-        ' ' + r2(bx) + ' ' + r2(by));
+        'M' + r2(ax * pctX) + ' ' + r2(ay * pctY) +
+        ' C' + r2((ax + a.tx * offA) * pctX) + ' ' + r2((ay + a.ty * offA) * pctY) +
+        ' ' + r2((bx - b.tx * offB) * pctX) + ' ' + r2((by - b.ty * offB) * pctY) +
+        ' ' + r2(bx * pctX) + ' ' + r2(by * pctY));
     }
     for (i = 0; i < items.length; i += 1) {
       items[i].drawnX = items[i].px;
@@ -659,6 +661,10 @@
     }
   }
 
+  function syncPaused() {
+    setPaused(!pageVisible || !chartVisible);
+  }
+
   /* 停止漂浮与交互并回到静态形态；监听器保留，处理函数按 enabled 返回 */
   function stop() {
     if (!enabled) {
@@ -795,13 +801,17 @@
 
   if (typeof window.IntersectionObserver === 'function') {
     var visibleObserver = new window.IntersectionObserver(function (entries) {
-      setPaused(!entries[0].isIntersecting);
+      if (entries.length) {
+        chartVisible = entries[0].isIntersecting;
+        syncPaused();
+      }
     }, { threshold: 0.05 });
     visibleObserver.observe(chart);
   }
 
   listen(document, 'visibilitychange', function () {
-    setPaused(document.hidden);
+    pageVisible = !document.hidden;
+    syncPaused();
   });
 
   if (window.matchMedia) {

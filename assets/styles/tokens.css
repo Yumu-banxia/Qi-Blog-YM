@@ -2,6 +2,8 @@
 :root {
   --font-sans: system-ui, -apple-system, "Segoe UI", "Noto Sans SC",
     "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-display: "Noto Serif SC", "Source Han Serif SC", "Songti SC",
+    "STSong", "SimSun", Georgia, serif;
   --font-mono: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas,
     "Liberation Mono", monospace;
 
@@ -24,14 +26,14 @@
   --space-7: 3rem;
   --space-8: 4rem;
 
-  --radius-sm: 4px;
-  --radius-md: 8px;
+  --radius-sm: 6px;
+  --radius-md: 14px;
   --radius-pill: 999px;
 
   --container: 72rem;
   --measure: 36rem;
   --section-space: clamp(3rem, 2rem + 4vw, 5.5rem);
-  --header-height: 3.5rem;
+  --header-height: 4rem;
 
   --duration-fast: 120ms;
   --duration-base: 200ms;
@@ -43,40 +45,44 @@
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --color-bg: #ffffff;
-  --color-surface: #f4f6fb;
-  --color-text: #12172a;
-  --color-muted: #525b73;
-  --color-border: #dde2ee;
+  --color-bg: #f8f9fc;
+  --color-surface: #eef1f7;
+  --color-text: #182235;
+  --color-muted: #566174;
+  --color-border: #d5ddea;
+  --color-hero: #f1f4fa;
+  --color-nebula: rgb(111 139 196 / 18%);
   --color-accent: #d9a233;
-  --color-accent-contrast: #12172a;
-  --color-link: #1b4fd8;
-  --color-link-hover: #1746bf;
-  --color-focus: #1d4ed8;
-  --color-star: #aebbd6;
-  --color-chart-line: #b9c4da;
+  --color-accent-contrast: #182235;
+  --color-link: #214f9b;
+  --color-link-hover: #173e80;
+  --color-focus: #2459a6;
+  --color-star: #9ca8bd;
+  --color-chart-line: #aab4c3;
   --color-selection: rgb(217 162 51 / 30%);
-  --star-opacity: 0.7;
-  --shadow-md: 0 6px 24px rgb(16 18 24 / 10%);
+  --star-opacity: 0.55;
+  --shadow-md: 0 16px 42px rgb(24 34 53 / 16%);
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --color-bg: #0a0e18;
-  --color-surface: #131a28;
-  --color-text: #e7ecf7;
-  --color-muted: #98a3bd;
-  --color-border: #242c40;
+  --color-bg: #0b1120;
+  --color-surface: #141d2d;
+  --color-text: #edf1f7;
+  --color-muted: #a3afc2;
+  --color-border: #2c3850;
+  --color-hero: #0d1525;
+  --color-nebula: rgb(73 102 164 / 22%);
   --color-accent: #f0c675;
-  --color-accent-contrast: #0a0e18;
-  --color-link: #8fb4ff;
-  --color-link-hover: #a9c8ff;
-  --color-focus: #93b6ff;
-  --color-star: #9fb6e8;
-  --color-chart-line: #38425f;
+  --color-accent-contrast: #0b1120;
+  --color-link: #a6c5ff;
+  --color-link-hover: #c3d7ff;
+  --color-focus: #a9c7ff;
+  --color-star: #a8b8d5;
+  --color-chart-line: #465573;
   --color-selection: rgb(240 198 117 / 28%);
-  --star-opacity: 0.7;
-  --shadow-md: 0 6px 24px rgb(0 0 0 / 45%);
+  --star-opacity: 0.66;
+  --shadow-md: 0 18px 48px rgb(0 0 0 / 42%);
 }
 
 ::selection {

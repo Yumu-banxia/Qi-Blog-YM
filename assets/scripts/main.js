@@ -181,7 +181,7 @@
     searchState = 'loading';
     var toggle = document.querySelector('.search-toggle');
     var script = document.createElement('script');
-    script.src = searchBase() + 'assets/scripts/search.js?v=8';
+    script.src = searchBase() + 'assets/scripts/search.js?v=9';
     script.async = true;
     script.onload = function () {
       if (!window.SiteSearch) {

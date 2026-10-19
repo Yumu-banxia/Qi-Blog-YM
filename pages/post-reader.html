@@ -4,42 +4,42 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>文章页的阅读增强：按需渲染与代码块操作 · Qi 的个人博客</title>
-  <meta name="description" content="文章页的目录、进度、字号与代码块操作的实现方式，以及公式与高亮的加载条件。">
-  <meta name="theme-color" content="#ffffff">
-  <link rel="manifest" href="../manifest.webmanifest">
+  <title>文章页阅读增强：目录、代码块与公式 · 语暮的技术手记</title>
+  <meta name="description" content="文章页实现章节目录、阅读进度、代码块交互与公式排版，并说明字号设置和渲染库的按需加载。">
+  <meta name="theme-color" content="#f8f9fc">
+  <link rel="manifest" href="../manifest.webmanifest?v=2">
   <link rel="apple-touch-icon" href="../assets/icons/icon-192.png">
   <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-  <meta property="og:site_name" content="Qi 的个人博客">
+  <meta property="og:site_name" content="语暮的技术手记">
   <meta property="og:type" content="article">
-  <meta property="og:title" content="文章页的阅读增强：按需渲染与代码块操作">
-  <meta property="og:description" content="文章页的目录、进度、字号与代码块操作的实现方式，以及公式与高亮的加载条件。">
+  <meta property="og:title" content="文章页阅读增强：目录、代码块与公式">
+  <meta property="og:description" content="文章页实现章节目录、阅读进度、代码块交互与公式排版，并说明字号设置和渲染库的按需加载。">
   <meta property="og:locale" content="zh_CN">
-  <meta property="og:image" content="../assets/media/og-cover.jpg">
+  <meta property="og:image" content="../assets/media/og-cover.png">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
-    "headline": "文章页的阅读增强：按需渲染与代码块操作",
+    "headline": "文章页阅读增强：目录、代码块与公式",
     "datePublished": "2026-10-13",
     "inLanguage": "zh-CN",
     "author": { "@type": "Person", "name": "Yumu-banxia" },
-    "isPartOf": { "@type": "Blog", "name": "Qi 的个人博客" }
+    "isPartOf": { "@type": "Blog", "name": "语暮的技术手记" }
   }
   </script>
-  <link rel="stylesheet" href="../assets/styles/tokens.css?v=8">
-  <link rel="stylesheet" href="../assets/styles/base.css?v=8">
-  <link rel="stylesheet" href="../assets/styles/article.css?v=8">
-  <script src="../assets/scripts/capability.js?v=8"></script>
-  <script src="../assets/scripts/main.js?v=8" defer></script>
-  <script src="../assets/scripts/reader.js?v=8" defer></script>
+  <link rel="stylesheet" href="../assets/styles/tokens.css?v=9">
+  <link rel="stylesheet" href="../assets/styles/base.css?v=10">
+  <link rel="stylesheet" href="../assets/styles/article.css?v=11">
+  <script src="../assets/scripts/capability.js?v=9"></script>
+  <script src="../assets/scripts/main.js?v=9" defer></script>
+  <script src="../assets/scripts/reader.js?v=10" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主要内容</a>
 
   <header class="site-header">
     <div class="container header-inner">
-      <a class="brand" href="../index.html">Qi 的个人博客</a>
+      <a class="brand" href="../index.html">语暮的技术手记</a>
 
       <nav id="site-nav" class="site-nav" aria-label="主导航">
         <ul>
@@ -83,7 +83,7 @@
     <article class="section">
       <div class="container">
         <header class="article-head">
-          <h1>文章页的阅读增强：按需渲染与代码块操作</h1>
+          <h1>文章页阅读增强：目录、代码块与公式</h1>
           <p class="meta"><time datetime="2026-10-13">2026-10-13</time><span>阅读体验</span></p>
           <ul class="tags">
             <li>阅读体验</li>
@@ -93,91 +93,54 @@
         </header>
 
         <div class="prose">
-          <p>写完第一篇文章才发现，正文里的东西比正文本身麻烦：一段三十来行的代码在窄屏上被拉得很长，几条公式要等渲染库加载完才出现。阅读增强这一部分就是为这些情况写的，代码放在 <code>article.css</code> 与 <code>reader.js</code>，只在文章详情页加载。</p>
+          <p>文章详情页的阅读增强包括章节目录、阅读进度、代码块操作、公式排版与字号设置。样式和交互分别由 <code>article.css</code> 与 <code>reader.js</code> 承担；代码高亮和公式库仅在正文包含对应内容时按需加载。</p>
 
-          <h2>目录与进度条</h2>
-          <p>目录是脚本扫正文的二级、三级标题拼出来的，标题不到三条就不生成——短文配目录显得累赘。当前所在的小节由观察器判断，命中后标 <code>aria-current</code>。</p>
-          <p>顶部那条进度线高两像素，位移交给 <code>transform: scaleX()</code>，滚动回调塞进 <code>requestAnimationFrame</code>，一次滚动最多写一次样式。回到顶部的按钮在纵向滚过 400 像素后出现；设备被判定不适合动效时，它改成瞬时跳转。</p>
+          <h2>目录生成与章节定位</h2>
+          <p>目录由脚本扫描正文的二级与三级标题生成，标题少于三条时不渲染。当前小节由观察器判定，命中项标注 <code>aria-current</code>。</p>
 
-          <h2>代码块</h2>
-          <p>每个代码块补一条工具条：语言、折叠、复制。超过 16 行默认收起，按钮上写清楚还剩多少行，展开状态同步到 <code>aria-expanded</code>。</p>
-          <p>复制走异步剪贴板接口，失败时退回临时文本域加 <code>execCommand</code>，本地文件打开时这条回退路径用得上。复制结果交给一个独立状态区播报，读屏软件能听到。</p>
-          <p>代码块横向可滚动，因此补上 <code>tabindex</code>，键盘可以进入查看长行。折叠时只裁纵向，横向仍可滚动。早先的写法把 <code>overflow</code> 整个设成 <code>hidden</code>，长行只能看到左边一截，这个问题后来才修。</p>
+          <h2>阅读进度与返回顶部</h2>
+          <p>顶部进度线高 2 像素，位移通过 <code>transform: scaleX()</code> 完成。滚动回调由 <code>requestAnimationFrame</code> 合并，每帧最多写入一次样式。返回顶部按钮在纵向滚动超过 400 像素后出现；访问端被判定为不适合动效时，按钮改为瞬时跳转。</p>
 
-          <pre><code class="language-js">function enhanceBlock(pre) {
-  /* 代码块可横向滚动，需要能通过键盘到达 */
-  if (!pre.getAttribute('tabindex')) {
-    pre.setAttribute('tabindex', '0');
-  }
+          <h2>代码块复制与折叠</h2>
+          <p>每个代码块附加一条工具条，提供语言标识、折叠与复制。代码超过 16 行时默认折叠，按钮注明剩余行数，展开状态同步至 <code>aria-expanded</code>。</p>
+          <p>复制优先使用异步剪贴板接口，失败时回退到临时文本域与 <code>execCommand</code>，该路径在 <code>file://</code> 环境下仍然有效。复制结果由独立状态区播报，读屏软件可以获取。</p>
 
-  var source = code ? code.textContent : pre.textContent;
-  var lines = countLines(source);
+          <h2>折叠、滚动与键盘操作</h2>
+          <p>代码块使用浏览器原生纵横向滚动，并补充 <code>tabindex="0"</code> 供键盘访问。收起窗口最多显示 16 行，并会随较矮视口缩小；展开后按代码内容增高，窗口上限为视口高度的 90% 与 <code>48rem</code> 两者中的较小值。超出窗口的代码仍可在块内滚动。</p>
 
-  if (lines > FOLD_MIN_LINES) {
-    var toggle = document.createElement('button');
-    toggle.type = 'button';
-    toggle.className = 'code-action';
-    toggle.textContent = '展开';
-    toggle.setAttribute('aria-expanded', 'false');
-    toggle.addEventListener('click', function () {
-      var folded = wrapper.getAttribute('data-folded') === 'true';
-      wrapper.setAttribute('data-folded', folded ? 'false' : 'true');
-      toggle.setAttribute('aria-expanded', folded ? 'true' : 'false');
-      toggle.textContent = folded ? '收起' : '展开';
-    });
-    wrapper.setAttribute('data-folded', 'true');
-    bar.appendChild(toggle);
-  }
-}
+          <p>按钮事件切换代码块状态、同步 <code>aria-expanded</code>，并将局部滚动位置归零。以下片段节选自 <code>reader.js</code>。</p>
 
-function copyText(value, onDone) {
-  function fallback() {
-    var area = document.createElement('textarea');
-    area.value = value;
-    area.setAttribute('readonly', 'readonly');
-    area.style.position = 'fixed';
-    area.style.top = '-1000px';
-    document.body.appendChild(area);
-    area.select();
-    try {
-      document.execCommand('copy');
-      onDone();
-    } catch (error) {
-      /* 复制不可用时保留原文 */
-    }
-    document.body.removeChild(area);
-  }
+          <pre><code class="language-js">toggle.addEventListener('click', function () {
+  var folded = wrapper.getAttribute('data-folded') === 'true';
+  wrapper.setAttribute('data-folded', folded ? 'false' : 'true');
+  toggle.setAttribute('aria-expanded', folded ? 'true' : 'false');
+  toggle.textContent = folded ? '收起' : '展开剩余 ' + restLines + ' 行';
+  pre.scrollTop = 0;
+});</code></pre>
 
-  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-    navigator.clipboard.writeText(value).then(onDone, fallback);
-    return;
-  }
-  fallback();
-}</code></pre>
-
-          <h2>公式与高亮按需加载</h2>
-          <p>两份渲染库都不进首屏。代码高亮只在页面真有代码块时请求，公式渲染只在正文确实出现分隔符时请求。判断公式的办法是读正文纯文本，遇到 <code>pre</code> 与 <code>code</code> 就跳过，所以代码里的美元符号不会误判。行内公式写成 $O(n\log n)$ 这样，独立成段的公式是下面这条。</p>
+          <h2>公式与高亮的按需加载</h2>
+          <p>两份渲染库都不进入首屏。代码高亮仅在页面存在代码块时请求，公式渲染仅在正文出现分隔符时请求。公式检测读取正文纯文本，遇到 <code>pre</code> 与 <code>code</code> 元素即跳过，因此代码中的美元符号不会触发误判。行内公式写作 <code>$O(n\log n)$</code>，独立公式使用双美元符号。</p>
           <p>$ \int_{-\infty}^{\infty} e^{-x^{2}}\,\mathrm{d}x = \sqrt{\pi} $</p>
-          <p>KaTeX 的脚本与样式合计约 292 KB、字体约 254 KB，highlight.js 约 126 KB。页面上一行代码都没有的时候，这些数字就是零。</p>
+          <p>KaTeX 的脚本与样式合计约 292 KB，字体约 254 KB；highlight.js 约 126 KB。页面没有代码块或公式时，这些资源不产生请求。</p>
 
-          <h2>字号</h2>
-          <p>小、中、大三档改的是正文基准字号，小节标题、代码、公式按同一比例跟着缩放。早先只放大正文，标题反而显得小，层级不正常。选择存在 <code>localStorage</code>，存不了就只影响这次会话。</p>
+          <h2>字号设置与偏好保存</h2>
+          <p>字号分为小、中、大三档，正文、小节标题、代码与公式按同一比例缩放。偏好保存在 <code>localStorage</code>；存储不可用时仅对当前会话生效。</p>
 
-          <h2>还没做的</h2>
-          <p>代码块没有行号，也做不了差异对比；折叠阈值写死 16 行，长行与短行的观感差别不小。这些等到文章多起来再补。</p>
+          <h2>代码块功能边界</h2>
+          <p>代码块目前支持复制、折叠与局部滚动，尚未提供行号和差异对比。折叠阈值固定为 16 行，后续可依据文章中的代码长度评估调整。</p>
         </div>
 
         <nav class="related" aria-labelledby="related-title">
           <h2 class="related-title" id="related-title">继续阅读</h2>
           <ul class="related-list">
-            <li><a href="post-capability.html">老设备也要能读：按访问端条件分级</a></li>
-            <li><a href="post-no-build.html">这个博客没有构建步骤</a></li>
+            <li><a href="post-capability.html">兼顾功能机与现代设备：访问端能力分级</a></li>
+            <li><a href="post-no-build.html">本地双击与静态托管：无构建方案的取舍</a></li>
           </ul>
         </nav>
 
         <nav class="article-pager" aria-label="文章导航">
           <ul class="pager">
-            <li class="pager-prev"><a href="post-capability.html" rel="prev"><span class="pager-dir">更早的一篇</span><span class="pager-title">老设备也要能读：按访问端条件分级</span></a></li>
+            <li class="pager-prev"><a href="post-capability.html" rel="prev"><span class="pager-dir">更早的一篇</span><span class="pager-title">兼顾功能机与现代设备：访问端能力分级</span></a></li>
           </ul>
           <p class="pager-back"><a href="posts.html">返回文章列表</a></p>
         </nav>
@@ -187,7 +150,7 @@ function copyText(value, onDone) {
 
   <footer class="site-footer">
     <div class="container">
-      <p>© <span data-year>2026</span> Qi 的个人博客</p>
+      <p>© <span data-year>2026</span> 语暮的技术手记</p>
     </div>
   </footer>
   <div class="search-panel" id="search-panel" hidden>

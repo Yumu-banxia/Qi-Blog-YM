@@ -193,27 +193,6 @@
 
     wrapper.insertBefore(bar, pre);
 
-    /* 展开态接管框内纵向滚轮，避免浏览器把余量传给页面 */
-    wrapper.addEventListener('wheel', function (event) {
-      if (wrapper.getAttribute('data-folded') === 'true' || event.shiftKey) {
-        return;
-      }
-
-      var delta = event.deltaY;
-      if (!delta || Math.abs(delta) <= Math.abs(event.deltaX)) {
-        return;
-      }
-
-      var maxScroll = pre.scrollHeight - pre.clientHeight;
-      if (maxScroll < 1) {
-        return;
-      }
-
-      var unit = event.deltaMode === 1 ? 16 : (event.deltaMode === 2 ? pre.clientHeight : 1);
-      var next = Math.max(0, Math.min(maxScroll, pre.scrollTop + delta * unit));
-      pre.scrollTop = next;
-      event.preventDefault();
-    }, { passive: false });
   }
 
   function enhanceCodeBlocks() {

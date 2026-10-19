@@ -4,42 +4,42 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>老设备也要能读：按访问端条件分级 · Qi 的个人博客</title>
-  <meta name="description" content="在一台功能机上核对后加的分级机制：按访问端条件分四档，决定给多少表现。">
-  <meta name="theme-color" content="#ffffff">
-  <link rel="manifest" href="../manifest.webmanifest">
+  <title>兼顾功能机与现代设备：访问端能力分级 · 语暮的技术手记</title>
+  <meta name="description" content="以 Nokia 2700c 核验为起点，介绍依据浏览器、硬件、网络与运行时能力控制样式和脚本的四档机制。">
+  <meta name="theme-color" content="#f8f9fc">
+  <link rel="manifest" href="../manifest.webmanifest?v=2">
   <link rel="apple-touch-icon" href="../assets/icons/icon-192.png">
   <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-  <meta property="og:site_name" content="Qi 的个人博客">
+  <meta property="og:site_name" content="语暮的技术手记">
   <meta property="og:type" content="article">
-  <meta property="og:title" content="老设备也要能读：按访问端条件分级">
-  <meta property="og:description" content="在一台功能机上核对后加的分级机制：按访问端条件分四档，决定给多少表现。">
+  <meta property="og:title" content="兼顾功能机与现代设备：访问端能力分级">
+  <meta property="og:description" content="以 Nokia 2700c 核验为起点，介绍依据浏览器、硬件、网络与运行时能力控制样式和脚本的四档机制。">
   <meta property="og:locale" content="zh_CN">
-  <meta property="og:image" content="../assets/media/og-cover.jpg">
+  <meta property="og:image" content="../assets/media/og-cover.png">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
-    "headline": "老设备也要能读：按访问端条件分级",
+    "headline": "兼顾功能机与现代设备：访问端能力分级",
     "datePublished": "2026-10-12",
     "inLanguage": "zh-CN",
     "author": { "@type": "Person", "name": "Yumu-banxia" },
-    "isPartOf": { "@type": "Blog", "name": "Qi 的个人博客" }
+    "isPartOf": { "@type": "Blog", "name": "语暮的技术手记" }
   }
   </script>
-  <link rel="stylesheet" href="../assets/styles/tokens.css?v=8">
-  <link rel="stylesheet" href="../assets/styles/base.css?v=8">
-  <link rel="stylesheet" href="../assets/styles/article.css?v=8">
-  <script src="../assets/scripts/capability.js?v=8"></script>
-  <script src="../assets/scripts/main.js?v=8" defer></script>
-  <script src="../assets/scripts/reader.js?v=8" defer></script>
+  <link rel="stylesheet" href="../assets/styles/tokens.css?v=9">
+  <link rel="stylesheet" href="../assets/styles/base.css?v=10">
+  <link rel="stylesheet" href="../assets/styles/article.css?v=11">
+  <script src="../assets/scripts/capability.js?v=9"></script>
+  <script src="../assets/scripts/main.js?v=9" defer></script>
+  <script src="../assets/scripts/reader.js?v=10" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主要内容</a>
 
   <header class="site-header">
     <div class="container header-inner">
-      <a class="brand" href="../index.html">Qi 的个人博客</a>
+      <a class="brand" href="../index.html">语暮的技术手记</a>
 
       <nav id="site-nav" class="site-nav" aria-label="主导航">
         <ul>
@@ -83,7 +83,7 @@
     <article class="section">
       <div class="container">
         <header class="article-head">
-          <h1>老设备也要能读：按访问端条件分级</h1>
+          <h1>兼顾功能机与现代设备：访问端能力分级</h1>
           <p class="meta"><time datetime="2026-10-12">2026-10-12</time><span>兼容性</span></p>
           <ul class="tags">
             <li>兼容性</li>
@@ -93,23 +93,23 @@
         </header>
 
         <div class="prose">
-          <p>手边有一台 Nokia 2700c，试着打开这个站。结果比预想差：布局散掉，正文挤成一团。那次之后，站点加了一套按访问端条件分支的机制。</p>
+          <p>Nokia 2700c 核验时，页面主布局失效，正文区域被压缩。项目据此加入四档能力分级，根据 User-Agent、硬件、网络与运行时接口控制样式和脚本。</p>
 
-          <h2>首屏判断一次</h2>
-          <p>判断放在 <code>&lt;head&gt;</code> 里同步执行的一小段脚本中，结果写到根元素的 <code>data-cap</code> 上，样式和后续脚本都读这一个属性，不再各自判断。依据来自三处。</p>
-          <p>先是 User-Agent。功能机与老式移动浏览器（<code>MIDP</code>、<code>Symbian</code>、<code>Opera Mini</code>、<code>Trident</code> 这些片段）命中就判最低档；现代内核但硬件受限的机型（老 Android、UC、MIUI 之类）归为受限档。</p>
-          <p>再看硬件与网络：逻辑核数、设备内存、省流模式，以及连接是不是 2G 级。</p>
-          <p>最后一处是运行时接口，把它拆成两组。核心组含 <code>querySelector</code>、<code>addEventListener</code>、<code>CSS.supports('--probe: 0')</code>、<code>matchMedia</code> 与 <code>requestAnimationFrame</code>，任一项缺失就判最低档；增强组含 <code>IntersectionObserver</code>、<code>ResizeObserver</code> 与 <code>PointerEvent</code>，缺失时只关掉对应功能，档位不变。</p>
+          <h2>能力判定依据</h2>
+          <p>判定脚本位于 <code>&lt;head&gt;</code> 内并同步执行，结果写入根元素的 <code>data-cap</code> 属性。样式与后续脚本读取同一属性，不再各自判断。信号来源分为三组。</p>
+          <p>User-Agent 是第一组信号。包含 <code>MIDP</code>、<code>Symbian</code>、<code>Opera Mini</code> 或 <code>Trident</code> 等特征时，访问端归入最低档；内核较新但硬件受限的机型，例如早期 Android、UC 浏览器与 MIUI 内置浏览器，归入受限档。</p>
+          <p>第二组为硬件与网络状态，包括逻辑核心数、设备内存、省流模式与连接类型。2G 级连接归入受限档。</p>
+          <p>第三组为运行时接口，按核心与增强两类拆分。核心接口包含 <code>querySelector</code>、<code>addEventListener</code>、<code>CSS.supports('--probe: 0')</code>、<code>matchMedia</code> 与 <code>requestAnimationFrame</code>，任一缺失即判最低档；增强接口包含 <code>IntersectionObserver</code>、<code>ResizeObserver</code> 与 <code>PointerEvent</code>，缺失时只关闭对应功能，档位保持不变。</p>
 
-          <h2>四档与各自能用的东西</h2>
+          <h2>四档能力与启用范围</h2>
           <div class="table-wrap" tabindex="0">
             <table>
-              <caption>判定条件与各档允许的表现项</caption>
+              <caption>各档的判定条件与启用功能</caption>
               <thead>
                 <tr>
                   <th scope="col">档位</th>
                   <th scope="col">判定条件</th>
-                  <th scope="col">允许项</th>
+                  <th scope="col">启用功能</th>
                 </tr>
               </thead>
               <tbody>
@@ -137,9 +137,9 @@
             </table>
           </div>
 
-          <h2>样式与脚本怎么读这个结果</h2>
-          <p>样式按属性选择器分支。受限档位关掉页头模糊；最低档位把导航改回常驻排列，隐藏搜索与主题按钮，动画和过渡整个停掉，跳转主内容的链接改为常驻可见。</p>
-          <p>脚本用 <code>Capability.allow(name)</code> 查询单项能力，未获允许时不发起请求，比先下载再判断更省。滚动出现依赖 <code>IntersectionObserver</code>，缺失时待入场元素保持可见；星图的指针交互依赖 <code>PointerEvent</code>，缺失时保留漂浮与键盘微调。</p>
+          <h2>样式与脚本的分级控制</h2>
+          <p>样式通过属性选择器读取档位。受限档关闭页头模糊；最低档将导航改为常驻排列，隐藏搜索与主题按钮，停止动画与过渡，并让跳转主内容的链接常驻可见。</p>
+          <p>脚本通过 <code>Capability.allow(name)</code> 查询单项能力，未获允许时不发起请求，避免下载后再判断。滚动入场效果依赖 <code>IntersectionObserver</code>，接口缺失时待入场元素保持可见；星图的指针交互依赖 <code>PointerEvent</code>，接口缺失时保留漂浮与键盘微调。</p>
 
           <pre><code class="language-js">var coreRuntime = {
   querySelector: typeof document.querySelector === 'function',
@@ -180,26 +180,26 @@ var features = {
 root.setAttribute('data-cap', tier);
 root.setAttribute('data-cap-reason', reason);</code></pre>
 
-          <h2>最低档位换一份样式表</h2>
-          <p>仅有静态内容还不够。缺少自定义属性与弹性布局支持的浏览器，连主样式表都排不对，所以最低档位会追加一份兜底表：不用自定义属性，不用 flex 与 grid，正文 16 像素、行高 1.6，导航回到行内排列。</p>
-          <p>根元素上的 <code>data-cap-reason</code> 记着是哪组信号触发的降级（<code>legacy-ua</code>、<code>limited-runtime</code>、<code>constrained-ua</code>、<code>network</code>、<code>hardware</code>），在真机上排查时很省事。</p>
+          <h2>最低档位的基础样式</h2>
+          <p>仅有静态内容尚不足以保证可读性。缺少自定义属性与弹性布局支持的浏览器无法正确解析主样式表，最低档位因此追加一份兜底样式：不使用自定义属性、flex 与 grid，正文 16 像素、行高 1.6，导航恢复为行内排列。</p>
+          <p>根元素上的 <code>data-cap-reason</code> 记录触发降级的信号，取值为 <code>legacy-ua</code>、<code>limited-runtime</code>、<code>constrained-ua</code>、<code>network</code> 与 <code>hardware</code>，用于在真机上定位判定结果。</p>
 
-          <h2>没解决的部分</h2>
-          <p>内存与核数的阈值是估出来的，只在几台常见设备上核对过，没有做大规模验证；功能机实测也只有那一台。要做扎实，需要收集一批旧机型逐台验证，这一步尚未进行。</p>
+          <h2>阈值与验证范围</h2>
+          <p>内存与核心数阈值来自经验估计，目前仅在数台常见设备上核对；功能机实测只有 Nokia 2700c。现有样本不足以证明这些阈值适用于更多机型。</p>
         </div>
 
         <nav class="related" aria-labelledby="related-title">
           <h2 class="related-title" id="related-title">继续阅读</h2>
           <ul class="related-list">
-            <li><a href="post-reader.html">文章页的阅读增强：按需渲染与代码块操作</a></li>
-            <li><a href="post-no-build.html">这个博客没有构建步骤</a></li>
+            <li><a href="post-reader.html">文章页阅读增强：目录、代码块与公式</a></li>
+            <li><a href="post-no-build.html">本地双击与静态托管：无构建方案的取舍</a></li>
           </ul>
         </nav>
 
         <nav class="article-pager" aria-label="文章导航">
           <ul class="pager">
-            <li class="pager-prev"><a href="post-no-build.html" rel="prev"><span class="pager-dir">更早的一篇</span><span class="pager-title">这个博客没有构建步骤</span></a></li>
-            <li class="pager-next"><a href="post-reader.html" rel="next"><span class="pager-dir">更新的一篇</span><span class="pager-title">文章页的阅读增强：按需渲染与代码块操作</span></a></li>
+            <li class="pager-prev"><a href="post-no-build.html" rel="prev"><span class="pager-dir">更早的一篇</span><span class="pager-title">本地双击与静态托管：无构建方案的取舍</span></a></li>
+            <li class="pager-next"><a href="post-reader.html" rel="next"><span class="pager-dir">更新的一篇</span><span class="pager-title">文章页阅读增强：目录、代码块与公式</span></a></li>
           </ul>
           <p class="pager-back"><a href="posts.html">返回文章列表</a></p>
         </nav>
@@ -209,7 +209,7 @@ root.setAttribute('data-cap-reason', reason);</code></pre>
 
   <footer class="site-footer">
     <div class="container">
-      <p>© <span data-year>2026</span> Qi 的个人博客</p>
+      <p>© <span data-year>2026</span> 语暮的技术手记</p>
     </div>
   </footer>
   <div class="search-panel" id="search-panel" hidden>

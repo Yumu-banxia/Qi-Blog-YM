@@ -47,7 +47,10 @@
 }
 
 .article-head h1 {
+  max-inline-size: 24ch;
   font-size: clamp(1.9rem, 1.4rem + 2vw, 3rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 /* 宽屏下正文与目录分成两栏，目录随滚动停在视口上方 */
@@ -185,6 +188,7 @@
   border-radius: 0;
   font-size: calc(var(--text-sm) * var(--reading-scale));
   line-height: 1.6;
+  -webkit-overflow-scrolling: touch;
 }
 
 .code-toolbar {
@@ -216,18 +220,18 @@
   color: var(--color-text);
 }
 
-/* 折叠只裁剪纵向，横向仍可滚动，长行不会因此看不全 */
+/* 收起窗口最多显示 16 行，并随较矮视口缩小；长代码仍可在块内滚动 */
 .code-block[data-folded="true"] pre {
-  max-block-size: calc(var(--code-fold-lines) * 1.6em + 2 * var(--space-4));
-  overflow-x: auto;
-  overflow-y: hidden;
+  block-size: min(calc(var(--code-fold-lines) * 1.6em + 2 * var(--space-4)), 55vh);
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 
-/* 展开后保留独立阅读窗口，滚到代码边界时继续滚轮由脚本拦截 */
+/* 展开时按代码内容增高；超长代码在窗口内独立滚动 */
 .code-block[data-folded="false"] pre {
-  max-block-size: clamp(20rem, 56vh, 38rem);
-  overflow-x: auto;
-  overflow-y: auto;
+  block-size: auto;
+  max-block-size: min(90vh, 48rem);
+  overflow: auto;
   overscroll-behavior: contain;
 }
 
@@ -377,7 +381,9 @@
 
   .code-block[data-folded="true"] pre,
   .code-block[data-folded="false"] pre {
+    block-size: auto;
     max-height: none;
+    max-block-size: none;
     overflow: visible;
   }
 

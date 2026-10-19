@@ -1,14 +1,14 @@
 {
-  "name": "Qi 的个人博客",
-  "short_name": "Qi 的星图",
-  "description": "个人博客：个人介绍、文章阅读与作品陈列。",
+  "name": "语暮的技术手记",
+  "short_name": "语暮手记",
+  "description": "记录前端实现、系统工具与网站构建中的技术选择和验证过程。",
   "lang": "zh-CN",
   "dir": "ltr",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0a0e18",
-  "theme_color": "#0a0e18",
+  "background_color": "#0b1120",
+  "theme_color": "#0b1120",
   "icons": [
     {
       "src": "assets/icons/icon-192.png",

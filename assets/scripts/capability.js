@@ -57,6 +57,7 @@
   var saveData = Boolean(connection && connection.saveData);
   var slowNetwork = Boolean(connection && /(slow-)?2g$/i.test(connection.effectiveType || ''));
   var prefersReducedMotion = queryMatches('(prefers-reduced-motion: reduce)');
+  var motionQuery = typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
   var legacyUA = LEGACY_PATTERN.test(ua);
 
   var tier = 'medium';
@@ -138,7 +139,7 @@
     head().appendChild(lite);
   }
 
-  window.Capability = {
+  var capability = {
     tier: tier,
     reason: reason,
     env: env,
@@ -158,5 +159,27 @@
       }
     }
   };
+
+  window.Capability = capability;
+
+  /* 系统偏好可能在页面运行期间变化，同步能力状态与全局动效样式。 */
+  if (motionQuery) {
+    var onMotionChange = function (event) {
+      prefersReducedMotion = event.matches === true;
+      capability.reducedMotion = prefersReducedMotion;
+      features.motion = (tier === 'high' || tier === 'medium') && !prefersReducedMotion;
+      if (features.motion) {
+        root.removeAttribute('data-motion');
+      } else {
+        root.setAttribute('data-motion', 'reduced');
+      }
+    };
+
+    if (typeof motionQuery.addEventListener === 'function') {
+      motionQuery.addEventListener('change', onMotionChange);
+    } else if (typeof motionQuery.addListener === 'function') {
+      motionQuery.addListener(onMotionChange);
+    }
+  }
 })();
 

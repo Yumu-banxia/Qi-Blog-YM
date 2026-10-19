@@ -4,29 +4,29 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>文章 · Qi 的个人博客</title>
+  <title>文章 · 语暮的技术手记</title>
   <meta name="description" content="文章列表，按时间倒序。">
-  <meta name="theme-color" content="#ffffff">
-  <link rel="manifest" href="../manifest.webmanifest">
+  <meta name="theme-color" content="#f8f9fc">
+  <link rel="manifest" href="../manifest.webmanifest?v=2">
   <link rel="apple-touch-icon" href="../assets/icons/icon-192.png">
   <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-  <meta property="og:site_name" content="Qi 的个人博客">
+  <meta property="og:site_name" content="语暮的技术手记">
   <meta property="og:type" content="website">
   <meta property="og:title" content="文章">
   <meta property="og:description" content="文章列表，按时间倒序。">
   <meta property="og:locale" content="zh_CN">
-  <meta property="og:image" content="../assets/media/og-cover.jpg">
-  <link rel="stylesheet" href="../assets/styles/tokens.css?v=8">
-  <link rel="stylesheet" href="../assets/styles/base.css?v=8">
-  <script src="../assets/scripts/capability.js?v=8"></script>
-  <script src="../assets/scripts/main.js?v=8" defer></script>
+  <meta property="og:image" content="../assets/media/og-cover.png">
+  <link rel="stylesheet" href="../assets/styles/tokens.css?v=9">
+  <link rel="stylesheet" href="../assets/styles/base.css?v=10">
+  <script src="../assets/scripts/capability.js?v=9"></script>
+  <script src="../assets/scripts/main.js?v=9" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主要内容</a>
 
   <header class="site-header">
     <div class="container header-inner">
-      <a class="brand" href="../index.html">Qi 的个人博客</a>
+      <a class="brand" href="../index.html">语暮的技术手记</a>
 
       <nav id="site-nav" class="site-nav" aria-label="主导航">
         <ul>
@@ -70,15 +70,15 @@
     <section class="section">
       <div class="container">
         <h1>文章</h1>
-        <p class="lede">文章多围绕这个站点本身的技术选择、核对记录与失败尝试，按时间倒序。</p>
+        <p class="lede">文章记录站点实现中的技术选择、验证结果与维护经验，按发布日期倒序排列。</p>
         <p><a href="archive.html">按标签与年份浏览归档</a></p>
 
         <ul class="card-list">
           <li data-reveal>
             <article>
-              <h2 class="list-title"><a href="post-reader.html">文章页的阅读增强：按需渲染与代码块操作</a></h2>
+              <h2 class="list-title"><a href="post-reader.html">文章页阅读增强：目录、代码块与公式</a></h2>
               <p class="meta"><time datetime="2026-10-13">2026-10-13</time><span>阅读体验</span></p>
-              <p class="summary">文章页的目录、进度、字号与代码块操作的实现方式，以及公式与高亮的加载条件。</p>
+              <p class="summary">文章页实现章节目录、阅读进度、代码块交互与公式排版，并说明字号设置和渲染库的按需加载。</p>
               <ul class="tags">
                 <li>阅读体验</li>
                 <li>渲染性能</li>
@@ -87,9 +87,9 @@
           </li>
           <li data-reveal>
             <article>
-              <h2 class="list-title"><a href="post-capability.html">老设备也要能读：按访问端条件分级</a></h2>
+              <h2 class="list-title"><a href="post-capability.html">兼顾功能机与现代设备：访问端能力分级</a></h2>
               <p class="meta"><time datetime="2026-10-12">2026-10-12</time><span>兼容性</span></p>
-              <p class="summary">在一台功能机上核对后加的分级机制：按访问端条件分四档，决定给多少表现。</p>
+              <p class="summary">以 Nokia 2700c 核验为起点，介绍依据浏览器、硬件、网络与运行时能力控制样式和脚本的四档机制。</p>
               <ul class="tags">
                 <li>兼容性</li>
                 <li>渐进增强</li>
@@ -98,9 +98,9 @@
           </li>
           <li data-reveal>
             <article>
-              <h2 class="list-title"><a href="post-no-build.html">这个博客没有构建步骤</a></h2>
+              <h2 class="list-title"><a href="post-no-build.html">本地双击与静态托管：无构建方案的取舍</a></h2>
               <p class="meta"><time datetime="2026-10-11">2026-10-11</time><span>技术选型</span></p>
-              <p class="summary">这个博客不引入构建步骤的原因：本地双击打开、首屏体积，以及多页同步的成本。</p>
+              <p class="summary">从 file:// 兼容、资源地址、首屏体积与多页维护，分析静态站点采用无构建方案的原因与代价。</p>
               <ul class="tags">
                 <li>技术选型</li>
                 <li>性能预算</li>
@@ -114,7 +114,7 @@
 
   <footer class="site-footer">
     <div class="container">
-      <p>© <span data-year>2026</span> Qi 的个人博客</p>
+      <p>© <span data-year>2026</span> 语暮的技术手记</p>
     </div>
   </footer>
   <div class="search-panel" id="search-panel" hidden>

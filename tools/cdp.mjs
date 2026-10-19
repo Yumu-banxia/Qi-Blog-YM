@@ -179,6 +179,11 @@ export async function setReducedMotion(client, value) {
   await client.send('Emulation.setEmulatedMedia', {
     features: [{ name: 'prefers-reduced-motion', value }]
   });
+  /* CDP 更新 matchMedia.matches，但部分 Chromium 版本不会派发 change 事件。 */
+  await client.send('Runtime.evaluate', {
+    expression: "(() => { const query = window.matchMedia('(prefers-reduced-motion: reduce)'); const event = typeof MediaQueryListEvent === 'function' ? new MediaQueryListEvent('change', { matches: query.matches, media: query.media }) : new Event('change'); if (typeof event.matches === 'undefined') { Object.defineProperty(event, 'matches', { value: query.matches }); } query.dispatchEvent(event); })()",
+    returnByValue: true
+  });
 }
 
 export async function setUserAgent(client, userAgent) {

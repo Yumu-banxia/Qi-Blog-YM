@@ -181,6 +181,20 @@ try {
     {
       const page = await openPage(browser, 'about:blank');
       watch(page, 'index.html(动效)');
+      await setViewport(page.client, 1440, 900);
+      await page.client.send('Page.addScriptToEvaluateOnNewDocument', {
+        source: `(() => {
+          const nativeMatchMedia = window.matchMedia.bind(window);
+          const queries = new Map();
+          window.matchMedia = (query) => {
+            const key = String(query);
+            if (!queries.has(key)) {
+              queries.set(key, nativeMatchMedia(key));
+            }
+            return queries.get(key);
+          };
+        })();`
+      });
       await setReducedMotion(page.client, 'reduce');
       await navigate(page.client, fileUrl(ROOT + '/index.html'));
       await sleep(700);
@@ -199,7 +213,62 @@ try {
       const first = await evaluate(page.client, `document.querySelector('.chart-node').style.transform`);
       await sleep(400);
       const second = await evaluate(page.client, `document.querySelector('.chart-node').style.transform`);
-      check('偏好恢复后节点继续漂浮', first !== second, first + ' -> ' + second);
+      const resumedMotion = await evaluate(page.client, `({
+        reduced: window.Capability.reducedMotion,
+        attribute: document.documentElement.getAttribute('data-motion')
+      })`);
+      check('偏好恢复后节点继续漂浮且状态同步', first !== second && resumedMotion.reduced === false && resumedMotion.attribute === null,
+        JSON.stringify({ first, second, resumedMotion }));
+
+      await evaluate(page.client, `(() => {
+        document.documentElement.style.scrollBehavior = 'auto';
+        window.scrollTo(0, document.body.scrollHeight);
+      })()`);
+      await sleep(350);
+      const offscreenStart = await evaluate(page.client, `document.querySelector('.chart-node').style.transform`);
+      await evaluate(page.client, `(() => {
+        window.__hiddenDescriptor = Object.getOwnPropertyDescriptor(document, 'hidden');
+        Object.defineProperty(document, 'hidden', {
+          configurable: true,
+          get: () => Boolean(window.__testDocumentHidden)
+        });
+        window.__testDocumentHidden = true;
+        document.dispatchEvent(new Event('visibilitychange'));
+        window.__testDocumentHidden = false;
+        document.dispatchEvent(new Event('visibilitychange'));
+      })()`);
+      await sleep(350);
+      const offscreenAfterVisibility = await evaluate(page.client, `document.querySelector('.chart-node').style.transform`);
+
+      await evaluate(page.client, `(() => {
+        window.__testDocumentHidden = true;
+        document.dispatchEvent(new Event('visibilitychange'));
+        window.scrollTo(0, 0);
+      })()`);
+      await sleep(350);
+      const hiddenOnscreen = await evaluate(page.client, `document.querySelector('.chart-node').style.transform`);
+      await evaluate(page.client, `(() => {
+        window.__testDocumentHidden = false;
+        document.dispatchEvent(new Event('visibilitychange'));
+      })()`);
+      await sleep(350);
+      const visibleOnscreen = await evaluate(page.client, `(() => {
+        const descriptor = window.__hiddenDescriptor;
+        if (descriptor) {
+          Object.defineProperty(document, 'hidden', descriptor);
+        } else {
+          delete document.hidden;
+        }
+        delete window.__hiddenDescriptor;
+        delete window.__testDocumentHidden;
+        return document.querySelector('.chart-node').style.transform;
+      })()`);
+      const pauseStates = {
+        offscreenStayedPaused: offscreenStart === offscreenAfterVisibility,
+        hiddenStayedPaused: offscreenAfterVisibility === hiddenOnscreen,
+        visibleResumed: hiddenOnscreen !== visibleOnscreen
+      };
+      check('星图同时遵守页面可见与视口可见状态', pauseStates.offscreenStayedPaused && pauseStates.hiddenStayedPaused && pauseStates.visibleResumed, JSON.stringify(pauseStates));
 
       await setReducedMotion(page.client, 'reduce');
       await sleep(400);
@@ -207,10 +276,14 @@ try {
         const paths = Array.from(document.querySelectorAll('.chart-lines path'));
         return {
           withD: paths.filter((p) => (p.getAttribute('d') || '').length > 0).length,
-          node: document.querySelector('.chart-node').style.transform
+          node: document.querySelector('.chart-node').style.transform,
+          reduced: window.Capability.reducedMotion,
+          attribute: document.documentElement.getAttribute('data-motion')
         };
       })()`);
-      check('切到减少动态效果后连线保留且位移归零', stopped.withD === 4 && stopped.node.indexOf('translate3d(0px, 0px, 0px)') !== -1, JSON.stringify(stopped));
+      check('切到减少动态效果后状态同步且位移归零', stopped.withD === 4 &&
+        stopped.node.indexOf('translate3d(0px, 0px, 0px)') !== -1 && stopped.reduced === true &&
+        stopped.attribute === 'reduced', JSON.stringify(stopped));
       await closePage(page);
     }
 
@@ -218,6 +291,7 @@ try {
     {
       const page = await openPage(browser, 'about:blank');
       watch(page, 'works.html(灯箱)');
+      await setViewport(page.client, 360, 800);
       await navigate(page.client, fileUrl(ROOT + '/pages/works.html'));
       await sleep(400);
       const opened = await evaluate(page.client, `(() => {
@@ -226,10 +300,126 @@ try {
           hidden: document.getElementById('lightbox').hidden,
           overflow: document.body.style.overflow,
           headerInert: document.querySelector('.site-header').inert === true,
-          closeFocused: /lightbox-close/.test(document.activeElement.className)
+          closeFocused: /lightbox-close/.test(document.activeElement.className),
+          imageLoaded: document.querySelector('.lightbox-image').naturalWidth > 0
         };
       })()`);
-      check('灯箱打开后锁定滚动并限制背景访问', opened.hidden === false && opened.overflow === 'hidden' && opened.headerInert === true && opened.closeFocused === true, JSON.stringify(opened));
+      check('灯箱打开后锁定滚动并限制背景访问', opened.hidden === false && opened.overflow === 'hidden' && opened.headerInert === true && opened.closeFocused === true && opened.imageLoaded === true, JSON.stringify(opened));
+
+      const mobileLayout = await evaluate(page.client, `(() => {
+        const box = document.getElementById('lightbox');
+        const toolbar = box.querySelector('.lightbox-toolbar').getBoundingClientRect();
+        const stage = box.querySelector('.lightbox-stage').getBoundingClientRect();
+        return {
+          overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+          toolbarInside: toolbar.left >= 0 && toolbar.right <= document.documentElement.clientWidth,
+          stageVisible: stage.width > 0 && stage.height > 0
+        };
+      })()`);
+      check('窄屏图片浏览工具栏完整显示', mobileLayout.overflow === 0 && mobileLayout.toolbarInside === true && mobileLayout.stageVisible === true, JSON.stringify(mobileLayout));
+
+      const zoom = await evaluate(page.client, `(() => {
+        const frame = document.querySelector('.lightbox-frame');
+        const fitWidth = parseFloat(frame.style.width);
+        document.getElementById('lightbox-zoom-in').click();
+        const enlargedWidth = parseFloat(frame.style.width);
+        document.getElementById('lightbox-actual').click();
+        const actualWidth = parseFloat(frame.style.width);
+        document.getElementById('lightbox-fit').click();
+        return {
+          fitWidth,
+          enlargedWidth,
+          actualWidth,
+          naturalWidth: document.querySelector('.lightbox-image').naturalWidth,
+          fitLabel: document.getElementById('lightbox-zoom-level').textContent
+        };
+      })()`);
+      check('图片缩放、原始大小与适合窗口正常', zoom.enlargedWidth > zoom.fitWidth && zoom.actualWidth === zoom.naturalWidth && zoom.fitLabel === '适合窗口', JSON.stringify(zoom));
+
+      const wheelZoom = await evaluate(page.client, `(() => {
+        const stage = document.getElementById('lightbox-stage');
+        const frame = document.querySelector('.lightbox-frame');
+        const before = parseFloat(frame.style.width);
+        const rect = stage.getBoundingClientRect();
+        const event = new WheelEvent('wheel', {
+          deltaY: -120,
+          clientX: rect.left + rect.width * 0.35,
+          clientY: rect.top + rect.height * 0.4,
+          bubbles: true,
+          cancelable: true
+        });
+        stage.dispatchEvent(event);
+        return {
+          before,
+          after: parseFloat(frame.style.width),
+          prevented: event.defaultPrevented,
+          zoomLabel: document.getElementById('lightbox-zoom-level').textContent,
+          panable: stage.getAttribute('data-panable')
+        };
+      })()`);
+      check('滚轮以指针位置缩放图片', wheelZoom.after > wheelZoom.before && wheelZoom.prevented && wheelZoom.zoomLabel !== '适合窗口', JSON.stringify(wheelZoom));
+
+      const drag = await evaluate(page.client, `(() => {
+        document.getElementById('lightbox-actual').click();
+        const stage = document.getElementById('lightbox-stage');
+        const rect = stage.getBoundingClientRect();
+        const before = { x: stage.scrollLeft, y: stage.scrollTop };
+        const down = new PointerEvent('pointerdown', {
+          pointerId: 71, pointerType: 'mouse', isPrimary: true, button: 0,
+          clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2,
+          bubbles: true, cancelable: true
+        });
+        stage.dispatchEvent(down);
+        window.dispatchEvent(new PointerEvent('pointermove', {
+          pointerId: 71, pointerType: 'mouse', isPrimary: true, button: -1,
+          clientX: rect.left + rect.width / 2 - 32, clientY: rect.top + rect.height / 2 - 32,
+          bubbles: true, cancelable: true
+        }));
+        const after = { x: stage.scrollLeft, y: stage.scrollTop };
+        window.dispatchEvent(new PointerEvent('pointerup', {
+          pointerId: 71, pointerType: 'mouse', isPrimary: true, button: 0,
+          bubbles: true, cancelable: true
+        }));
+        return {
+          panable: stage.getAttribute('data-panable'),
+          moved: after.x > before.x || after.y > before.y,
+          startPrevented: down.defaultPrevented,
+          draggingCleared: !stage.hasAttribute('data-dragging')
+        };
+      })()`);
+      check('按住鼠标拖动平移放大的图片', drag.panable === 'true' && drag.moved && drag.startPrevented && drag.draggingCleared, JSON.stringify(drag));
+
+      const navigation = await evaluate(page.client, `(() => {
+        document.getElementById('lightbox-next').click();
+        const second = document.getElementById('lightbox-count').textContent;
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }));
+        const third = document.getElementById('lightbox-count').textContent;
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }));
+        const fourth = document.getElementById('lightbox-count').textContent;
+        const nextDisabled = document.getElementById('lightbox-next').disabled;
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true, cancelable: true }));
+        return { second, third, fourth, nextDisabled, backToThird: document.getElementById('lightbox-count').textContent };
+      })()`);
+      check('图片按钮与方向键切换顺序正常', navigation.second === '2 / 4' && navigation.third === '3 / 4' && navigation.fourth === '4 / 4' && navigation.nextDisabled === true && navigation.backToThird === '3 / 4', JSON.stringify(navigation));
+
+      await evaluate(page.client, `(() => {
+        Object.defineProperty(window, 'ClipboardItem', {
+          configurable: true,
+          value: function (items) { this.items = items; }
+        });
+        Object.defineProperty(navigator, 'clipboard', {
+          configurable: true,
+          value: { write: (items) => { window.__copiedImage = items; return Promise.resolve(); } }
+        });
+        document.getElementById('lightbox-copy').click();
+      })()`);
+      await sleep(150);
+      const copied = await evaluate(page.client, `(() => ({
+        status: document.getElementById('lightbox-status').textContent,
+        type: window.__copiedImage && window.__copiedImage[0] && Object.keys(window.__copiedImage[0].items)[0],
+        download: document.getElementById('lightbox-download').download
+      }))()`);
+      check('复制图片并保留原图下载', copied.status === '图片已复制到剪贴板。' && copied.type === 'image/png' && copied.download.length > 0, JSON.stringify(copied));
 
       const trap = await evaluate(page.client, `(() => {
         const box = document.getElementById('lightbox');
@@ -290,6 +480,9 @@ try {
       })()`);
       check('复制按钮文案自动复位', restored === '复制', restored);
 
+      await navigate(page.client, fileUrl(ROOT + '/pages/post-capability.html'));
+      await sleep(900);
+
       const codeWindow = await evaluate(page.client, `(() => {
         const toggle = document.querySelector('.code-block[data-folded] .code-action[aria-expanded]');
         if (!toggle) {
@@ -311,7 +504,7 @@ try {
           overflowY: style.overflowY
         };
       })()`);
-      check('展开后的代码块形成独立纵向滚动窗口',
+      check('长代码块展开后形成独立纵向滚动窗口',
         codeWindow.found === true && codeWindow.expanded === 'true' && codeWindow.folded === 'false' &&
           codeWindow.overflowY === 'auto' && codeWindow.scrollHeight > codeWindow.clientHeight,
         JSON.stringify(codeWindow));
@@ -457,6 +650,7 @@ try {
     {
       const page = await openPage(browser, 'about:blank');
       watch(page, 'index.html(无指针事件)');
+      await setViewport(page.client, 1440, 900);
       await page.client.send('Page.addScriptToEvaluateOnNewDocument', { source: 'window.PointerEvent = undefined;' });
       await navigate(page.client, fileUrl(ROOT + '/index.html'));
       await sleep(900);
@@ -483,15 +677,15 @@ try {
 
       /* 七、未知地址页面 */
       {
-        const project = await startServer(ROOT, '/Qi-blog-ds/');
+        const project = await startServer(ROOT, '/Qi-Blog-YM/');
         const root = await startServer(ROOT, '');
       try {
         const page = await openPage(browser, 'about:blank');
         watch(page, '404.html(前缀)');
-        await navigate(page.client, 'http://127.0.0.1:' + project.port + '/Qi-blog-ds/pages/missing');
+        await navigate(page.client, 'http://127.0.0.1:' + project.port + '/Qi-Blog-YM/pages/missing');
         await sleep(900);
         const hrefs = await evaluate(page.client, `Array.from(document.querySelectorAll('a[data-site-link]')).map((a) => a.getAttribute('href'))`);
-        check('项目子目录下的未知地址链接指向站点根', hrefs.length > 0 && hrefs.every((h) => h.indexOf('/Qi-blog-ds/') === 0), hrefs[0] || '');
+        check('项目子目录下的未知地址链接指向站点根', hrefs.length > 0 && hrefs.every((h) => h.indexOf('/Qi-Blog-YM/') === 0), hrefs[0] || '');
 
         const rootHrefs = await (async () => {
           const inner = await openPage(browser, 'about:blank');

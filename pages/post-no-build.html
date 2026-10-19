@@ -4,42 +4,42 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>这个博客没有构建步骤 · Qi 的个人博客</title>
-  <meta name="description" content="这个博客不引入构建步骤的原因：本地双击打开、首屏体积，以及多页同步的成本。">
-  <meta name="theme-color" content="#ffffff">
-  <link rel="manifest" href="../manifest.webmanifest">
+  <title>本地双击与静态托管：无构建方案的取舍 · 语暮的技术手记</title>
+  <meta name="description" content="从 file:// 兼容、资源地址、首屏体积与多页维护，分析静态站点采用无构建方案的原因与代价。">
+  <meta name="theme-color" content="#f8f9fc">
+  <link rel="manifest" href="../manifest.webmanifest?v=2">
   <link rel="apple-touch-icon" href="../assets/icons/icon-192.png">
   <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-  <meta property="og:site_name" content="Qi 的个人博客">
+  <meta property="og:site_name" content="语暮的技术手记">
   <meta property="og:type" content="article">
-  <meta property="og:title" content="这个博客没有构建步骤">
-  <meta property="og:description" content="这个博客不引入构建步骤的原因：本地双击打开、首屏体积，以及多页同步的成本。">
+  <meta property="og:title" content="本地双击与静态托管：无构建方案的取舍">
+  <meta property="og:description" content="从 file:// 兼容、资源地址、首屏体积与多页维护，分析静态站点采用无构建方案的原因与代价。">
   <meta property="og:locale" content="zh_CN">
-  <meta property="og:image" content="../assets/media/og-cover.jpg">
+  <meta property="og:image" content="../assets/media/og-cover.png">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
-    "headline": "这个博客没有构建步骤",
+    "headline": "本地双击与静态托管：无构建方案的取舍",
     "datePublished": "2026-10-11",
     "inLanguage": "zh-CN",
     "author": { "@type": "Person", "name": "Yumu-banxia" },
-    "isPartOf": { "@type": "Blog", "name": "Qi 的个人博客" }
+    "isPartOf": { "@type": "Blog", "name": "语暮的技术手记" }
   }
   </script>
-  <link rel="stylesheet" href="../assets/styles/tokens.css?v=8">
-  <link rel="stylesheet" href="../assets/styles/base.css?v=8">
-  <link rel="stylesheet" href="../assets/styles/article.css?v=8">
-  <script src="../assets/scripts/capability.js?v=8"></script>
-  <script src="../assets/scripts/main.js?v=8" defer></script>
-  <script src="../assets/scripts/reader.js?v=8" defer></script>
+  <link rel="stylesheet" href="../assets/styles/tokens.css?v=9">
+  <link rel="stylesheet" href="../assets/styles/base.css?v=10">
+  <link rel="stylesheet" href="../assets/styles/article.css?v=11">
+  <script src="../assets/scripts/capability.js?v=9"></script>
+  <script src="../assets/scripts/main.js?v=9" defer></script>
+  <script src="../assets/scripts/reader.js?v=10" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主要内容</a>
 
   <header class="site-header">
     <div class="container header-inner">
-      <a class="brand" href="../index.html">Qi 的个人博客</a>
+      <a class="brand" href="../index.html">语暮的技术手记</a>
 
       <nav id="site-nav" class="site-nav" aria-label="主导航">
         <ul>
@@ -83,7 +83,7 @@
     <article class="section">
       <div class="container">
         <header class="article-head">
-          <h1>这个博客没有构建步骤</h1>
+          <h1>本地双击与静态托管：无构建方案的取舍</h1>
           <p class="meta"><time datetime="2026-10-11">2026-10-11</time><span>技术选型</span></p>
           <ul class="tags">
             <li>技术选型</li>
@@ -93,40 +93,43 @@
         </header>
 
         <div class="prose">
-          <p>比赛要求把作品打包成压缩包发到邮箱，评审大概率会解压后双击 <code>index.html</code>。我按这个流程试了一遍，随后决定整站不引入构建步骤。</p>
+          <p>作品以压缩包提交，评审端可能从解压目录双击打开 <code>index.html</code>，发布端则采用静态托管。项目因此将 <code>file://</code> 与静态托管同时列为支持环境，并选择无构建的文件结构。</p>
 
-          <h2>双击打开时，模块会失效</h2>
-          <p>最早写的是 ES module，本地打开时脚本无法执行。控制台里是一条跨源错误：<code>file://</code> 下外部模块读不了，用 <code>fetch</code> 读本地数据文件同样不行。改成 classic script、资源引用一律写相对地址，问题才解决。</p>
-          <p>构建工具的产物通常假设站点跑在根目录，样式和脚本用 <code>/assets/...</code> 这类绝对地址。压缩包解压到哪里并不确定，这类地址在本地一律取不到。仅这一条就排除了不少静态站点生成器。</p>
+          <h2>本地文件与静态托管</h2>
+          <p>最初的实现使用 ES module。通过 <code>file://</code> 打开页面时，外部模块被浏览器按跨源请求处理，脚本无法执行；以 <code>fetch</code> 读取本地数据文件也会被拦截。改用 classic script、资源引用统一写作相对地址之后，页面在本地与静态托管两种环境下行为一致。</p>
+          <p>静态站点生成器的产物通常假定站点位于域名根目录，样式与脚本使用 <code>/assets/...</code> 形式的根相对地址。压缩包解压后的目录层级由评审环境决定，这类地址在本地无法解析。交付形式与构建产物之间因此产生冲突，多数生成器失去适用性。</p>
 
           <pre><code class="language-html">&lt;link rel="stylesheet" href="../assets/styles/tokens.css?v=8"&gt;
 &lt;link rel="stylesheet" href="../assets/styles/base.css?v=8"&gt;
 &lt;script src="../assets/scripts/capability.js?v=8"&gt;&lt;/script&gt;
 &lt;script src="../assets/scripts/main.js?v=8" defer&gt;&lt;/script&gt;</code></pre>
 
-          <h2>体积是第二个理由</h2>
-          <p>预算定为：HTML 加 CSS 不超过 120 KB，页面自带脚本不超过 40 KB，都按未压缩算。现在首页的 HTML、样式表与页面脚本合计 77.5 KB（gzip 21.4 KB），文章列表 49.4 KB、关于 48.6 KB、归档 52.5 KB、作品 55.7 KB，文章详情页在 77.0 KB 到 79.8 KB 之间，多出来的是正文本身。</p>
-          <p>脚本方面，每页都会加载的 <code>capability.js</code> 与 <code>main.js</code> 合计约 15 KB。首页多一个星图脚本，文章页多一个阅读增强脚本；搜索的脚本和索引要等点开搜索面板才请求。highlight.js 与 KaTeX 只在页面真有代码块或公式时才进队列。</p>
+          <h2>首屏体积预算</h2>
+          <p>项目设定两项上限：HTML 与样式表合计不超过 120 KB，页面自带脚本不超过 40 KB，均按未压缩体积计算；KB 按 1024 字节换算。2026-10-17 的本地统计中，首页 HTML、样式表与页面脚本合计 80.8 KB，gzip 后 22.1 KB；文章列表 52.6 KB，关于 51.7 KB，归档 55.7 KB，作品 58.8 KB；文章详情页 80.4 KB 至 82.6 KB，gzip 后 22.4 KB 至 23.0 KB，差异主要来自正文。</p>
+          <p>每页共同加载的 <code>capability.js</code> 与 <code>main.js</code> 合计约 15.3 KB。首页额外加载星图脚本，文章页额外加载阅读脚本；搜索脚本与索引在打开搜索面板后才请求。highlight.js 与 KaTeX 仅在页面存在代码块或公式时进入加载队列。</p>
 
-          <h2>同步成本</h2>
-          <p>页头与页脚在每页各存一份，改动一次导航要同步八个文件。此前新增「归档」一项就是用脚本批量替换的，带 <code>aria-current</code> 的那一页还要单独处理。页面继续增加，这套做法将难以为继，因此约定：超过八页时改用一次性生成脚本，脚本只在开发阶段运行，产物仍是静态文件。</p>
-          <p>组件库和原子化样式也一并放弃了。按需引入依赖构建阶段完成，不构建就只能整份引入，再花时间覆盖它自带的观感。现在整套样式 gzip 后七 KB 出头，最轻的通用样式库也有三 KB 多，组件还少。</p>
+          <h2>多页结构的维护成本</h2>
+          <p>页头与页脚在每份文档中各存一份，导航改动需要同步八个文件。新增「归档」栏目时，批量替换由脚本完成，带 <code>aria-current</code> 的当前页仍需单独处理。页面数量继续增加会使手工维护的负担超过收益，项目因此约定：文件超过八个之后改用一次性生成脚本，脚本只在开发阶段运行，交付物仍为静态文件。</p>
 
-          <h2>剩下的代价</h2>
-          <p>没有类型检查，没有自动化测试，第三方库升级要手动替换 <code>vendor</code> 里的文件。一位作者维护十来个页面时这些还能应付；人数增加之后，手工同步会最先出问题。</p>
+          <h2>组件库与 CSS 框架</h2>
+          <p>构建步骤会影响组件库的引入方式。组件库通常借助打包工具的 tree shaking 按需引入；无构建条件下需要加载完整样式，再覆盖默认规则。当前三份样式表分别 gzip 后合计约 10.6 KB，覆盖现有页面的界面需求；引入通用组件库仍需按其变量体系重写样式，因此未纳入方案。</p>
+          <p>原子化 CSS 框架依赖构建期扫描与生成，运行时方案需要额外脚本解析类名，与首屏预算冲突。</p>
+
+          <h2>无构建方案的维护边界</h2>
+          <p>无构建流程不会自动执行类型检查、测试或第三方依赖更新；项目通过独立 Node 脚本核对内容、浏览器行为与无障碍状态。<code>vendor</code> 目录中的库文件以及样式和脚本版本仍需手动维护，页面增加后，重复维护页头与页脚的成本也会提高。</p>
         </div>
 
         <nav class="related" aria-labelledby="related-title">
           <h2 class="related-title" id="related-title">继续阅读</h2>
           <ul class="related-list">
-            <li><a href="post-reader.html">文章页的阅读增强：按需渲染与代码块操作</a></li>
-            <li><a href="post-capability.html">老设备也要能读：按访问端条件分级</a></li>
+            <li><a href="post-reader.html">文章页阅读增强：目录、代码块与公式</a></li>
+            <li><a href="post-capability.html">兼顾功能机与现代设备：访问端能力分级</a></li>
           </ul>
         </nav>
 
         <nav class="article-pager" aria-label="文章导航">
           <ul class="pager">
-            <li class="pager-next"><a href="post-capability.html" rel="next"><span class="pager-dir">更新的一篇</span><span class="pager-title">老设备也要能读：按访问端条件分级</span></a></li>
+            <li class="pager-next"><a href="post-capability.html" rel="next"><span class="pager-dir">更新的一篇</span><span class="pager-title">兼顾功能机与现代设备：访问端能力分级</span></a></li>
           </ul>
           <p class="pager-back"><a href="posts.html">返回文章列表</a></p>
         </nav>
@@ -136,7 +139,7 @@
 
   <footer class="site-footer">
     <div class="container">
-      <p>© <span data-year>2026</span> Qi 的个人博客</p>
+      <p>© <span data-year>2026</span> 语暮的技术手记</p>
     </div>
   </footer>
   <div class="search-panel" id="search-panel" hidden>
